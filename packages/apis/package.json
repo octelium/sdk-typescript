@@ -1,0 +1,50 @@
+{
+  "name": "@octelium/apis",
+  "version": "1.0.0-pre.20260320.4",
+  "description": "Octelium Protobuf APIs",
+  "author": "Octelium <contact@octelium.com>",
+  "license": "Apache-2.0",
+  "private": false,
+  "type": "module",
+  "exports": {
+    "./main/*": {
+      "import": "./main/*.js",
+      "require": "./main/*.js",
+      "types": "./main/*.d.ts"
+    },
+    "./google/*": {
+      "import": "./google/*.js",
+      "require": "./google/*.js",
+      "types": "./google/*.d.ts"
+    }
+  },
+  "files": [
+    "main",
+    "google"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/octelium/sdk-typescript.git",
+    "directory": "packages/apis"
+  },
+  "bugs": {
+    "url": "https://github.com/octelium/sdk-typescript/issues"
+  },
+  "homepage": "https://octelium.com",
+  "peerDependencies": {
+    "@protobuf-ts/runtime": "^2.11.1"
+  },
+  "devDependencies": {
+    "@protobuf-ts/runtime": "^2.11.1",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "octelium",
+    "zero-trust",
+    "grpc",
+    "protobuf",
+    "proto3",
+    "typescript",
+    "sdk"
+  ]
+}
