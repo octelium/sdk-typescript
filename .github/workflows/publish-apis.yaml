@@ -1,0 +1,42 @@
+name: Publish @octelium/apis
+
+on:
+  push:
+    tags:
+      - "apis/v*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        working-directory: packages/apis
+        run: npm install
+
+      - name: Build
+        working-directory: packages/apis
+        run: npx tsc
+
+      - name: Publish stable
+        if: "!contains(github.ref, '-pre.')"
+        working-directory: packages/apis
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish pre-release
+        if: contains(github.ref, '-pre.')
+        working-directory: packages/apis
+        run: npm publish --access public --tag next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
