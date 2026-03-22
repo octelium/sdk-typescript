@@ -1,6 +1,6 @@
 {
   "name": "@octelium/apis",
-  "version": "1.0.0-pre.20260321.1",
+  "version": "1.0.0-pre.20260322.1",
   "description": "Octelium Protobuf APIs",
   "author": "Octelium <contact@octelium.com>",
   "license": "Apache-2.0",
@@ -8,9 +8,14 @@
   "type": "module",
   "exports": {
     "./main/*": {
-      "import": "./main/*.js",
-      "require": "./main/*.js",
-      "types": "./main/*.d.ts"
+      "import": "./main/*/index.js",
+      "require": "./main/*/index.js",
+      "types": "./main/*/index.d.ts"
+    },
+    "./main/*/*": {
+      "import": "./main/*/*.js",
+      "require": "./main/*/*.js",
+      "types": "./main/*/*.d.ts"
     },
     "./google/*": {
       "import": "./google/*.js",
