@@ -1173,6 +1173,16 @@ export interface Service_Spec_Config_HTTP_Header {
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.Host host = 6
      */
     host?: Service_Spec_Config_HTTP_Header_Host;
+    /**
+     * AuthorizationMode sets the behavior of passing the Authorization
+     * request header to the upstream. The default behavior is to delete
+     * it unless when used by anonymous Services. You can use either the
+     * value "PASS" to pass the downstream Authorization header to the
+     * upstream or "DELETE" to delete it.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.AuthorizationMode authorizationMode = 7
+     */
+    authorizationMode: Service_Spec_Config_HTTP_Header_AuthorizationMode;
 }
 /**
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.KeyValue
@@ -1269,6 +1279,23 @@ export enum Service_Spec_Config_HTTP_Header_ForwardedMode {
      * @generated from protobuf enum value: TRANSPARENT = 3;
      */
     TRANSPARENT = 3
+}
+/**
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.AuthorizationMode
+ */
+export enum Service_Spec_Config_HTTP_Header_AuthorizationMode {
+    /**
+     * @generated from protobuf enum value: AUTHORIZATION_MODE_UNSET = 0;
+     */
+    AUTHORIZATION_MODE_UNSET = 0,
+    /**
+     * @generated from protobuf enum value: PASS = 1;
+     */
+    PASS = 1,
+    /**
+     * @generated from protobuf enum value: DELETE = 2;
+     */
+    DELETE = 2
 }
 /**
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Response
@@ -1549,11 +1576,9 @@ export interface Service_Spec_Config_HTTP_Plugin_Direct {
      */
     body?: Service_Spec_Config_HTTP_Plugin_Direct_Body;
     /**
-     * @generated from protobuf field: map<string, string> headers = 3
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.KeyValue headers = 3
      */
-    headers: {
-        [key: string]: string;
-    };
+    headers: Service_Spec_Config_HTTP_Plugin_Direct_KeyValue[];
 }
 /**
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.Body
@@ -1577,6 +1602,19 @@ export interface Service_Spec_Config_HTTP_Plugin_Direct_Body {
     } | {
         oneofKind: undefined;
     };
+}
+/**
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.KeyValue
+ */
+export interface Service_Spec_Config_HTTP_Plugin_Direct_KeyValue {
+    /**
+     * @generated from protobuf field: string key = 1
+     */
+    key: string;
+    /**
+     * @generated from protobuf field: string value = 2
+     */
+    value: string;
 }
 /**
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit
@@ -1603,11 +1641,9 @@ export interface Service_Spec_Config_HTTP_Plugin_RateLimit {
      */
     window?: Duration;
     /**
-     * @generated from protobuf field: map<string, string> headers = 7
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.KeyValue headers = 7
      */
-    headers: {
-        [key: string]: string;
-    };
+    headers: Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue[];
 }
 /**
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.Body
@@ -1660,6 +1696,19 @@ export interface Service_Spec_Config_HTTP_Plugin_RateLimit_Key {
     } | {
         oneofKind: undefined;
     };
+}
+/**
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.KeyValue
+ */
+export interface Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue {
+    /**
+     * @generated from protobuf field: string key = 1
+     */
+    key: string;
+    /**
+     * @generated from protobuf field: string value = 2
+     */
+    value: string;
 }
 /**
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Cache
@@ -1728,11 +1777,9 @@ export interface Service_Spec_Config_HTTP_Plugin_JSONSchema {
      */
     body?: Service_Spec_Config_HTTP_Plugin_JSONSchema_Body;
     /**
-     * @generated from protobuf field: map<string, string> headers = 7
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.KeyValue headers = 4
      */
-    headers: {
-        [key: string]: string;
-    };
+    headers: Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue[];
 }
 /**
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.Body
@@ -1756,6 +1803,19 @@ export interface Service_Spec_Config_HTTP_Plugin_JSONSchema_Body {
     } | {
         oneofKind: undefined;
     };
+}
+/**
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.KeyValue
+ */
+export interface Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue {
+    /**
+     * @generated from protobuf field: string key = 1
+     */
+    key: string;
+    /**
+     * @generated from protobuf field: string value = 2
+     */
+    value: string;
 }
 /**
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Path
@@ -11916,7 +11976,8 @@ class Service_Spec_Config_HTTP_Header$Type extends MessageType<Service_Spec_Conf
             { no: 3, name: "addResponseHeaders", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_HTTP_Header_KeyValue },
             { no: 4, name: "removeResponseHeaders", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "forwardedMode", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.ForwardedMode", Service_Spec_Config_HTTP_Header_ForwardedMode] },
-            { no: 6, name: "host", kind: "message", T: () => Service_Spec_Config_HTTP_Header_Host }
+            { no: 6, name: "host", kind: "message", T: () => Service_Spec_Config_HTTP_Header_Host },
+            { no: 7, name: "authorizationMode", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.AuthorizationMode", Service_Spec_Config_HTTP_Header_AuthorizationMode] }
         ]);
     }
     create(value?: PartialMessage<Service_Spec_Config_HTTP_Header>): Service_Spec_Config_HTTP_Header {
@@ -11926,6 +11987,7 @@ class Service_Spec_Config_HTTP_Header$Type extends MessageType<Service_Spec_Conf
         message.addResponseHeaders = [];
         message.removeResponseHeaders = [];
         message.forwardedMode = 0;
+        message.authorizationMode = 0;
         if (value !== undefined)
             reflectionMergePartial<Service_Spec_Config_HTTP_Header>(this, message, value);
         return message;
@@ -11952,6 +12014,9 @@ class Service_Spec_Config_HTTP_Header$Type extends MessageType<Service_Spec_Conf
                     break;
                 case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.Host host */ 6:
                     message.host = Service_Spec_Config_HTTP_Header_Host.internalBinaryRead(reader, reader.uint32(), options, message.host);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.AuthorizationMode authorizationMode */ 7:
+                    message.authorizationMode = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -11983,6 +12048,9 @@ class Service_Spec_Config_HTTP_Header$Type extends MessageType<Service_Spec_Conf
         /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.Host host = 6; */
         if (message.host)
             Service_Spec_Config_HTTP_Header_Host.internalBinaryWrite(message.host, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.AuthorizationMode authorizationMode = 7; */
+        if (message.authorizationMode !== 0)
+            writer.tag(7, WireType.Varint).int32(message.authorizationMode);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -12762,13 +12830,13 @@ class Service_Spec_Config_HTTP_Plugin_Direct$Type extends MessageType<Service_Sp
         super("octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct", [
             { no: 1, name: "statusCode", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 2, name: "body", kind: "message", T: () => Service_Spec_Config_HTTP_Plugin_Direct_Body },
-            { no: 3, name: "headers", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
+            { no: 3, name: "headers", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_HTTP_Plugin_Direct_KeyValue }
         ]);
     }
     create(value?: PartialMessage<Service_Spec_Config_HTTP_Plugin_Direct>): Service_Spec_Config_HTTP_Plugin_Direct {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.statusCode = 0;
-        message.headers = {};
+        message.headers = [];
         if (value !== undefined)
             reflectionMergePartial<Service_Spec_Config_HTTP_Plugin_Direct>(this, message, value);
         return message;
@@ -12784,8 +12852,8 @@ class Service_Spec_Config_HTTP_Plugin_Direct$Type extends MessageType<Service_Sp
                 case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.Body body */ 2:
                     message.body = Service_Spec_Config_HTTP_Plugin_Direct_Body.internalBinaryRead(reader, reader.uint32(), options, message.body);
                     break;
-                case /* map<string, string> headers */ 3:
-                    this.binaryReadMap3(message.headers, reader, options);
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.KeyValue headers */ 3:
+                    message.headers.push(Service_Spec_Config_HTTP_Plugin_Direct_KeyValue.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -12798,22 +12866,6 @@ class Service_Spec_Config_HTTP_Plugin_Direct$Type extends MessageType<Service_Sp
         }
         return message;
     }
-    private binaryReadMap3(map: Service_Spec_Config_HTTP_Plugin_Direct["headers"], reader: IBinaryReader, options: BinaryReadOptions): void {
-        let len = reader.uint32(), end = reader.pos + len, key: keyof Service_Spec_Config_HTTP_Plugin_Direct["headers"] | undefined, val: Service_Spec_Config_HTTP_Plugin_Direct["headers"][any] | undefined;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case 1:
-                    key = reader.string();
-                    break;
-                case 2:
-                    val = reader.string();
-                    break;
-                default: throw new globalThis.Error("unknown map entry field for octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.headers");
-            }
-        }
-        map[key ?? ""] = val ?? "";
-    }
     internalBinaryWrite(message: Service_Spec_Config_HTTP_Plugin_Direct, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* int32 statusCode = 1; */
         if (message.statusCode !== 0)
@@ -12821,9 +12873,9 @@ class Service_Spec_Config_HTTP_Plugin_Direct$Type extends MessageType<Service_Sp
         /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.Body body = 2; */
         if (message.body)
             Service_Spec_Config_HTTP_Plugin_Direct_Body.internalBinaryWrite(message.body, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* map<string, string> headers = 3; */
-        for (let k of globalThis.Object.keys(message.headers))
-            writer.tag(3, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.headers[k]).join();
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.KeyValue headers = 3; */
+        for (let i = 0; i < message.headers.length; i++)
+            Service_Spec_Config_HTTP_Plugin_Direct_KeyValue.internalBinaryWrite(message.headers[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -12895,6 +12947,61 @@ class Service_Spec_Config_HTTP_Plugin_Direct_Body$Type extends MessageType<Servi
  */
 export const Service_Spec_Config_HTTP_Plugin_Direct_Body = new Service_Spec_Config_HTTP_Plugin_Direct_Body$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_HTTP_Plugin_Direct_KeyValue$Type extends MessageType<Service_Spec_Config_HTTP_Plugin_Direct_KeyValue> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.KeyValue", [
+            { no: 1, name: "key", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "value", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_HTTP_Plugin_Direct_KeyValue>): Service_Spec_Config_HTTP_Plugin_Direct_KeyValue {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.key = "";
+        message.value = "";
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_HTTP_Plugin_Direct_KeyValue>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_HTTP_Plugin_Direct_KeyValue): Service_Spec_Config_HTTP_Plugin_Direct_KeyValue {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string key */ 1:
+                    message.key = reader.string();
+                    break;
+                case /* string value */ 2:
+                    message.value = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_HTTP_Plugin_Direct_KeyValue, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string key = 1; */
+        if (message.key !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.key);
+        /* string value = 2; */
+        if (message.value !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.value);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.KeyValue
+ */
+export const Service_Spec_Config_HTTP_Plugin_Direct_KeyValue = new Service_Spec_Config_HTTP_Plugin_Direct_KeyValue$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class Service_Spec_Config_HTTP_Plugin_RateLimit$Type extends MessageType<Service_Spec_Config_HTTP_Plugin_RateLimit> {
     constructor() {
         super("octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit", [
@@ -12903,14 +13010,14 @@ class Service_Spec_Config_HTTP_Plugin_RateLimit$Type extends MessageType<Service
             { no: 4, name: "key", kind: "message", T: () => Service_Spec_Config_HTTP_Plugin_RateLimit_Key },
             { no: 5, name: "limit", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 2 /*LongType.NUMBER*/ },
             { no: 6, name: "window", kind: "message", T: () => Duration },
-            { no: 7, name: "headers", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
+            { no: 7, name: "headers", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue }
         ]);
     }
     create(value?: PartialMessage<Service_Spec_Config_HTTP_Plugin_RateLimit>): Service_Spec_Config_HTTP_Plugin_RateLimit {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.statusCode = 0;
         message.limit = 0;
-        message.headers = {};
+        message.headers = [];
         if (value !== undefined)
             reflectionMergePartial<Service_Spec_Config_HTTP_Plugin_RateLimit>(this, message, value);
         return message;
@@ -12935,8 +13042,8 @@ class Service_Spec_Config_HTTP_Plugin_RateLimit$Type extends MessageType<Service
                 case /* octelium.api.main.meta.v1.Duration window */ 6:
                     message.window = Duration.internalBinaryRead(reader, reader.uint32(), options, message.window);
                     break;
-                case /* map<string, string> headers */ 7:
-                    this.binaryReadMap7(message.headers, reader, options);
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.KeyValue headers */ 7:
+                    message.headers.push(Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -12948,22 +13055,6 @@ class Service_Spec_Config_HTTP_Plugin_RateLimit$Type extends MessageType<Service
             }
         }
         return message;
-    }
-    private binaryReadMap7(map: Service_Spec_Config_HTTP_Plugin_RateLimit["headers"], reader: IBinaryReader, options: BinaryReadOptions): void {
-        let len = reader.uint32(), end = reader.pos + len, key: keyof Service_Spec_Config_HTTP_Plugin_RateLimit["headers"] | undefined, val: Service_Spec_Config_HTTP_Plugin_RateLimit["headers"][any] | undefined;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case 1:
-                    key = reader.string();
-                    break;
-                case 2:
-                    val = reader.string();
-                    break;
-                default: throw new globalThis.Error("unknown map entry field for octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.headers");
-            }
-        }
-        map[key ?? ""] = val ?? "";
     }
     internalBinaryWrite(message: Service_Spec_Config_HTTP_Plugin_RateLimit, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* int32 statusCode = 2; */
@@ -12981,9 +13072,9 @@ class Service_Spec_Config_HTTP_Plugin_RateLimit$Type extends MessageType<Service
         /* octelium.api.main.meta.v1.Duration window = 6; */
         if (message.window)
             Duration.internalBinaryWrite(message.window, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
-        /* map<string, string> headers = 7; */
-        for (let k of globalThis.Object.keys(message.headers))
-            writer.tag(7, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.headers[k]).join();
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.KeyValue headers = 7; */
+        for (let i = 0; i < message.headers.length; i++)
+            Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue.internalBinaryWrite(message.headers[i], writer.tag(7, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -13125,6 +13216,61 @@ class Service_Spec_Config_HTTP_Plugin_RateLimit_Key$Type extends MessageType<Ser
  */
 export const Service_Spec_Config_HTTP_Plugin_RateLimit_Key = new Service_Spec_Config_HTTP_Plugin_RateLimit_Key$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue$Type extends MessageType<Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.KeyValue", [
+            { no: 1, name: "key", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "value", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue>): Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.key = "";
+        message.value = "";
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue): Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string key */ 1:
+                    message.key = reader.string();
+                    break;
+                case /* string value */ 2:
+                    message.value = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string key = 1; */
+        if (message.key !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.key);
+        /* string value = 2; */
+        if (message.value !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.value);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.KeyValue
+ */
+export const Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue = new Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class Service_Spec_Config_HTTP_Plugin_Cache$Type extends MessageType<Service_Spec_Config_HTTP_Plugin_Cache> {
     constructor() {
         super("octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Cache", [
@@ -13258,14 +13404,14 @@ class Service_Spec_Config_HTTP_Plugin_JSONSchema$Type extends MessageType<Servic
             { no: 1, name: "inline", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "statusCode", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 3, name: "body", kind: "message", T: () => Service_Spec_Config_HTTP_Plugin_JSONSchema_Body },
-            { no: 7, name: "headers", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
+            { no: 4, name: "headers", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue }
         ]);
     }
     create(value?: PartialMessage<Service_Spec_Config_HTTP_Plugin_JSONSchema>): Service_Spec_Config_HTTP_Plugin_JSONSchema {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.type = { oneofKind: undefined };
         message.statusCode = 0;
-        message.headers = {};
+        message.headers = [];
         if (value !== undefined)
             reflectionMergePartial<Service_Spec_Config_HTTP_Plugin_JSONSchema>(this, message, value);
         return message;
@@ -13287,8 +13433,8 @@ class Service_Spec_Config_HTTP_Plugin_JSONSchema$Type extends MessageType<Servic
                 case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.Body body */ 3:
                     message.body = Service_Spec_Config_HTTP_Plugin_JSONSchema_Body.internalBinaryRead(reader, reader.uint32(), options, message.body);
                     break;
-                case /* map<string, string> headers */ 7:
-                    this.binaryReadMap7(message.headers, reader, options);
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.KeyValue headers */ 4:
+                    message.headers.push(Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -13301,22 +13447,6 @@ class Service_Spec_Config_HTTP_Plugin_JSONSchema$Type extends MessageType<Servic
         }
         return message;
     }
-    private binaryReadMap7(map: Service_Spec_Config_HTTP_Plugin_JSONSchema["headers"], reader: IBinaryReader, options: BinaryReadOptions): void {
-        let len = reader.uint32(), end = reader.pos + len, key: keyof Service_Spec_Config_HTTP_Plugin_JSONSchema["headers"] | undefined, val: Service_Spec_Config_HTTP_Plugin_JSONSchema["headers"][any] | undefined;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case 1:
-                    key = reader.string();
-                    break;
-                case 2:
-                    val = reader.string();
-                    break;
-                default: throw new globalThis.Error("unknown map entry field for octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.headers");
-            }
-        }
-        map[key ?? ""] = val ?? "";
-    }
     internalBinaryWrite(message: Service_Spec_Config_HTTP_Plugin_JSONSchema, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* string inline = 1; */
         if (message.type.oneofKind === "inline")
@@ -13327,9 +13457,9 @@ class Service_Spec_Config_HTTP_Plugin_JSONSchema$Type extends MessageType<Servic
         /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.Body body = 3; */
         if (message.body)
             Service_Spec_Config_HTTP_Plugin_JSONSchema_Body.internalBinaryWrite(message.body, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* map<string, string> headers = 7; */
-        for (let k of globalThis.Object.keys(message.headers))
-            writer.tag(7, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.headers[k]).join();
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.KeyValue headers = 4; */
+        for (let i = 0; i < message.headers.length; i++)
+            Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue.internalBinaryWrite(message.headers[i], writer.tag(4, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -13400,6 +13530,61 @@ class Service_Spec_Config_HTTP_Plugin_JSONSchema_Body$Type extends MessageType<S
  * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.Body
  */
 export const Service_Spec_Config_HTTP_Plugin_JSONSchema_Body = new Service_Spec_Config_HTTP_Plugin_JSONSchema_Body$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue$Type extends MessageType<Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.KeyValue", [
+            { no: 1, name: "key", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "value", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue>): Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.key = "";
+        message.value = "";
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue): Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string key */ 1:
+                    message.key = reader.string();
+                    break;
+                case /* string value */ 2:
+                    message.value = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string key = 1; */
+        if (message.key !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.key);
+        /* string value = 2; */
+        if (message.value !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.value);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.KeyValue
+ */
+export const Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue = new Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Service_Spec_Config_HTTP_Plugin_Path$Type extends MessageType<Service_Spec_Config_HTTP_Plugin_Path> {
     constructor() {
