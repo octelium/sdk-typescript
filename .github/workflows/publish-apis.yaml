@@ -28,7 +28,7 @@ jobs:
 
       - name: Build
         working-directory: packages/apis
-        run: npm run build
+        run: npx tsc
 
       - name: Publish stable
         if: "!contains(github.ref_name, '-pre.')"
