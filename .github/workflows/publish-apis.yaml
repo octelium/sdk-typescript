@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: packages/apis
-        run: npm ci
+        run: npm install
 
       - name: Build
         working-directory: packages/apis
