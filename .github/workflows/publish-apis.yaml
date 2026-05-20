@@ -5,12 +5,13 @@ on:
     tags:
       - "apis/v*"
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
 
     steps:
       - name: Checkout
@@ -19,23 +20,22 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          registry-url: "https://registry.npmjs.org"
+          node-version: "22"
 
       - name: Install dependencies
         working-directory: packages/apis
-        run: npm install
+        run: npm ci
 
       - name: Build
         working-directory: packages/apis
-        run: npx tsc
+        run: npm run build
 
       - name: Publish stable
-        if: "!contains(github.ref, '-pre.')"
+        if: "!contains(github.ref_name, '-pre.')"
         working-directory: packages/apis
-        run: npm publish --access public
+        run: npm publish --access public --provenance
 
       - name: Publish pre-release
-        if: contains(github.ref, '-pre.')
+        if: contains(github.ref_name, '-pre.')
         working-directory: packages/apis
-        run: npm publish --access public --tag next
+        run: npm publish --access public --tag next --provenance
