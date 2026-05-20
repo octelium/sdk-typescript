@@ -27,11 +27,11 @@ import { UnknownFieldHandler } from "@protobuf-ts/runtime";
 import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
-import { Timestamp } from "../../google/protobuf/timestamp.js";
 import { CommonListOptions } from "../metav1/metav1.js";
 import { ListResponseMeta } from "../metav1/metav1.js";
 import { DualStackNetwork } from "../metav1/metav1.js";
 import { DualStackIP } from "../metav1/metav1.js";
+import { Timestamp } from "../../google/protobuf/timestamp.js";
 import { Metadata } from "../metav1/metav1.js";
 /**
  * @generated from protobuf message octelium.api.main.user.v1.LogoutRequest
@@ -213,6 +213,12 @@ export interface ConnectRequest {
          */
         initialize: ConnectRequest_Initialize;
     } | {
+        oneofKind: "keepAlive";
+        /**
+         * @generated from protobuf field: octelium.api.main.user.v1.ConnectRequest.KeepAlive keepAlive = 2
+         */
+        keepAlive: ConnectRequest_KeepAlive;
+    } | {
         oneofKind: undefined;
     };
 }
@@ -367,6 +373,15 @@ export enum ConnectRequest_Initialize_ConnectionType {
      * @generated from protobuf enum value: QUICV0 = 2;
      */
     QUICV0 = 2
+}
+/**
+ * @generated from protobuf message octelium.api.main.user.v1.ConnectRequest.KeepAlive
+ */
+export interface ConnectRequest_KeepAlive {
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp setAt = 1
+     */
+    setAt?: Timestamp;
 }
 /**
  * @generated from protobuf message octelium.api.main.user.v1.DisconnectRequest
@@ -1162,6 +1177,18 @@ export interface SetServiceConfigsResponse {
      * @generated from protobuf field: repeated octelium.api.main.user.v1.SetServiceConfigsResponse.Config configs = 1
      */
     configs: SetServiceConfigsResponse_Config[];
+    /**
+     * @generated from protobuf field: string host = 2
+     */
+    host: string;
+    /**
+     * @generated from protobuf field: int32 port = 3
+     */
+    port: number;
+    /**
+     * @generated from protobuf field: octelium.api.main.user.v1.SetServiceConfigsResponse.L3Mode l3Mode = 4
+     */
+    l3Mode: SetServiceConfigsResponse_L3Mode;
 }
 /**
  * @generated from protobuf message octelium.api.main.user.v1.SetServiceConfigsResponse.Config
@@ -1179,6 +1206,12 @@ export interface SetServiceConfigsResponse_Config {
          */
         kubeconfig: SetServiceConfigsResponse_Config_Kubeconfig;
     } | {
+        oneofKind: "ssh";
+        /**
+         * @generated from protobuf field: octelium.api.main.user.v1.SetServiceConfigsResponse.Config.SSH ssh = 2
+         */
+        ssh: SetServiceConfigsResponse_Config_SSH;
+    } | {
         oneofKind: undefined;
     };
 }
@@ -1192,6 +1225,40 @@ export interface SetServiceConfigsResponse_Config_Kubeconfig {
      * @generated from protobuf field: bytes content = 1
      */
     content: Uint8Array;
+}
+/**
+ * @generated from protobuf message octelium.api.main.user.v1.SetServiceConfigsResponse.Config.SSH
+ */
+export interface SetServiceConfigsResponse_Config_SSH {
+    /**
+     * KnownHosts is the list of SSH known hosts
+     *
+     * @generated from protobuf field: repeated string knownHosts = 1
+     */
+    knownHosts: string[];
+    /**
+     * AuthorizedKeys is the list of SSH authorized keys
+     *
+     * @generated from protobuf field: repeated string authorizedKeys = 2
+     */
+    authorizedKeys: string[];
+}
+/**
+ * @generated from protobuf enum octelium.api.main.user.v1.SetServiceConfigsResponse.L3Mode
+ */
+export enum SetServiceConfigsResponse_L3Mode {
+    /**
+     * @generated from protobuf enum value: BOTH = 0;
+     */
+    BOTH = 0,
+    /**
+     * @generated from protobuf enum value: V4 = 1;
+     */
+    V4 = 1,
+    /**
+     * @generated from protobuf enum value: V6 = 2;
+     */
+    V6 = 2
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class LogoutRequest$Type extends MessageType<LogoutRequest> {
@@ -1731,7 +1798,8 @@ export const GetStatusResponse_Cluster = new GetStatusResponse_Cluster$Type();
 class ConnectRequest$Type extends MessageType<ConnectRequest> {
     constructor() {
         super("octelium.api.main.user.v1.ConnectRequest", [
-            { no: 1, name: "initialize", kind: "message", oneof: "type", T: () => ConnectRequest_Initialize }
+            { no: 1, name: "initialize", kind: "message", oneof: "type", T: () => ConnectRequest_Initialize },
+            { no: 2, name: "keepAlive", kind: "message", oneof: "type", T: () => ConnectRequest_KeepAlive }
         ]);
     }
     create(value?: PartialMessage<ConnectRequest>): ConnectRequest {
@@ -1752,6 +1820,12 @@ class ConnectRequest$Type extends MessageType<ConnectRequest> {
                         initialize: ConnectRequest_Initialize.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).initialize)
                     };
                     break;
+                case /* octelium.api.main.user.v1.ConnectRequest.KeepAlive keepAlive */ 2:
+                    message.type = {
+                        oneofKind: "keepAlive",
+                        keepAlive: ConnectRequest_KeepAlive.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).keepAlive)
+                    };
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -1767,6 +1841,9 @@ class ConnectRequest$Type extends MessageType<ConnectRequest> {
         /* octelium.api.main.user.v1.ConnectRequest.Initialize initialize = 1; */
         if (message.type.oneofKind === "initialize")
             ConnectRequest_Initialize.internalBinaryWrite(message.type.initialize, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.user.v1.ConnectRequest.KeepAlive keepAlive = 2; */
+        if (message.type.oneofKind === "keepAlive")
+            ConnectRequest_KeepAlive.internalBinaryWrite(message.type.keepAlive, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -2052,6 +2129,52 @@ class ConnectRequest_Initialize_PublishedService$Type extends MessageType<Connec
  * @generated MessageType for protobuf message octelium.api.main.user.v1.ConnectRequest.Initialize.PublishedService
  */
 export const ConnectRequest_Initialize_PublishedService = new ConnectRequest_Initialize_PublishedService$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ConnectRequest_KeepAlive$Type extends MessageType<ConnectRequest_KeepAlive> {
+    constructor() {
+        super("octelium.api.main.user.v1.ConnectRequest.KeepAlive", [
+            { no: 1, name: "setAt", kind: "message", T: () => Timestamp }
+        ]);
+    }
+    create(value?: PartialMessage<ConnectRequest_KeepAlive>): ConnectRequest_KeepAlive {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<ConnectRequest_KeepAlive>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ConnectRequest_KeepAlive): ConnectRequest_KeepAlive {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* google.protobuf.Timestamp setAt */ 1:
+                    message.setAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.setAt);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ConnectRequest_KeepAlive, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* google.protobuf.Timestamp setAt = 1; */
+        if (message.setAt)
+            Timestamp.internalBinaryWrite(message.setAt, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.user.v1.ConnectRequest.KeepAlive
+ */
+export const ConnectRequest_KeepAlive = new ConnectRequest_KeepAlive$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class DisconnectRequest$Type extends MessageType<DisconnectRequest> {
     constructor() {
@@ -4004,12 +4127,18 @@ export const SetServiceConfigsRequest = new SetServiceConfigsRequest$Type();
 class SetServiceConfigsResponse$Type extends MessageType<SetServiceConfigsResponse> {
     constructor() {
         super("octelium.api.main.user.v1.SetServiceConfigsResponse", [
-            { no: 1, name: "configs", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => SetServiceConfigsResponse_Config }
+            { no: 1, name: "configs", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => SetServiceConfigsResponse_Config },
+            { no: 2, name: "host", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "port", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 4, name: "l3Mode", kind: "enum", T: () => ["octelium.api.main.user.v1.SetServiceConfigsResponse.L3Mode", SetServiceConfigsResponse_L3Mode] }
         ]);
     }
     create(value?: PartialMessage<SetServiceConfigsResponse>): SetServiceConfigsResponse {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.configs = [];
+        message.host = "";
+        message.port = 0;
+        message.l3Mode = 0;
         if (value !== undefined)
             reflectionMergePartial<SetServiceConfigsResponse>(this, message, value);
         return message;
@@ -4021,6 +4150,15 @@ class SetServiceConfigsResponse$Type extends MessageType<SetServiceConfigsRespon
             switch (fieldNo) {
                 case /* repeated octelium.api.main.user.v1.SetServiceConfigsResponse.Config configs */ 1:
                     message.configs.push(SetServiceConfigsResponse_Config.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* string host */ 2:
+                    message.host = reader.string();
+                    break;
+                case /* int32 port */ 3:
+                    message.port = reader.int32();
+                    break;
+                case /* octelium.api.main.user.v1.SetServiceConfigsResponse.L3Mode l3Mode */ 4:
+                    message.l3Mode = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -4037,6 +4175,15 @@ class SetServiceConfigsResponse$Type extends MessageType<SetServiceConfigsRespon
         /* repeated octelium.api.main.user.v1.SetServiceConfigsResponse.Config configs = 1; */
         for (let i = 0; i < message.configs.length; i++)
             SetServiceConfigsResponse_Config.internalBinaryWrite(message.configs[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string host = 2; */
+        if (message.host !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.host);
+        /* int32 port = 3; */
+        if (message.port !== 0)
+            writer.tag(3, WireType.Varint).int32(message.port);
+        /* octelium.api.main.user.v1.SetServiceConfigsResponse.L3Mode l3Mode = 4; */
+        if (message.l3Mode !== 0)
+            writer.tag(4, WireType.Varint).int32(message.l3Mode);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -4051,7 +4198,8 @@ export const SetServiceConfigsResponse = new SetServiceConfigsResponse$Type();
 class SetServiceConfigsResponse_Config$Type extends MessageType<SetServiceConfigsResponse_Config> {
     constructor() {
         super("octelium.api.main.user.v1.SetServiceConfigsResponse.Config", [
-            { no: 1, name: "kubeconfig", kind: "message", oneof: "type", T: () => SetServiceConfigsResponse_Config_Kubeconfig }
+            { no: 1, name: "kubeconfig", kind: "message", oneof: "type", T: () => SetServiceConfigsResponse_Config_Kubeconfig },
+            { no: 2, name: "ssh", kind: "message", oneof: "type", T: () => SetServiceConfigsResponse_Config_SSH }
         ]);
     }
     create(value?: PartialMessage<SetServiceConfigsResponse_Config>): SetServiceConfigsResponse_Config {
@@ -4072,6 +4220,12 @@ class SetServiceConfigsResponse_Config$Type extends MessageType<SetServiceConfig
                         kubeconfig: SetServiceConfigsResponse_Config_Kubeconfig.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).kubeconfig)
                     };
                     break;
+                case /* octelium.api.main.user.v1.SetServiceConfigsResponse.Config.SSH ssh */ 2:
+                    message.type = {
+                        oneofKind: "ssh",
+                        ssh: SetServiceConfigsResponse_Config_SSH.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).ssh)
+                    };
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -4087,6 +4241,9 @@ class SetServiceConfigsResponse_Config$Type extends MessageType<SetServiceConfig
         /* octelium.api.main.user.v1.SetServiceConfigsResponse.Config.Kubeconfig kubeconfig = 1; */
         if (message.type.oneofKind === "kubeconfig")
             SetServiceConfigsResponse_Config_Kubeconfig.internalBinaryWrite(message.type.kubeconfig, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.user.v1.SetServiceConfigsResponse.Config.SSH ssh = 2; */
+        if (message.type.oneofKind === "ssh")
+            SetServiceConfigsResponse_Config_SSH.internalBinaryWrite(message.type.ssh, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -4144,6 +4301,61 @@ class SetServiceConfigsResponse_Config_Kubeconfig$Type extends MessageType<SetSe
  * @generated MessageType for protobuf message octelium.api.main.user.v1.SetServiceConfigsResponse.Config.Kubeconfig
  */
 export const SetServiceConfigsResponse_Config_Kubeconfig = new SetServiceConfigsResponse_Config_Kubeconfig$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class SetServiceConfigsResponse_Config_SSH$Type extends MessageType<SetServiceConfigsResponse_Config_SSH> {
+    constructor() {
+        super("octelium.api.main.user.v1.SetServiceConfigsResponse.Config.SSH", [
+            { no: 1, name: "knownHosts", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "authorizedKeys", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<SetServiceConfigsResponse_Config_SSH>): SetServiceConfigsResponse_Config_SSH {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.knownHosts = [];
+        message.authorizedKeys = [];
+        if (value !== undefined)
+            reflectionMergePartial<SetServiceConfigsResponse_Config_SSH>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: SetServiceConfigsResponse_Config_SSH): SetServiceConfigsResponse_Config_SSH {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated string knownHosts */ 1:
+                    message.knownHosts.push(reader.string());
+                    break;
+                case /* repeated string authorizedKeys */ 2:
+                    message.authorizedKeys.push(reader.string());
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: SetServiceConfigsResponse_Config_SSH, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated string knownHosts = 1; */
+        for (let i = 0; i < message.knownHosts.length; i++)
+            writer.tag(1, WireType.LengthDelimited).string(message.knownHosts[i]);
+        /* repeated string authorizedKeys = 2; */
+        for (let i = 0; i < message.authorizedKeys.length; i++)
+            writer.tag(2, WireType.LengthDelimited).string(message.authorizedKeys[i]);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.user.v1.SetServiceConfigsResponse.Config.SSH
+ */
+export const SetServiceConfigsResponse_Config_SSH = new SetServiceConfigsResponse_Config_SSH$Type();
 /**
  * @generated ServiceType for protobuf service octelium.api.main.user.v1.MainService
  */

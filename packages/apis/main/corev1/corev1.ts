@@ -2737,6 +2737,25 @@ export interface Service_Spec_Config_Upstream_Container_SecurityContext {
      * @generated from protobuf field: uint32 runAsUser = 2
      */
     runAsUser: number;
+    /**
+     * Capabilities adds/drops Linux capabilities used by the container
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.SecurityContext.Capabilities capabilities = 3
+     */
+    capabilities?: Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities;
+}
+/**
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.SecurityContext.Capabilities
+ */
+export interface Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities {
+    /**
+     * @generated from protobuf field: repeated string add = 1
+     */
+    add: string[];
+    /**
+     * @generated from protobuf field: repeated string drop = 2
+     */
+    drop: string[];
 }
 /**
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Volume
@@ -7302,6 +7321,39 @@ export interface Region_Status {
      * @generated from protobuf field: string version = 5
      */
     version: string;
+    /**
+     * @generated from protobuf field: map<string, octelium.api.main.core.v1.Region.Status.VersionInfo> versionInfoMap = 6
+     */
+    versionInfoMap: {
+        [key: string]: Region_Status_VersionInfo;
+    };
+}
+/**
+ * @generated from protobuf message octelium.api.main.core.v1.Region.Status.VersionInfo
+ */
+export interface Region_Status_VersionInfo {
+    /**
+     * @generated from protobuf field: string version = 1
+     */
+    version: string;
+    /**
+     * @generated from protobuf field: string package = 2
+     */
+    package: string;
+    /**
+     * @generated from protobuf field: string id = 3
+     */
+    id: string;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp setAt = 4
+     */
+    setAt?: Timestamp;
+    /**
+     * @generated from protobuf field: map<string, google.protobuf.Struct> ext = 5
+     */
+    ext: {
+        [key: string]: Struct;
+    };
 }
 /**
  * @generated from protobuf message octelium.api.main.core.v1.RegionList
@@ -15673,7 +15725,8 @@ class Service_Spec_Config_Upstream_Container_SecurityContext$Type extends Messag
     constructor() {
         super("octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.SecurityContext", [
             { no: 1, name: "readOnlyRootFilesystem", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "runAsUser", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+            { no: 2, name: "runAsUser", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 3, name: "capabilities", kind: "message", T: () => Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities }
         ]);
     }
     create(value?: PartialMessage<Service_Spec_Config_Upstream_Container_SecurityContext>): Service_Spec_Config_Upstream_Container_SecurityContext {
@@ -15695,6 +15748,9 @@ class Service_Spec_Config_Upstream_Container_SecurityContext$Type extends Messag
                 case /* uint32 runAsUser */ 2:
                     message.runAsUser = reader.uint32();
                     break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.SecurityContext.Capabilities capabilities */ 3:
+                    message.capabilities = Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities.internalBinaryRead(reader, reader.uint32(), options, message.capabilities);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -15713,6 +15769,9 @@ class Service_Spec_Config_Upstream_Container_SecurityContext$Type extends Messag
         /* uint32 runAsUser = 2; */
         if (message.runAsUser !== 0)
             writer.tag(2, WireType.Varint).uint32(message.runAsUser);
+        /* octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.SecurityContext.Capabilities capabilities = 3; */
+        if (message.capabilities)
+            Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities.internalBinaryWrite(message.capabilities, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -15723,6 +15782,61 @@ class Service_Spec_Config_Upstream_Container_SecurityContext$Type extends Messag
  * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.SecurityContext
  */
 export const Service_Spec_Config_Upstream_Container_SecurityContext = new Service_Spec_Config_Upstream_Container_SecurityContext$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities$Type extends MessageType<Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.SecurityContext.Capabilities", [
+            { no: 1, name: "add", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "drop", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities>): Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.add = [];
+        message.drop = [];
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities): Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated string add */ 1:
+                    message.add.push(reader.string());
+                    break;
+                case /* repeated string drop */ 2:
+                    message.drop.push(reader.string());
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated string add = 1; */
+        for (let i = 0; i < message.add.length; i++)
+            writer.tag(1, WireType.LengthDelimited).string(message.add[i]);
+        /* repeated string drop = 2; */
+        for (let i = 0; i < message.drop.length; i++)
+            writer.tag(2, WireType.LengthDelimited).string(message.drop[i]);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.SecurityContext.Capabilities
+ */
+export const Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities = new Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Service_Spec_Config_Upstream_Container_Volume$Type extends MessageType<Service_Spec_Config_Upstream_Container_Volume> {
     constructor() {
@@ -25413,7 +25527,8 @@ class Region_Status$Type extends MessageType<Region_Status> {
             { no: 2, name: "ingressAddresses", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "publicHostname", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "ext", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "message", T: () => Struct } },
-            { no: 5, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 5, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "versionInfoMap", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "message", T: () => Region_Status_VersionInfo } }
         ]);
     }
     create(value?: PartialMessage<Region_Status>): Region_Status {
@@ -25423,6 +25538,7 @@ class Region_Status$Type extends MessageType<Region_Status> {
         message.publicHostname = "";
         message.ext = {};
         message.version = "";
+        message.versionInfoMap = {};
         if (value !== undefined)
             reflectionMergePartial<Region_Status>(this, message, value);
         return message;
@@ -25446,6 +25562,9 @@ class Region_Status$Type extends MessageType<Region_Status> {
                     break;
                 case /* string version */ 5:
                     message.version = reader.string();
+                    break;
+                case /* map<string, octelium.api.main.core.v1.Region.Status.VersionInfo> versionInfoMap */ 6:
+                    this.binaryReadMap6(message.versionInfoMap, reader, options);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -25474,6 +25593,22 @@ class Region_Status$Type extends MessageType<Region_Status> {
         }
         map[key ?? ""] = val ?? Struct.create();
     }
+    private binaryReadMap6(map: Region_Status["versionInfoMap"], reader: IBinaryReader, options: BinaryReadOptions): void {
+        let len = reader.uint32(), end = reader.pos + len, key: keyof Region_Status["versionInfoMap"] | undefined, val: Region_Status["versionInfoMap"][any] | undefined;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case 1:
+                    key = reader.string();
+                    break;
+                case 2:
+                    val = Region_Status_VersionInfo.internalBinaryRead(reader, reader.uint32(), options);
+                    break;
+                default: throw new globalThis.Error("unknown map entry field for octelium.api.main.core.v1.Region.Status.versionInfoMap");
+            }
+        }
+        map[key ?? ""] = val ?? Region_Status_VersionInfo.create();
+    }
     internalBinaryWrite(message: Region_Status, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* int32 index = 1; */
         if (message.index !== 0)
@@ -25494,6 +25629,13 @@ class Region_Status$Type extends MessageType<Region_Status> {
         /* string version = 5; */
         if (message.version !== "")
             writer.tag(5, WireType.LengthDelimited).string(message.version);
+        /* map<string, octelium.api.main.core.v1.Region.Status.VersionInfo> versionInfoMap = 6; */
+        for (let k of globalThis.Object.keys(message.versionInfoMap)) {
+            writer.tag(6, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k);
+            writer.tag(2, WireType.LengthDelimited).fork();
+            Region_Status_VersionInfo.internalBinaryWrite(message.versionInfoMap[k], writer, options);
+            writer.join().join();
+        }
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -25504,6 +25646,104 @@ class Region_Status$Type extends MessageType<Region_Status> {
  * @generated MessageType for protobuf message octelium.api.main.core.v1.Region.Status
  */
 export const Region_Status = new Region_Status$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Region_Status_VersionInfo$Type extends MessageType<Region_Status_VersionInfo> {
+    constructor() {
+        super("octelium.api.main.core.v1.Region.Status.VersionInfo", [
+            { no: 1, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "package", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "setAt", kind: "message", T: () => Timestamp },
+            { no: 5, name: "ext", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "message", T: () => Struct } }
+        ]);
+    }
+    create(value?: PartialMessage<Region_Status_VersionInfo>): Region_Status_VersionInfo {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.version = "";
+        message.package = "";
+        message.id = "";
+        message.ext = {};
+        if (value !== undefined)
+            reflectionMergePartial<Region_Status_VersionInfo>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Region_Status_VersionInfo): Region_Status_VersionInfo {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string version */ 1:
+                    message.version = reader.string();
+                    break;
+                case /* string package */ 2:
+                    message.package = reader.string();
+                    break;
+                case /* string id */ 3:
+                    message.id = reader.string();
+                    break;
+                case /* google.protobuf.Timestamp setAt */ 4:
+                    message.setAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.setAt);
+                    break;
+                case /* map<string, google.protobuf.Struct> ext */ 5:
+                    this.binaryReadMap5(message.ext, reader, options);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    private binaryReadMap5(map: Region_Status_VersionInfo["ext"], reader: IBinaryReader, options: BinaryReadOptions): void {
+        let len = reader.uint32(), end = reader.pos + len, key: keyof Region_Status_VersionInfo["ext"] | undefined, val: Region_Status_VersionInfo["ext"][any] | undefined;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case 1:
+                    key = reader.string();
+                    break;
+                case 2:
+                    val = Struct.internalBinaryRead(reader, reader.uint32(), options);
+                    break;
+                default: throw new globalThis.Error("unknown map entry field for octelium.api.main.core.v1.Region.Status.VersionInfo.ext");
+            }
+        }
+        map[key ?? ""] = val ?? Struct.create();
+    }
+    internalBinaryWrite(message: Region_Status_VersionInfo, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string version = 1; */
+        if (message.version !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.version);
+        /* string package = 2; */
+        if (message.package !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.package);
+        /* string id = 3; */
+        if (message.id !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.id);
+        /* google.protobuf.Timestamp setAt = 4; */
+        if (message.setAt)
+            Timestamp.internalBinaryWrite(message.setAt, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* map<string, google.protobuf.Struct> ext = 5; */
+        for (let k of globalThis.Object.keys(message.ext)) {
+            writer.tag(5, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k);
+            writer.tag(2, WireType.LengthDelimited).fork();
+            Struct.internalBinaryWrite(message.ext[k], writer, options);
+            writer.join().join();
+        }
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Region.Status.VersionInfo
+ */
+export const Region_Status_VersionInfo = new Region_Status_VersionInfo$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RegionList$Type extends MessageType<RegionList> {
     constructor() {
