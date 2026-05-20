@@ -1,6 +1,6 @@
 {
   "name": "@octelium/apis",
-  "version": "1.0.0-pre.20260520.5",
+  "version": "1.0.0-pre.20260520.6",
   "description": "Octelium Protobuf APIs",
   "author": "Octelium <contact@octelium.com>",
   "license": "Apache-2.0",
