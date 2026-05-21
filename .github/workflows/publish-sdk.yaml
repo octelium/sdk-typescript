@@ -6,6 +6,10 @@ on:
       - "sdk/ts/v*" # stable release:  sdk/ts/v1.0.0
       - "sdk/ts/pre/*" # pre-release:     sdk/ts/pre/20260320.1
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -17,8 +21,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          registry-url: "https://registry.npmjs.org"
+          node-version: "24"
 
       - name: Extract version from tag
         id: version
@@ -51,13 +54,9 @@ jobs:
       - name: Publish stable
         if: steps.version.outputs.is_release == 'true'
         working-directory: packages/sdk
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance
 
       - name: Publish pre-release
         if: steps.version.outputs.is_release == 'false'
         working-directory: packages/sdk
-        run: npm publish --access public --tag next
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --tag next --provenance
