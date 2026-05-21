@@ -1,6 +1,7 @@
-import { MainServiceClient as CoreC } from "@octelium/apis/main/corev1/corev1.client";
-import { MainServiceClient as UserC } from "@octelium/apis/main/userv1/userv1.client";
-import { MainServiceClient as AuthC } from "@octelium/apis/main/authv1/authv1.client";
+import { MainServiceClient as CoreC } from "@octelium/apis/main/corev1";
+import { MainServiceClient as UserC } from "@octelium/apis/main/userv1";
+import { MainServiceClient as AuthC } from "@octelium/apis/main/authv1";
+import { MainServiceClient as CordiumC } from "@octelium/apis/main/cordiumv1";
 import {
   RpcTransport,
   RpcInterceptor,
@@ -16,7 +17,7 @@ import { GrpcTransport } from "@protobuf-ts/grpc-transport";
 import {
   AuthenticateWithAuthenticationTokenRequest,
   SessionToken,
-} from "@octelium/apis/main/authv1/authv1";
+} from "@octelium/apis/main/authv1";
 
 export type OcteliumClientConfig = {
   domain: string;
@@ -56,6 +57,7 @@ export class OcteliumClient {
   private _corev1?: CoreC;
   private _userv1?: UserC;
   private _authC: AuthC;
+  private _cordiumv1?: CordiumC;
 
   private accessToken?: string;
   private sessionToken?: SessionToken;
@@ -277,5 +279,9 @@ export class OcteliumClient {
 
   get userV1(): UserC {
     return (this._userv1 ??= new UserC(this.transport));
+  }
+
+  get corduimV1(): CordiumC {
+    return (this._cordiumv1 ??= new CordiumC(this.transport));
   }
 }

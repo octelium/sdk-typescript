@@ -36,7 +36,7 @@ Here is another example with [OAuth2 client credentials](https://octelium.com/do
 
 ```typescript
 import { OcteliumClient } from "@octelium/sdk";
-import {GetOptions} from '@octelium/apis/main/metav1/metav1'
+import {GetOptions} from '@octelium/apis/main/metav1'
 
 const c = await OcteliumClient.create({
   domain: "example.com",

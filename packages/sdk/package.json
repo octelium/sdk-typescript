@@ -12,7 +12,9 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc"
   },
@@ -27,7 +29,7 @@
   "homepage": "https://octelium.com",
   "dependencies": {
     "@grpc/grpc-js": "^1.14.3",
-    "@octelium/apis": "^1.0.0-pre.20260321.1",
+    "@octelium/apis": "^1.0.0-pre.20260521.3",
     "@protobuf-ts/grpc-transport": "^2.11.1",
     "@protobuf-ts/runtime": "^2.11.1",
     "@protobuf-ts/runtime-rpc": "^2.11.1"
@@ -35,5 +37,13 @@
   "devDependencies": {
     "typescript": "^5.0.0"
   },
-  "keywords": ["octelium", "zero-trust", "grpc", "protobuf", "typescript", "sdk"]
+  "keywords": [
+    "octelium",
+    "zero-trust",
+    "grpc",
+    "protobuf",
+    "typescript",
+    "sdk",
+    "cordium"
+  ]
 }
