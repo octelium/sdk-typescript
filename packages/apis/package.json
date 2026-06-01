@@ -1,6 +1,6 @@
 {
   "name": "@octelium/apis",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Octelium Protobuf APIs",
   "author": "Octelium <contact@octelium.com>",
   "license": "Apache-2.0",
@@ -11,13 +11,45 @@
       "import": "./index.js",
       "types": "./index.d.ts"
     },
-    "./main/*": {
-      "import": "./main/*/index.js",
-      "types": "./main/*/index.d.ts"
+    "./main/metav1": {
+      "import": "./main/metav1/index.js",
+      "types": "./main/metav1/index.d.ts"
     },
-    "./main/*/*": {
-      "import": "./main/*/*.js",
-      "types": "./main/*/*.d.ts"
+    "./main/corev1": {
+      "import": "./main/corev1/index.js",
+      "types": "./main/corev1/index.d.ts"
+    },
+    "./main/authv1": {
+      "import": "./main/authv1/index.js",
+      "types": "./main/authv1/index.d.ts"
+    },
+    "./main/userv1": {
+      "import": "./main/userv1/index.js",
+      "types": "./main/userv1/index.d.ts"
+    },
+    "./main/cordiumv1": {
+      "import": "./main/cordiumv1/index.js",
+      "types": "./main/cordiumv1/index.d.ts"
+    },
+    "./main/metav1/*": {
+      "import": "./main/metav1/*.js",
+      "types": "./main/metav1/*.d.ts"
+    },
+    "./main/corev1/*": {
+      "import": "./main/corev1/*.js",
+      "types": "./main/corev1/*.d.ts"
+    },
+    "./main/authv1/*": {
+      "import": "./main/authv1/*.js",
+      "types": "./main/authv1/*.d.ts"
+    },
+    "./main/userv1/*": {
+      "import": "./main/userv1/*.js",
+      "types": "./main/userv1/*.d.ts"
+    },
+    "./main/cordiumv1/*": {
+      "import": "./main/cordiumv1/*.js",
+      "types": "./main/cordiumv1/*.d.ts"
     },
     "./google/*": {
       "import": "./google/*.js",
