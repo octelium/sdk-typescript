@@ -1,2 +1,2 @@
 export * from './userv1.js'
-export * from './userv1.client.js'
+export { MainServiceClient } from './userv1.client.js'

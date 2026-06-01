@@ -1,31 +1,38 @@
 {
   "name": "@octelium/apis",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Octelium Protobuf APIs",
   "author": "Octelium <contact@octelium.com>",
   "license": "Apache-2.0",
   "private": false,
   "type": "module",
   "exports": {
+    ".": {
+      "import": "./index.js",
+      "types": "./index.d.ts"
+    },
     "./main/*": {
       "import": "./main/*/index.js",
-      "require": "./main/*/index.js",
       "types": "./main/*/index.d.ts"
     },
     "./main/*/*": {
       "import": "./main/*/*.js",
-      "require": "./main/*/*.js",
       "types": "./main/*/*.d.ts"
     },
     "./google/*": {
       "import": "./google/*.js",
-      "require": "./google/*.js",
       "types": "./google/*.d.ts"
     }
   },
   "files": [
+    "index.js",
+    "index.d.ts",
+    "index.d.ts.map",
+    "index.js.map",
     "main",
-    "google"
+    "google",
+    "LICENSE",
+    "README.md"
   ],
   "repository": {
     "type": "git",
