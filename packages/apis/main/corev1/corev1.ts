@@ -8197,6 +8197,166 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream {
      * @generated from protobuf field: string url = 1
      */
     url: string;
+    /**
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth auth = 2
+     */
+    auth?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth;
+}
+/**
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth
+ */
+export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth {
+    /**
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "bearer";
+        /**
+         * Bearer sets bearer authentication details
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Bearer bearer = 1
+         */
+        bearer: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer;
+    } | {
+        oneofKind: "basic";
+        /**
+         * Basis sets basic authentication details
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic basic = 2
+         */
+        basic: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic;
+    } | {
+        oneofKind: "custom";
+        /**
+         * Custom sets authentication inside custom header
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom custom = 3
+         */
+        custom: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom;
+    } | {
+        oneofKind: "query";
+        /**
+         * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query query = 4
+         */
+        query: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Bearer
+ */
+export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer {
+    /**
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "fromSecret";
+        /**
+         * @generated from protobuf field: string fromSecret = 1
+         */
+        fromSecret: string;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic
+ */
+export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic {
+    /**
+     * Username is the username value of HTTP basic authentication
+     *
+     * @generated from protobuf field: string username = 1
+     */
+    username: string;
+    /**
+     * Password is the password value of HTTP basic authentication
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic.Password password = 2
+     */
+    password?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password;
+}
+/**
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic.Password
+ */
+export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password {
+    /**
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "fromSecret";
+        /**
+         * @generated from protobuf field: string fromSecret = 1
+         */
+        fromSecret: string;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom
+ */
+export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom {
+    /**
+     * Header is the name of the HTTP header (e.g. "X-Custom-Auth")
+     *
+     * @generated from protobuf field: string header = 1
+     */
+    header: string;
+    /**
+     * Value is the value of the header
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom.Value value = 2
+     */
+    value?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value;
+}
+/**
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom.Value
+ */
+export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value {
+    /**
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "fromSecret";
+        /**
+         * @generated from protobuf field: string fromSecret = 1
+         */
+        fromSecret: string;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query
+ */
+export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query {
+    /**
+     * @generated from protobuf field: string key = 1
+     */
+    key: string;
+    /**
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query.Value value = 2
+     */
+    value?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value;
+}
+/**
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query.Value
+ */
+export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value {
+    /**
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "fromSecret";
+        /**
+         * @generated from protobuf field: string fromSecret = 1
+         */
+        fromSecret: string;
+    } | {
+        oneofKind: undefined;
+    };
 }
 /**
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status
@@ -8267,6 +8427,14 @@ export interface ClusterConfig_Status_NetworkConfig_V4 {
      * @generated from protobuf field: string clusterNetwork = 1
      */
     clusterNetwork: string;
+    /**
+     * @generated from protobuf field: uint32 gatewayBits = 2
+     */
+    gatewayBits: number;
+    /**
+     * @generated from protobuf field: uint32 regionBits = 3
+     */
+    regionBits: number;
 }
 /**
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.NetworkConfig.V6
@@ -9263,6 +9431,10 @@ export interface Authenticator_Status_Info_FIDO {
      * @generated from protobuf field: bool isHardware = 10
      */
     isHardware: boolean;
+    /**
+     * @generated from protobuf field: uint32 signCount = 11
+     */
+    signCount: number;
 }
 /**
  * @generated from protobuf enum octelium.api.main.core.v1.Authenticator.Status.Info.FIDO.Type
@@ -27861,7 +28033,8 @@ export const ClusterConfig_Spec_Authentication_Geolocation_MMDB = new ClusterCon
 class ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream$Type extends MessageType<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream> {
     constructor() {
         super("octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream", [
-            { no: 1, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "auth", kind: "message", T: () => ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth }
         ]);
     }
     create(value?: PartialMessage<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream>): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream {
@@ -27879,6 +28052,9 @@ class ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream$Type extends M
                 case /* string url */ 1:
                     message.url = reader.string();
                     break;
+                case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth auth */ 2:
+                    message.auth = ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth.internalBinaryRead(reader, reader.uint32(), options, message.auth);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -27894,6 +28070,9 @@ class ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream$Type extends M
         /* string url = 1; */
         if (message.url !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.url);
+        /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth auth = 2; */
+        if (message.auth)
+            ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth.internalBinaryWrite(message.auth, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -27904,6 +28083,448 @@ class ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream$Type extends M
  * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream
  */
 export const ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream = new ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth$Type extends MessageType<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth", [
+            { no: 1, name: "bearer", kind: "message", oneof: "type", T: () => ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer },
+            { no: 2, name: "basic", kind: "message", oneof: "type", T: () => ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic },
+            { no: 3, name: "custom", kind: "message", oneof: "type", T: () => ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom },
+            { no: 4, name: "query", kind: "message", oneof: "type", T: () => ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth>): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Bearer bearer */ 1:
+                    message.type = {
+                        oneofKind: "bearer",
+                        bearer: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).bearer)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic basic */ 2:
+                    message.type = {
+                        oneofKind: "basic",
+                        basic: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).basic)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom custom */ 3:
+                    message.type = {
+                        oneofKind: "custom",
+                        custom: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).custom)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query query */ 4:
+                    message.type = {
+                        oneofKind: "query",
+                        query: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).query)
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Bearer bearer = 1; */
+        if (message.type.oneofKind === "bearer")
+            ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer.internalBinaryWrite(message.type.bearer, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic basic = 2; */
+        if (message.type.oneofKind === "basic")
+            ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic.internalBinaryWrite(message.type.basic, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom custom = 3; */
+        if (message.type.oneofKind === "custom")
+            ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom.internalBinaryWrite(message.type.custom, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query query = 4; */
+        if (message.type.oneofKind === "query")
+            ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query.internalBinaryWrite(message.type.query, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth
+ */
+export const ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth = new ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer$Type extends MessageType<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Bearer", [
+            { no: 1, name: "fromSecret", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer>): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string fromSecret */ 1:
+                    message.type = {
+                        oneofKind: "fromSecret",
+                        fromSecret: reader.string()
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string fromSecret = 1; */
+        if (message.type.oneofKind === "fromSecret")
+            writer.tag(1, WireType.LengthDelimited).string(message.type.fromSecret);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Bearer
+ */
+export const ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer = new ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic$Type extends MessageType<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic", [
+            { no: 1, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "password", kind: "message", T: () => ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic>): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.username = "";
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string username */ 1:
+                    message.username = reader.string();
+                    break;
+                case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic.Password password */ 2:
+                    message.password = ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password.internalBinaryRead(reader, reader.uint32(), options, message.password);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string username = 1; */
+        if (message.username !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.username);
+        /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic.Password password = 2; */
+        if (message.password)
+            ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password.internalBinaryWrite(message.password, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic
+ */
+export const ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic = new ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password$Type extends MessageType<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic.Password", [
+            { no: 1, name: "fromSecret", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password>): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string fromSecret */ 1:
+                    message.type = {
+                        oneofKind: "fromSecret",
+                        fromSecret: reader.string()
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string fromSecret = 1; */
+        if (message.type.oneofKind === "fromSecret")
+            writer.tag(1, WireType.LengthDelimited).string(message.type.fromSecret);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic.Password
+ */
+export const ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password = new ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom$Type extends MessageType<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom", [
+            { no: 1, name: "header", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "value", kind: "message", T: () => ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom>): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.header = "";
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string header */ 1:
+                    message.header = reader.string();
+                    break;
+                case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom.Value value */ 2:
+                    message.value = ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value.internalBinaryRead(reader, reader.uint32(), options, message.value);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string header = 1; */
+        if (message.header !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.header);
+        /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom.Value value = 2; */
+        if (message.value)
+            ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value.internalBinaryWrite(message.value, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom
+ */
+export const ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom = new ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value$Type extends MessageType<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom.Value", [
+            { no: 1, name: "fromSecret", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value>): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string fromSecret */ 1:
+                    message.type = {
+                        oneofKind: "fromSecret",
+                        fromSecret: reader.string()
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string fromSecret = 1; */
+        if (message.type.oneofKind === "fromSecret")
+            writer.tag(1, WireType.LengthDelimited).string(message.type.fromSecret);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom.Value
+ */
+export const ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value = new ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query$Type extends MessageType<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query", [
+            { no: 1, name: "key", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "value", kind: "message", T: () => ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query>): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.key = "";
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string key */ 1:
+                    message.key = reader.string();
+                    break;
+                case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query.Value value */ 2:
+                    message.value = ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value.internalBinaryRead(reader, reader.uint32(), options, message.value);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string key = 1; */
+        if (message.key !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.key);
+        /* octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query.Value value = 2; */
+        if (message.value)
+            ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value.internalBinaryWrite(message.value, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query
+ */
+export const ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query = new ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value$Type extends MessageType<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query.Value", [
+            { no: 1, name: "fromSecret", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value>): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value): ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string fromSecret */ 1:
+                    message.type = {
+                        oneofKind: "fromSecret",
+                        fromSecret: reader.string()
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string fromSecret = 1; */
+        if (message.type.oneofKind === "fromSecret")
+            writer.tag(1, WireType.LengthDelimited).string(message.type.fromSecret);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query.Value
+ */
+export const ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value = new ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class ClusterConfig_Status$Type extends MessageType<ClusterConfig_Status> {
     constructor() {
@@ -28051,12 +28672,16 @@ export const ClusterConfig_Status_NetworkConfig = new ClusterConfig_Status_Netwo
 class ClusterConfig_Status_NetworkConfig_V4$Type extends MessageType<ClusterConfig_Status_NetworkConfig_V4> {
     constructor() {
         super("octelium.api.main.core.v1.ClusterConfig.Status.NetworkConfig.V4", [
-            { no: 1, name: "clusterNetwork", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "clusterNetwork", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "gatewayBits", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 3, name: "regionBits", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
     create(value?: PartialMessage<ClusterConfig_Status_NetworkConfig_V4>): ClusterConfig_Status_NetworkConfig_V4 {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.clusterNetwork = "";
+        message.gatewayBits = 0;
+        message.regionBits = 0;
         if (value !== undefined)
             reflectionMergePartial<ClusterConfig_Status_NetworkConfig_V4>(this, message, value);
         return message;
@@ -28068,6 +28693,12 @@ class ClusterConfig_Status_NetworkConfig_V4$Type extends MessageType<ClusterConf
             switch (fieldNo) {
                 case /* string clusterNetwork */ 1:
                     message.clusterNetwork = reader.string();
+                    break;
+                case /* uint32 gatewayBits */ 2:
+                    message.gatewayBits = reader.uint32();
+                    break;
+                case /* uint32 regionBits */ 3:
+                    message.regionBits = reader.uint32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -28084,6 +28715,12 @@ class ClusterConfig_Status_NetworkConfig_V4$Type extends MessageType<ClusterConf
         /* string clusterNetwork = 1; */
         if (message.clusterNetwork !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.clusterNetwork);
+        /* uint32 gatewayBits = 2; */
+        if (message.gatewayBits !== 0)
+            writer.tag(2, WireType.Varint).uint32(message.gatewayBits);
+        /* uint32 regionBits = 3; */
+        if (message.regionBits !== 0)
+            writer.tag(3, WireType.Varint).uint32(message.regionBits);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -30490,7 +31127,8 @@ class Authenticator_Status_Info_FIDO$Type extends MessageType<Authenticator_Stat
             { no: 7, name: "backupEligible", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 8, name: "isAttestationVerified", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 9, name: "isSoftware", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 10, name: "isHardware", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 10, name: "isHardware", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 11, name: "signCount", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
     create(value?: PartialMessage<Authenticator_Status_Info_FIDO>): Authenticator_Status_Info_FIDO {
@@ -30505,6 +31143,7 @@ class Authenticator_Status_Info_FIDO$Type extends MessageType<Authenticator_Stat
         message.isAttestationVerified = false;
         message.isSoftware = false;
         message.isHardware = false;
+        message.signCount = 0;
         if (value !== undefined)
             reflectionMergePartial<Authenticator_Status_Info_FIDO>(this, message, value);
         return message;
@@ -30543,6 +31182,9 @@ class Authenticator_Status_Info_FIDO$Type extends MessageType<Authenticator_Stat
                     break;
                 case /* bool isHardware */ 10:
                     message.isHardware = reader.bool();
+                    break;
+                case /* uint32 signCount */ 11:
+                    message.signCount = reader.uint32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -30586,6 +31228,9 @@ class Authenticator_Status_Info_FIDO$Type extends MessageType<Authenticator_Stat
         /* bool isHardware = 10; */
         if (message.isHardware !== false)
             writer.tag(10, WireType.Varint).bool(message.isHardware);
+        /* uint32 signCount = 11; */
+        if (message.signCount !== 0)
+            writer.tag(11, WireType.Varint).uint32(message.signCount);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

@@ -880,6 +880,10 @@ export interface ListServiceOptions {
      * @generated from protobuf field: string namespace = 2
      */
     namespace: string;
+    /**
+     * @generated from protobuf field: octelium.api.main.user.v1.Service.Spec.Type type = 3
+     */
+    type: Service_Spec_Type;
 }
 /**
  * @generated from protobuf message octelium.api.main.user.v1.ListNamespaceOptions
@@ -3194,12 +3198,14 @@ class ListServiceOptions$Type extends MessageType<ListServiceOptions> {
     constructor() {
         super("octelium.api.main.user.v1.ListServiceOptions", [
             { no: 1, name: "common", kind: "message", T: () => CommonListOptions },
-            { no: 2, name: "namespace", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "namespace", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "type", kind: "enum", T: () => ["octelium.api.main.user.v1.Service.Spec.Type", Service_Spec_Type] }
         ]);
     }
     create(value?: PartialMessage<ListServiceOptions>): ListServiceOptions {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.namespace = "";
+        message.type = 0;
         if (value !== undefined)
             reflectionMergePartial<ListServiceOptions>(this, message, value);
         return message;
@@ -3214,6 +3220,9 @@ class ListServiceOptions$Type extends MessageType<ListServiceOptions> {
                     break;
                 case /* string namespace */ 2:
                     message.namespace = reader.string();
+                    break;
+                case /* octelium.api.main.user.v1.Service.Spec.Type type */ 3:
+                    message.type = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -3233,6 +3242,9 @@ class ListServiceOptions$Type extends MessageType<ListServiceOptions> {
         /* string namespace = 2; */
         if (message.namespace !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.namespace);
+        /* octelium.api.main.user.v1.Service.Spec.Type type = 3; */
+        if (message.type !== 0)
+            writer.tag(3, WireType.Varint).int32(message.type);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
