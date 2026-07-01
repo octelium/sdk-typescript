@@ -828,7 +828,15 @@ export enum Service_Spec_Type {
     /**
      * @generated from protobuf enum value: DNS = 10;
      */
-    DNS = 10
+    DNS = 10,
+    /**
+     * @generated from protobuf enum value: SOCKS5 = 11;
+     */
+    SOCKS5 = 11,
+    /**
+     * @generated from protobuf enum value: RDP_WEB = 12;
+     */
+    RDP_WEB = 12
 }
 /**
  * @generated from protobuf message octelium.api.main.user.v1.Service.Status
