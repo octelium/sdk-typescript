@@ -268,6 +268,14 @@ export interface ConnectRequest_Initialize {
      * @generated from protobuf field: int32 eSSHPort = 7
      */
     eSSHPort: number;
+    /**
+     * @generated from protobuf field: bool eSOCKS5Enable = 8
+     */
+    eSOCKS5Enable: boolean;
+    /**
+     * @generated from protobuf field: int32 eSOCKS5Port = 9
+     */
+    eSOCKS5Port: number;
 }
 /**
  * @generated from protobuf message octelium.api.main.user.v1.ConnectRequest.Initialize.ServiceOptions
@@ -1868,7 +1876,9 @@ class ConnectRequest_Initialize$Type extends MessageType<ConnectRequest_Initiali
             { no: 4, name: "publishedServices", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => ConnectRequest_Initialize_PublishedService },
             { no: 5, name: "ignoreDNS", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 6, name: "eSSHEnable", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 7, name: "eSSHPort", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+            { no: 7, name: "eSSHPort", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 8, name: "eSOCKS5Enable", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 9, name: "eSOCKS5Port", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
         ]);
     }
     create(value?: PartialMessage<ConnectRequest_Initialize>): ConnectRequest_Initialize {
@@ -1879,6 +1889,8 @@ class ConnectRequest_Initialize$Type extends MessageType<ConnectRequest_Initiali
         message.ignoreDNS = false;
         message.eSSHEnable = false;
         message.eSSHPort = 0;
+        message.eSOCKS5Enable = false;
+        message.eSOCKS5Port = 0;
         if (value !== undefined)
             reflectionMergePartial<ConnectRequest_Initialize>(this, message, value);
         return message;
@@ -1908,6 +1920,12 @@ class ConnectRequest_Initialize$Type extends MessageType<ConnectRequest_Initiali
                     break;
                 case /* int32 eSSHPort */ 7:
                     message.eSSHPort = reader.int32();
+                    break;
+                case /* bool eSOCKS5Enable */ 8:
+                    message.eSOCKS5Enable = reader.bool();
+                    break;
+                case /* int32 eSOCKS5Port */ 9:
+                    message.eSOCKS5Port = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1942,6 +1960,12 @@ class ConnectRequest_Initialize$Type extends MessageType<ConnectRequest_Initiali
         /* int32 eSSHPort = 7; */
         if (message.eSSHPort !== 0)
             writer.tag(7, WireType.Varint).int32(message.eSSHPort);
+        /* bool eSOCKS5Enable = 8; */
+        if (message.eSOCKS5Enable !== false)
+            writer.tag(8, WireType.Varint).bool(message.eSOCKS5Enable);
+        /* int32 eSOCKS5Port = 9; */
+        if (message.eSOCKS5Port !== 0)
+            writer.tag(9, WireType.Varint).int32(message.eSOCKS5Port);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
