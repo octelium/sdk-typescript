@@ -19,6 +19,10 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { MainService } from "./authv1.js";
+import type { RunDeviceProbeFinishResponse } from "./authv1.js";
+import type { RunDeviceProbeFinishRequest } from "./authv1.js";
+import type { RunDeviceProbeBeginResponse } from "./authv1.js";
+import type { RunDeviceProbeBeginRequest } from "./authv1.js";
 import type { AuthenticateWithPasskeyRequest } from "./authv1.js";
 import type { AuthenticateWithPasskeyBeginResponse } from "./authv1.js";
 import type { AuthenticateWithPasskeyBeginRequest } from "./authv1.js";
@@ -127,6 +131,14 @@ export interface IMainServiceClient {
      * @generated from protobuf rpc: AuthenticateWithPasskey
      */
     authenticateWithPasskey(input: AuthenticateWithPasskeyRequest, options?: RpcOptions): UnaryCall<AuthenticateWithPasskeyRequest, SessionToken>;
+    /**
+     * @generated from protobuf rpc: RunDeviceProbeBegin
+     */
+    runDeviceProbeBegin(input: RunDeviceProbeBeginRequest, options?: RpcOptions): UnaryCall<RunDeviceProbeBeginRequest, RunDeviceProbeBeginResponse>;
+    /**
+     * @generated from protobuf rpc: RunDeviceProbeFinish
+     */
+    runDeviceProbeFinish(input: RunDeviceProbeFinishRequest, options?: RpcOptions): UnaryCall<RunDeviceProbeFinishRequest, RunDeviceProbeFinishResponse>;
 }
 /**
  * @generated from protobuf service octelium.api.main.auth.v1.MainService
@@ -262,5 +274,19 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
     authenticateWithPasskey(input: AuthenticateWithPasskeyRequest, options?: RpcOptions): UnaryCall<AuthenticateWithPasskeyRequest, SessionToken> {
         const method = this.methods[17], opt = this._transport.mergeOptions(options);
         return stackIntercept<AuthenticateWithPasskeyRequest, SessionToken>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: RunDeviceProbeBegin
+     */
+    runDeviceProbeBegin(input: RunDeviceProbeBeginRequest, options?: RpcOptions): UnaryCall<RunDeviceProbeBeginRequest, RunDeviceProbeBeginResponse> {
+        const method = this.methods[18], opt = this._transport.mergeOptions(options);
+        return stackIntercept<RunDeviceProbeBeginRequest, RunDeviceProbeBeginResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: RunDeviceProbeFinish
+     */
+    runDeviceProbeFinish(input: RunDeviceProbeFinishRequest, options?: RpcOptions): UnaryCall<RunDeviceProbeFinishRequest, RunDeviceProbeFinishResponse> {
+        const method = this.methods[19], opt = this._transport.mergeOptions(options);
+        return stackIntercept<RunDeviceProbeFinishRequest, RunDeviceProbeFinishResponse>("unary", this._transport, method, opt, input);
     }
 }
