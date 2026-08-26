@@ -72,6 +72,11 @@ import type { Policy } from "./corev1.js";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
+ * MainService is the main Cluster management API. It provides the CRUD
+ * operations over the Cluster resources (e.g. Users, Groups, Devices,
+ * Sessions, Namespaces, Services, Policies, Credentials, Secrets,
+ * IdentityProviders, etc...) as well as over the Cluster configuration itself.
+ *
  * @generated from protobuf service octelium.api.main.core.v1.MainService
  */
 export interface IMainServiceClient {
@@ -82,7 +87,7 @@ export interface IMainServiceClient {
      */
     createPolicy(input: Policy, options?: RpcOptions): UnaryCall<Policy, Policy>;
     /**
-     * ListPolicy lists Policy
+     * ListPolicy lists Policies
      *
      * @generated from protobuf rpc: ListPolicy
      */
@@ -244,7 +249,7 @@ export interface IMainServiceClient {
      */
     getSecret(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Secret>;
     /**
-     * UpdateSecret creates a Secret
+     * UpdateSecret updates a Secret
      *
      * @generated from protobuf rpc: UpdateSecret
      */
@@ -310,7 +315,7 @@ export interface IMainServiceClient {
      */
     createCredential(input: Credential, options?: RpcOptions): UnaryCall<Credential, Credential>;
     /**
-     * UpdateCredential creates a Credential
+     * UpdateCredential updates a Credential
      *
      * @generated from protobuf rpc: UpdateCredential
      */
@@ -358,7 +363,7 @@ export interface IMainServiceClient {
      */
     listIdentityProvider(input: ListIdentityProviderOptions, options?: RpcOptions): UnaryCall<ListIdentityProviderOptions, IdentityProviderList>;
     /**
-     * UpdateIdentityProvider updates an UpdateIdentityProvider
+     * UpdateIdentityProvider updates an IdentityProvider
      *
      * @generated from protobuf rpc: UpdateIdentityProvider
      */
@@ -394,13 +399,13 @@ export interface IMainServiceClient {
      */
     getGateway(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Gateway>;
     /**
-     * GetClusterConfig gets the Cluster Configuration.
+     * GetClusterConfig retrieves the Cluster Configuration
      *
      * @generated from protobuf rpc: GetClusterConfig
      */
     getClusterConfig(input: GetClusterConfigRequest, options?: RpcOptions): UnaryCall<GetClusterConfigRequest, ClusterConfig>;
     /**
-     * UpdateConfig updates the Cluster Configuration.
+     * UpdateClusterConfig updates the Cluster Configuration
      *
      * @generated from protobuf rpc: UpdateClusterConfig
      */
@@ -461,6 +466,11 @@ export interface IMainServiceClient {
     getConfig(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Config>;
 }
 /**
+ * MainService is the main Cluster management API. It provides the CRUD
+ * operations over the Cluster resources (e.g. Users, Groups, Devices,
+ * Sessions, Namespaces, Services, Policies, Credentials, Secrets,
+ * IdentityProviders, etc...) as well as over the Cluster configuration itself.
+ *
  * @generated from protobuf service octelium.api.main.core.v1.MainService
  */
 export class MainServiceClient implements IMainServiceClient, ServiceInfo {
@@ -479,7 +489,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<Policy, Policy>("unary", this._transport, method, opt, input);
     }
     /**
-     * ListPolicy lists Policy
+     * ListPolicy lists Policies
      *
      * @generated from protobuf rpc: ListPolicy
      */
@@ -722,7 +732,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GetOptions, Secret>("unary", this._transport, method, opt, input);
     }
     /**
-     * UpdateSecret creates a Secret
+     * UpdateSecret updates a Secret
      *
      * @generated from protobuf rpc: UpdateSecret
      */
@@ -821,7 +831,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<Credential, Credential>("unary", this._transport, method, opt, input);
     }
     /**
-     * UpdateCredential creates a Credential
+     * UpdateCredential updates a Credential
      *
      * @generated from protobuf rpc: UpdateCredential
      */
@@ -893,7 +903,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<ListIdentityProviderOptions, IdentityProviderList>("unary", this._transport, method, opt, input);
     }
     /**
-     * UpdateIdentityProvider updates an UpdateIdentityProvider
+     * UpdateIdentityProvider updates an IdentityProvider
      *
      * @generated from protobuf rpc: UpdateIdentityProvider
      */
@@ -947,7 +957,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GetOptions, Gateway>("unary", this._transport, method, opt, input);
     }
     /**
-     * GetClusterConfig gets the Cluster Configuration.
+     * GetClusterConfig retrieves the Cluster Configuration
      *
      * @generated from protobuf rpc: GetClusterConfig
      */
@@ -956,7 +966,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GetClusterConfigRequest, ClusterConfig>("unary", this._transport, method, opt, input);
     }
     /**
-     * UpdateConfig updates the Cluster Configuration.
+     * UpdateClusterConfig updates the Cluster Configuration
      *
      * @generated from protobuf rpc: UpdateClusterConfig
      */

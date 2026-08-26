@@ -40,6 +40,13 @@ import { ListResponseMeta } from "../metav1/metav1.js";
 import { Struct } from "../../google/protobuf/struct.js";
 import { Metadata } from "../metav1/metav1.js";
 /**
+ * Namespace is a logical grouping of Services according to a common
+ * functionality (e.g. project names, environments such as production or
+ * staging, regions, etc...). Every Service belongs to a single Namespace which
+ * also acts as the parent domain of its Services' FQDNs. A Service that does
+ * not explicitly specify a Namespace belongs to the `default` Namespace which
+ * is automatically created upon the Cluster's installation.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Namespace
  */
 export interface Namespace {
@@ -56,7 +63,7 @@ export interface Namespace {
      */
     kind: string;
     /**
-     * octelium.api.main.meta.v1.Metadata is the object's metadata.
+     * Metadata is the object's metadata.
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
@@ -75,6 +82,8 @@ export interface Namespace {
     status?: Namespace_Status;
 }
 /**
+ * Spec is the Namespace specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Namespace.Spec
  */
 export interface Namespace_Spec {
@@ -85,7 +94,7 @@ export interface Namespace_Spec {
      */
     authorization?: Namespace_Spec_Authorization;
     /**
-     * Attrs is a map user-defined attributes, mostly used in authorization
+     * Attrs is a map of user-defined attributes, mostly used in authorization
      * rules. It is strongly recommended to stick to camelCase in order to be
      * conformant with Octelium's API naming conventions.
      *
@@ -94,6 +103,9 @@ export interface Namespace_Spec {
     attrs?: Struct;
 }
 /**
+ * Authorization sets the Policies that are applied to every Service owned
+ * by the Namespace
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Namespace.Spec.Authorization
  */
 export interface Namespace_Spec_Authorization {
@@ -111,11 +123,16 @@ export interface Namespace_Spec_Authorization {
     inlinePolicies: InlinePolicy[];
 }
 /**
+ * Status is the current status of the Namespace
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Namespace.Status
  */
 export interface Namespace_Status {
 }
 /**
+ * NamespaceList is the list of Namespaces returned by the ListNamespace
+ * method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.NamespaceList
  */
 export interface NamespaceList {
@@ -132,7 +149,7 @@ export interface NamespaceList {
      */
     kind: string;
     /**
-     * Items is the list of Namespaces
+     * Items is the list of Namespaces.
      *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Namespace items = 3
      */
@@ -145,6 +162,9 @@ export interface NamespaceList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * InlinePolicy is a Policy that is defined inline within the resource that
+ * attaches it instead of being created as a standalone Policy resource.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.InlinePolicy
  */
 export interface InlinePolicy {
@@ -162,6 +182,12 @@ export interface InlinePolicy {
     spec?: Policy_Spec;
 }
 /**
+ * User is an identity within the Cluster. A User is either a HUMAN who
+ * authenticates via the Cluster's IdentityProviders, or a WORKLOAD (e.g. a
+ * container, a server, a CI job, etc...) which authenticates via its
+ * Credentials. Users are members of Groups and every successful
+ * authentication of a User creates a Session.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.User
  */
 export interface User {
@@ -178,7 +204,7 @@ export interface User {
      */
     kind: string;
     /**
-     * octelium.api.main.meta.v1.Metadata is the object's metadata.
+     * Metadata is the object's metadata.
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
@@ -197,6 +223,8 @@ export interface User {
     status?: User_Status;
 }
 /**
+ * Spec is the User specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.User.Spec
  */
 export interface User_Spec {
@@ -210,8 +238,7 @@ export interface User_Spec {
      * Email sets the default e-mail for the User. It is used for User
      * authentication if the IdentityProvider returns the email value in the
      * authentication information (e.g. OIDC identity tokens, SAML 2.0
-     * assertions or GitHub OAuth2). The e-mail is used as a fallback
-     * authentication method if there are no User identity that matches in the
+     * assertions or GitHub OAuth2).
      *
      * @generated from protobuf field: string email = 2
      */
@@ -241,7 +268,7 @@ export interface User_Spec {
      */
     authorization?: User_Spec_Authorization;
     /**
-     * isDisabled de-activates/disables the User. Once disabled, the User
+     * IsDisabled de-activates/disables the User. Once disabled, the User
      * cannot interact with the Cluster or access its Services until this field
      * is set to false again.
      *
@@ -249,15 +276,23 @@ export interface User_Spec {
      */
     isDisabled: boolean;
     /**
+     * Attrs is a map of user-defined attributes, mostly used in authorization
+     * rules. It is strongly recommended to stick to camelCase in order to be
+     * conformant with Octelium's API naming conventions.
+     *
      * @generated from protobuf field: google.protobuf.Struct attrs = 8
      */
     attrs?: Struct;
     /**
+     * Authentication sets the authentication-related configuration
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.User.Spec.Authentication authentication = 9
      */
     authentication?: User_Spec_Authentication;
 }
 /**
+ * Authorization sets the Policies that are applied to the User
+ *
  * @generated from protobuf message octelium.api.main.core.v1.User.Spec.Authorization
  */
 export interface User_Spec_Authorization {
@@ -275,6 +310,8 @@ export interface User_Spec_Authorization {
     inlinePolicies: InlinePolicy[];
 }
 /**
+ * Authentication sets how the User authenticates to the Cluster
+ *
  * @generated from protobuf message octelium.api.main.core.v1.User.Spec.Authentication
  */
 export interface User_Spec_Authentication {
@@ -285,17 +322,22 @@ export interface User_Spec_Authentication {
      */
     identities: User_Spec_Authentication_Identity[];
     /**
+     * AuthenticatorDefaultState is the default state of a newly registered
+     * Authenticator. It is typically used to require an explicit approval of
+     * the User's Authenticators before they can be used.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Spec.State authenticatorDefaultState = 2
      */
     authenticatorDefaultState: Authenticator_Spec_State;
 }
 /**
+ * Identity is an identity of the User at a specific IdentityProvider
+ *
  * @generated from protobuf message octelium.api.main.core.v1.User.Spec.Authentication.Identity
  */
 export interface User_Spec_Authentication_Identity {
     /**
-     * Provider is the provider's name according to the Cluster
-     * configuration.
+     * IdentityProvider is the IdentityProvider's name.
      *
      * @generated from protobuf field: string identityProvider = 1
      */
@@ -310,6 +352,8 @@ export interface User_Spec_Authentication_Identity {
     identifier: string;
 }
 /**
+ * Session sets the options of the Sessions created for the User
+ *
  * @generated from protobuf message octelium.api.main.core.v1.User.Spec.Session
  */
 export interface User_Spec_Session {
@@ -342,7 +386,7 @@ export interface User_Spec_Session {
      */
     refreshTokenDuration?: Duration;
     /**
-     * MaxPerUser sets the max number of of Sessions per User
+     * MaxPerUser sets the max number of Sessions per User
      *
      * @generated from protobuf field: uint32 maxPerUser = 5
      */
@@ -355,39 +399,57 @@ export interface User_Spec_Session {
     defaultState: Session_Spec_State;
 }
 /**
+ * Info is the personal information of the User
+ *
  * @generated from protobuf message octelium.api.main.core.v1.User.Spec.Info
  */
 export interface User_Spec_Info {
     /**
+     * Locale is the User's locale (e.g. "en-US")
+     *
      * @generated from protobuf field: string locale = 1
      */
     locale: string;
     /**
+     * Phone is the User's phone number
+     *
      * @generated from protobuf field: string phone = 2
      */
     phone: string;
     /**
+     * FirstName is the User's first/given name
+     *
      * @generated from protobuf field: string firstName = 3
      */
     firstName: string;
     /**
+     * MiddleName is the User's middle name
+     *
      * @generated from protobuf field: string middleName = 4
      */
     middleName: string;
     /**
+     * LastName is the User's last/family name
+     *
      * @generated from protobuf field: string lastName = 5
      */
     lastName: string;
     /**
+     * Website is the URL of the User's website
+     *
      * @generated from protobuf field: string website = 6
      */
     website: string;
     /**
+     * Country is the User's country
+     *
      * @generated from protobuf field: string country = 7
      */
     country: string;
 }
 /**
+ * Type is the type of the User
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.User.Spec.Type
  */
 export enum User_Spec_Type {
@@ -412,25 +474,36 @@ export enum User_Spec_Type {
     WORKLOAD = 2
 }
 /**
+ * Status is the current status of the User
+ *
  * @generated from protobuf message octelium.api.main.core.v1.User.Status
  */
 export interface User_Status {
     /**
+     * Ext is a map of internal Cluster-managed extension data.
+     *
      * @generated from protobuf field: map<string, google.protobuf.Struct> ext = 1
      */
     ext: {
         [key: string]: Struct;
     };
     /**
+     * IdentityProviderRef is the reference of the IdentityProvider that
+     * provisioned the User.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference identityProviderRef = 2
      */
     identityProviderRef?: ObjectReference;
     /**
+     * IsLocked indicates whether the User is locked by the Cluster.
+     *
      * @generated from protobuf field: bool isLocked = 3
      */
     isLocked: boolean;
 }
 /**
+ * UserList is the list of Users returned by the ListUser method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.UserList
  */
 export interface UserList {
@@ -460,6 +533,16 @@ export interface UserList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * Service represents a protected upstream resource (e.g. a web application,
+ * an API, an SSH server, a database, a Kubernetes cluster, etc...) inside the
+ * Cluster. A Service is implemented by Vigil, an identity-aware proxy (IaP)
+ * that understands the application-layer protocol of the upstream and provides
+ * access control, secretless access, dynamic configuration as well as
+ * application-layer visibility and access logging. Every Service belongs to a
+ * single Namespace and has the private FQDN
+ * `<SERVICE>.<NAMESPACE>.local.<DOMAIN>` and, when publicly exposed, the
+ * public FQDN `<SERVICE>.<NAMESPACE>.<DOMAIN>`.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service
  */
 export interface Service {
@@ -476,7 +559,7 @@ export interface Service {
      */
     kind: string;
     /**
-     * octelium.api.main.meta.v1.Metadata is the object's metadata.
+     * Metadata is the object's metadata.
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
@@ -495,6 +578,8 @@ export interface Service {
     status?: Service_Status;
 }
 /**
+ * Spec is the Service specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec
  */
 export interface Service_Spec {
@@ -560,7 +645,7 @@ export interface Service_Spec {
      */
     isAnonymous: boolean;
     /**
-     * Deployment sets The Service's underlying deployment configurations.
+     * Deployment sets the Service's underlying deployment configurations.
      *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Deployment deployment = 9
      */
@@ -573,18 +658,24 @@ export interface Service_Spec {
      */
     isDisabled: boolean;
     /**
+     * Attrs is a map of user-defined attributes, mostly used in authorization
+     * rules. It is strongly recommended to stick to camelCase in order to be
+     * conformant with Octelium's API naming conventions.
+     *
      * @generated from protobuf field: google.protobuf.Struct attrs = 12
      */
     attrs?: Struct;
     /**
-     * Region explicitly sets the Region name in which the Service is
-     * deployed.By default, a Service is deployed in the "default" Region.
+     * Region explicitly sets the Region name in which the Service is deployed.
+     * By default, a Service is deployed in the "default" Region.
      *
      * @generated from protobuf field: string region = 13
      */
     region: string;
 }
 /**
+ * Authorization sets the Policies that are applied to the Service
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Authorization
  */
 export interface Service_Spec_Authorization {
@@ -601,11 +692,22 @@ export interface Service_Spec_Authorization {
      */
     inlinePolicies: InlinePolicy[];
     /**
+     * EnableAnonymous enables authorization for anonymous Services (i.e.
+     * Services whose isAnonymous field is enabled). By default, an anonymous
+     * Service enforces no authorization at all. Once enabled, the Policies
+     * of the Service are evaluated for the anonymous requests and, as it is
+     * the case with the authenticated authorization, a request that matches
+     * no rule is denied.
+     *
      * @generated from protobuf field: bool enableAnonymous = 3
      */
     enableAnonymous: boolean;
 }
 /**
+ * Config is the Service configuration. It contains the upstream
+ * information as well as the configuration that is specific to the
+ * application-layer protocol used by the Service.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config
  */
 export interface Service_Spec_Config {
@@ -640,10 +742,16 @@ export interface Service_Spec_Config {
      */
     parent: string;
     /**
+     * TLS sets the TLS client-side configuration used by the Service to
+     * connect to an upstream that is listening over TLS.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.TLS tls = 10
      */
     tls?: Service_Spec_Config_TLS;
     /**
+     * Type sets the application-layer protocol specific configuration. It
+     * corresponds to the Service's mode.
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -689,20 +797,43 @@ export interface Service_Spec_Config {
     } | {
         oneofKind: "socks5";
         /**
+         * SOCKS5 sets SOCKS5-specific configuration
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.SOCKS5 socks5 = 11
          */
         socks5: Service_Spec_Config_SOCKS5;
     } | {
         oneofKind: "rdp";
         /**
+         * RDP sets RDP-specific configuration
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.RDP rdp = 12
          */
         rdp: Service_Spec_Config_RDP;
+    } | {
+        oneofKind: "mcp";
+        /**
+         * MCP sets Model Context Protocol-specific configuration
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.MCP mcp = 13
+         */
+        mcp: Service_Spec_Config_MCP;
+    } | {
+        oneofKind: "llm";
+        /**
+         * LLM sets LLM-gateway-specific configuration
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM llm = 14
+         */
+        llm: Service_Spec_Config_LLM;
     } | {
         oneofKind: undefined;
     };
 }
 /**
+ * HTTP sets the HTTP-specific configuration. It is used by every
+ * HTTP-based Service mode (i.e. HTTP, WEB and GRPC).
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP
  */
 export interface Service_Spec_Config_HTTP {
@@ -783,17 +914,28 @@ export interface Service_Spec_Config_HTTP {
      */
     visibility?: Service_Spec_Config_HTTP_Visibility;
     /**
+     * Retry sets the retrying of the failed upstream requests
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Retry retry = 12
      */
     retry?: Service_Spec_Config_HTTP_Retry;
 }
 /**
+ * CORS sets the Cross-Origin Resource Sharing options which are needed
+ * to access the Service from a browser-based application that is
+ * served at a different origin
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.CORS
  */
 export interface Service_Spec_Config_HTTP_CORS {
     /**
-     * AllowOriginStringMatch is the list of  patterns that match
-     * allowed origins.
+     * AllowOriginStringMatch is the list of the allowed origins. An
+     * entry is either an exact origin (e.g. "https://example.com") or a
+     * `*` which allows every origin. A request whose Origin matches the
+     * Service's own origin is always allowed and it does not need to be
+     * listed here. Note that Octelium always responds with the request's
+     * own Origin rather than with a literal `*` since the browsers
+     * reject a wildcard whenever the request carries credentials.
      *
      * @generated from protobuf field: repeated string allowOriginStringMatch = 1
      */
@@ -833,12 +975,36 @@ export interface Service_Spec_Config_HTTP_CORS {
      * @generated from protobuf field: bool allowCredentials = 6
      */
     allowCredentials: boolean;
+    /**
+     * AllowClusterServices allows the origins of the Cluster's own
+     * Services (i.e. the Cluster domain itself as well as any of its
+     * subdomains at any depth, over HTTPS only) in addition to the
+     * origins that are set in `allowOriginStringMatch`. Credentials are
+     * always allowed for such origins regardless of `allowCredentials`
+     * since the Cluster's Services authenticate the browsers with the
+     * `octelium_auth` Cookie. This is needed to access the Service from
+     * the Cluster's own web console (e.g. the MCP and LLM playgrounds).
+     * Note that enabling this effectively trusts every Service in the
+     * Cluster since a browser-based application served by any of them
+     * can then read this Service's responses on behalf of the browsing
+     * User.
+     *
+     * @generated from protobuf field: bool allowClusterServices = 7
+     */
+    allowClusterServices: boolean;
 }
 /**
+ * Auth sets the application-layer credentials that are injected by
+ * the Service on-the-fly to authenticate to the upstream. This
+ * provides secretless access where the credentials are never shared
+ * with the Users.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth
  */
 export interface Service_Spec_Config_HTTP_Auth {
     /**
+     * Type sets the authentication method used with the upstream
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -852,7 +1018,7 @@ export interface Service_Spec_Config_HTTP_Auth {
     } | {
         oneofKind: "basic";
         /**
-         * Basis sets basic authentication details
+         * Basic sets basic authentication details
          *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth.Basic basic = 2
          */
@@ -887,6 +1053,9 @@ export interface Service_Spec_Config_HTTP_Auth {
     };
 }
 /**
+ * Bearer is the bearer token that is set in the `Authorization`
+ * request header
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth.Bearer
  */
 export interface Service_Spec_Config_HTTP_Auth_Bearer {
@@ -896,6 +1065,9 @@ export interface Service_Spec_Config_HTTP_Auth_Bearer {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains
+         * the bearer token
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -904,6 +1076,8 @@ export interface Service_Spec_Config_HTTP_Auth_Bearer {
     };
 }
 /**
+ * Basic is the HTTP basic authentication credentials
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth.Basic
  */
 export interface Service_Spec_Config_HTTP_Auth_Basic {
@@ -921,6 +1095,8 @@ export interface Service_Spec_Config_HTTP_Auth_Basic {
     password?: Service_Spec_Config_HTTP_Auth_Basic_Password;
 }
 /**
+ * Password is the password value of HTTP basic authentication
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth.Basic.Password
  */
 export interface Service_Spec_Config_HTTP_Auth_Basic_Password {
@@ -930,6 +1106,9 @@ export interface Service_Spec_Config_HTTP_Auth_Basic_Password {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains
+         * the Password
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -938,6 +1117,8 @@ export interface Service_Spec_Config_HTTP_Auth_Basic_Password {
     };
 }
 /**
+ * Custom is a credential that is set in a custom request header
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth.Custom
  */
 export interface Service_Spec_Config_HTTP_Auth_Custom {
@@ -955,6 +1136,8 @@ export interface Service_Spec_Config_HTTP_Auth_Custom {
     value?: Service_Spec_Config_HTTP_Auth_Custom_Value;
 }
 /**
+ * Value is the value of the custom request header
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth.Custom.Value
  */
 export interface Service_Spec_Config_HTTP_Auth_Custom_Value {
@@ -964,6 +1147,9 @@ export interface Service_Spec_Config_HTTP_Auth_Custom_Value {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains
+         * the header's Value
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -972,6 +1158,9 @@ export interface Service_Spec_Config_HTTP_Auth_Custom_Value {
     };
 }
 /**
+ * OAuth2ClientCredentials authenticates to the upstream via the
+ * standard OAuth2 client credentials flow
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth.OAuth2ClientCredentials
  */
 export interface Service_Spec_Config_HTTP_Auth_OAuth2ClientCredentials {
@@ -1001,6 +1190,8 @@ export interface Service_Spec_Config_HTTP_Auth_OAuth2ClientCredentials {
     scopes: string[];
 }
 /**
+ * ClientSecret is the OAuth2 client secret
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth.OAuth2ClientCredentials.ClientSecret
  */
 export interface Service_Spec_Config_HTTP_Auth_OAuth2ClientCredentials_ClientSecret {
@@ -1010,6 +1201,9 @@ export interface Service_Spec_Config_HTTP_Auth_OAuth2ClientCredentials_ClientSec
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains
+         * the ClientSecret
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -1018,27 +1212,42 @@ export interface Service_Spec_Config_HTTP_Auth_OAuth2ClientCredentials_ClientSec
     };
 }
 /**
+ * Sigv4 computes and injects AWS Signature Version 4 signatures
+ * on-the-fly for a Sigv4-compliant upstream API
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth.Sigv4
  */
 export interface Service_Spec_Config_HTTP_Auth_Sigv4 {
     /**
+     * AccessKeyID is the AWS access key ID
+     *
      * @generated from protobuf field: string accessKeyID = 1
      */
     accessKeyID: string;
     /**
+     * SecretAccessKey is the AWS secret access key
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth.Sigv4.SecretAccessKey secretAccessKey = 2
      */
     secretAccessKey?: Service_Spec_Config_HTTP_Auth_Sigv4_SecretAccessKey;
     /**
+     * Region is the AWS region of the upstream API (e.g.
+     * "eu-central-1")
+     *
      * @generated from protobuf field: string region = 3
      */
     region: string;
     /**
+     * Service is the AWS service of the upstream API (e.g. "lambda",
+     * "s3")
+     *
      * @generated from protobuf field: string service = 4
      */
     service: string;
 }
 /**
+ * SecretAccessKey is the AWS secret access key
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth.Sigv4.SecretAccessKey
  */
 export interface Service_Spec_Config_HTTP_Auth_Sigv4_SecretAccessKey {
@@ -1048,6 +1257,9 @@ export interface Service_Spec_Config_HTTP_Auth_Sigv4_SecretAccessKey {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains
+         * the SecretAccessKey
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -1056,6 +1268,9 @@ export interface Service_Spec_Config_HTTP_Auth_Sigv4_SecretAccessKey {
     };
 }
 /**
+ * Path sets the manipulation of the request path that is forwarded to
+ * the upstream
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Path
  */
 export interface Service_Spec_Config_HTTP_Path {
@@ -1075,10 +1290,15 @@ export interface Service_Spec_Config_HTTP_Path {
     removePrefix: string;
 }
 /**
+ * Body sets the request body-specific options. It requires
+ * enableRequestBuffering to be enabled.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Body
  */
 export interface Service_Spec_Config_HTTP_Body {
     /**
+     * Mode sets the expected format of the request body
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Body.Mode mode = 1
      */
     mode: Service_Spec_Config_HTTP_Body_Mode;
@@ -1089,20 +1309,29 @@ export interface Service_Spec_Config_HTTP_Body {
      */
     maxRequestSize: number;
     /**
+     * Validation sets the validation of the request body content
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Body.Validation validation = 3
      */
     validation?: Service_Spec_Config_HTTP_Body_Validation;
 }
 /**
+ * Validation validates the content of the request body. A request
+ * whose body is invalid is rejected with a status code of `400`.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Body.Validation
  */
 export interface Service_Spec_Config_HTTP_Body_Validation {
     /**
+     * Type sets the validation method of the request body
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "jsonSchema";
         /**
+         * JSONSchema validates the request body against a JSON schema
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Body.Validation.JSONSchema jsonSchema = 1
          */
         jsonSchema: Service_Spec_Config_HTTP_Body_Validation_JSONSchema;
@@ -1111,6 +1340,8 @@ export interface Service_Spec_Config_HTTP_Body_Validation {
     };
 }
 /**
+ * JSONSchema validates the request body against a JSON schema
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Body.Validation.JSONSchema
  */
 export interface Service_Spec_Config_HTTP_Body_Validation_JSONSchema {
@@ -1120,6 +1351,8 @@ export interface Service_Spec_Config_HTTP_Body_Validation_JSONSchema {
     type: {
         oneofKind: "inline";
         /**
+         * Inline is the JSON schema itself
+         *
          * @generated from protobuf field: string inline = 1
          */
         inline: string;
@@ -1128,10 +1361,15 @@ export interface Service_Spec_Config_HTTP_Body_Validation_JSONSchema {
     };
 }
 /**
+ * Mode is the expected format of the request body
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.HTTP.Body.Mode
  */
 export enum Service_Spec_Config_HTTP_Body_Mode {
     /**
+     * MODE_UNSET performs no request body format validation. This is
+     * the default value.
+     *
      * @generated from protobuf enum value: MODE_UNSET = 0;
      */
     MODE_UNSET = 0,
@@ -1144,6 +1382,8 @@ export enum Service_Spec_Config_HTTP_Body_Mode {
     JSON = 1
 }
 /**
+ * Header sets the manipulation of the request and response headers
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header
  */
 export interface Service_Spec_Config_HTTP_Header {
@@ -1180,6 +1420,8 @@ export interface Service_Spec_Config_HTTP_Header {
      */
     forwardedMode: Service_Spec_Config_HTTP_Header_ForwardedMode;
     /**
+     * Host sets the Host request header forwarded to the upstream
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.Host host = 6
      */
     host?: Service_Spec_Config_HTTP_Header_Host;
@@ -1195,6 +1437,8 @@ export interface Service_Spec_Config_HTTP_Header {
     authorizationMode: Service_Spec_Config_HTTP_Header_AuthorizationMode;
 }
 /**
+ * KeyValue is a header that is added to the request or the response
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.KeyValue
  */
 export interface Service_Spec_Config_HTTP_Header_KeyValue {
@@ -1205,6 +1449,8 @@ export interface Service_Spec_Config_HTTP_Header_KeyValue {
      */
     key: string;
     /**
+     * Type sets how the header's value is computed
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -1218,6 +1464,9 @@ export interface Service_Spec_Config_HTTP_Header_KeyValue {
     } | {
         oneofKind: "eval";
         /**
+         * Eval sets the header's value to the result of a CEL expression
+         * that is evaluated against the request context.
+         *
          * @generated from protobuf field: string eval = 4
          */
         eval: string;
@@ -1233,27 +1482,41 @@ export interface Service_Spec_Config_HTTP_Header_KeyValue {
     append: boolean;
 }
 /**
+ * Host sets the `Host` request header that is forwarded to the
+ * upstream. By default, the Host header is rewritten to the
+ * upstream's real host (i.e. the host of the Upstream's URL).
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.Host
  */
 export interface Service_Spec_Config_HTTP_Header_Host {
     /**
+     * Type sets how the Host header's value is computed
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "preserve";
         /**
+         * Preserve preserves the Host header by using the Service's own
+         * FQDN as its value.
+         *
          * @generated from protobuf field: bool preserve = 1
          */
         preserve: boolean;
     } | {
         oneofKind: "value";
         /**
+         * Value explicitly sets the Host header's value
+         *
          * @generated from protobuf field: string value = 2
          */
         value: string;
     } | {
         oneofKind: "eval";
         /**
+         * Eval sets the Host header's value to the result of a CEL
+         * expression that is evaluated against the request context.
+         *
          * @generated from protobuf field: string eval = 3
          */
         eval: string;
@@ -1262,10 +1525,15 @@ export interface Service_Spec_Config_HTTP_Header_Host {
     };
 }
 /**
+ * ForwardedMode sets how the `Forwarded` request header set by the
+ * downstream is handled
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.ForwardedMode
  */
 export enum Service_Spec_Config_HTTP_Header_ForwardedMode {
     /**
+     * UNSET falls back to the default behavior which is currently DROP
+     *
      * @generated from protobuf enum value: UNSET = 0;
      */
     UNSET = 0,
@@ -1291,32 +1559,50 @@ export enum Service_Spec_Config_HTTP_Header_ForwardedMode {
     TRANSPARENT = 3
 }
 /**
+ * AuthorizationMode sets how the downstream's `Authorization`
+ * request header is handled
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header.AuthorizationMode
  */
 export enum Service_Spec_Config_HTTP_Header_AuthorizationMode {
     /**
+     * AUTHORIZATION_MODE_UNSET falls back to the default behavior
+     * which is to delete the header unless the Service is anonymous.
+     *
      * @generated from protobuf enum value: AUTHORIZATION_MODE_UNSET = 0;
      */
     AUTHORIZATION_MODE_UNSET = 0,
     /**
+     * PASS passes the downstream's Authorization request header to the
+     * upstream as is, if it exists.
+     *
      * @generated from protobuf enum value: PASS = 1;
      */
     PASS = 1,
     /**
+     * DELETE deletes the downstream's Authorization request header
+     *
      * @generated from protobuf enum value: DELETE = 2;
      */
     DELETE = 2
 }
 /**
+ * Response sets the response-specific configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Response
  */
 export interface Service_Spec_Config_HTTP_Response {
     /**
+     * Type sets the type of the response
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "direct";
         /**
+         * Direct returns a response directly without proxying the request
+         * to the upstream
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Response.Direct direct = 1
          */
         direct: Service_Spec_Config_HTTP_Response_Direct;
@@ -1325,29 +1611,43 @@ export interface Service_Spec_Config_HTTP_Response {
     };
 }
 /**
+ * Direct returns a response directly from the Service without
+ * proxying the request to the upstream
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Response.Direct
  */
 export interface Service_Spec_Config_HTTP_Response_Direct {
     /**
+     * StatusCode is the status code of the returned response
+     *
      * @generated from protobuf field: int32 statusCode = 1
      */
     statusCode: number;
     /**
+     * ContentType is the value of the `Content-Type` response header
+     * (e.g. "image/png")
+     *
      * @generated from protobuf field: string contentType = 2
      */
     contentType: string;
     /**
+     * Type sets the body of the returned response
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "inline";
         /**
+         * Inline is the response body as a string
+         *
          * @generated from protobuf field: string inline = 3
          */
         inline: string;
     } | {
         oneofKind: "inlineBytes";
         /**
+         * InlineBytes is the response body as raw bytes
+         *
          * @generated from protobuf field: bytes inlineBytes = 4
          */
         inlineBytes: Uint8Array;
@@ -1356,100 +1656,159 @@ export interface Service_Spec_Config_HTTP_Response_Direct {
     };
 }
 /**
+ * Retry sets the retrying of the failed upstream requests. Retrying is
+ * disabled by default. The Service uses an exponential backoff that
+ * starts with the initialInterval duration which is multiplied on each
+ * retry by the multiplier until it reaches the maxInterval duration.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Retry
  */
 export interface Service_Spec_Config_HTTP_Retry {
     /**
+     * MaxRetries is the maximum number of retries
+     *
      * @generated from protobuf field: uint32 maxRetries = 1
      */
     maxRetries: number;
     /**
+     * InitialInterval is the duration of the backoff before the first
+     * retry
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration initialInterval = 2
      */
     initialInterval?: Duration;
     /**
+     * MaxInterval is the upper bound of the backoff duration between the
+     * retries
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration maxInterval = 3
      */
     maxInterval?: Duration;
     /**
+     * MaxElapsedTime is the deadline after which no further retries are
+     * performed
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration maxElapsedTime = 4
      */
     maxElapsedTime?: Duration;
     /**
+     * Multiplier is the floating point value by which the backoff
+     * duration is multiplied on each retry
+     *
      * @generated from protobuf field: float multiplier = 5
      */
     multiplier: number;
     /**
+     * StatusCodes is the list of the response status codes that are
+     * retried. By default, the Service currently retries on the 502, 503
+     * and 504 status codes.
+     *
      * @generated from protobuf field: repeated int32 statusCodes = 6
      */
     statusCodes: number[];
     /**
+     * RetryOnServerErrors additionally retries on every 5xx response
+     * status code.
+     *
      * @generated from protobuf field: bool retryOnServerErrors = 7
      */
     retryOnServerErrors: boolean;
 }
 /**
+ * Plugin provides a more advanced and dynamic way to manipulate the
+ * HTTP requests and responses. A Service can have one or more Plugins,
+ * including multiple Plugins of the same type.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin
  */
 export interface Service_Spec_Config_HTTP_Plugin {
     /**
+     * Name is the unique name of the Plugin
+     *
      * @generated from protobuf field: string name = 1
      */
     name: string;
     /**
+     * IsDisabled disables the Plugin without having to change its
+     * Condition or to delete it.
+     *
      * @generated from protobuf field: bool isDisabled = 2
      */
     isDisabled: boolean;
     /**
+     * Phase sets whether the Plugin is invoked before or after the
+     * authentication and authorization processes
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Phase phase = 3
      */
     phase: Service_Spec_Config_HTTP_Plugin_Phase;
     /**
+     * Condition decides whether the Plugin is invoked on a per-request
+     * basis
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Condition condition = 4
      */
     condition?: Condition;
     /**
+     * Type sets the type of the Plugin
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "extProc";
         /**
+         * ExtProc processes the requests via an Envoy ext_proc compliant
+         * gRPC server
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc extProc = 5
          */
         extProc: Service_Spec_Config_HTTP_Plugin_ExtProc;
     } | {
         oneofKind: "lua";
         /**
+         * Lua processes the requests via a Lua script
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Lua lua = 6
          */
         lua: Service_Spec_Config_HTTP_Plugin_Lua;
     } | {
         oneofKind: "direct";
         /**
+         * Direct returns a response directly without proxying the request
+         * to the upstream
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct direct = 7
          */
         direct: Service_Spec_Config_HTTP_Plugin_Direct;
     } | {
         oneofKind: "rateLimit";
         /**
+         * RateLimit rate limits the requests
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit rateLimit = 8
          */
         rateLimit: Service_Spec_Config_HTTP_Plugin_RateLimit;
     } | {
         oneofKind: "cache";
         /**
+         * Cache returns globally cached responses
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Cache cache = 9
          */
         cache: Service_Spec_Config_HTTP_Plugin_Cache;
     } | {
         oneofKind: "jsonSchema";
         /**
+         * JSONSchema validates the JSON request body against a JSON schema
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema jsonSchema = 10
          */
         jsonSchema: Service_Spec_Config_HTTP_Plugin_JSONSchema;
     } | {
         oneofKind: "path";
         /**
+         * Path removes and/or adds prefixes of the request path
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Path path = 11
          */
         path: Service_Spec_Config_HTTP_Plugin_Path;
@@ -1458,21 +1817,34 @@ export interface Service_Spec_Config_HTTP_Plugin {
     };
 }
 /**
+ * ExtProc processes the requests via an external gRPC server that is
+ * compliant with Envoy's ext_proc protocol. Vigil acts as the
+ * ext_proc gRPC client that sends a ProcessingRequest and waits for
+ * a ProcessingResponse on every request.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc
  */
 export interface Service_Spec_Config_HTTP_Plugin_ExtProc {
     /**
+     * Type sets the ext_proc gRPC server
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "address";
         /**
+         * Address is the address of the ext_proc gRPC server (e.g.
+         * "ext-proc.default.svc:8080")
+         *
          * @generated from protobuf field: string address = 1
          */
         address: string;
     } | {
         oneofKind: "container";
         /**
+         * Container serves the ext_proc gRPC server from a managed
+         * container
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc.Container container = 2
          */
         container: Service_Spec_Config_HTTP_Plugin_ExtProc_Container;
@@ -1480,83 +1852,136 @@ export interface Service_Spec_Config_HTTP_Plugin_ExtProc {
         oneofKind: undefined;
     };
     /**
+     * ProcessingMode sets which parts of the request and the response
+     * are sent to the ext_proc server
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc.ProcessingMode processingMode = 3
      */
     processingMode?: Service_Spec_Config_HTTP_Plugin_ExtProc_ProcessingMode;
     /**
+     * MessageTimeout is the duration after which a message sent to the
+     * ext_proc server times out
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration messageTimeout = 4
      */
     messageTimeout?: Duration;
 }
 /**
+ * Container is a managed container that serves the ext_proc gRPC
+ * server
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc.Container
  */
 export interface Service_Spec_Config_HTTP_Plugin_ExtProc_Container {
     /**
+     * Image is the image URL of the container
+     *
      * @generated from protobuf field: string image = 1
      */
     image: string;
     /**
+     * Port is the port at which the ext_proc gRPC server listens
+     *
      * @generated from protobuf field: int32 port = 2
      */
     port: number;
 }
 /**
+ * ProcessingMode sets which parts of the request and the response
+ * are sent to the ext_proc server
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc.ProcessingMode
  */
 export interface Service_Spec_Config_HTTP_Plugin_ExtProc_ProcessingMode {
     /**
+     * RequestHeaderMode sets whether the request headers are sent to
+     * the ext_proc server
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc.ProcessingMode.HeaderSendMode requestHeaderMode = 1
      */
     requestHeaderMode: Service_Spec_Config_HTTP_Plugin_ExtProc_ProcessingMode_HeaderSendMode;
     /**
+     * ResponseHeaderMode sets whether the response headers are sent
+     * to the ext_proc server
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc.ProcessingMode.HeaderSendMode responseHeaderMode = 2
      */
     responseHeaderMode: Service_Spec_Config_HTTP_Plugin_ExtProc_ProcessingMode_HeaderSendMode;
     /**
+     * RequestBodyMode sets whether the request body is sent to the
+     * ext_proc server
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc.ProcessingMode.BodySendMode requestBodyMode = 3
      */
     requestBodyMode: Service_Spec_Config_HTTP_Plugin_ExtProc_ProcessingMode_BodySendMode;
     /**
+     * ResponseBodyMode sets whether the response body is sent to the
+     * ext_proc server
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc.ProcessingMode.BodySendMode responseBodyMode = 4
      */
     responseBodyMode: Service_Spec_Config_HTTP_Plugin_ExtProc_ProcessingMode_BodySendMode;
 }
 /**
+ * HeaderSendMode sets whether the headers are sent to the
+ * ext_proc server
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc.ProcessingMode.HeaderSendMode
  */
 export enum Service_Spec_Config_HTTP_Plugin_ExtProc_ProcessingMode_HeaderSendMode {
     /**
+     * HEADER_SEND_MODE_UNSET falls back to the default behavior
+     *
      * @generated from protobuf enum value: HEADER_SEND_MODE_UNSET = 0;
      */
     HEADER_SEND_MODE_UNSET = 0,
     /**
+     * SEND sends the headers to the ext_proc server
+     *
      * @generated from protobuf enum value: SEND = 1;
      */
     SEND = 1,
     /**
+     * SKIP does not send the headers to the ext_proc server
+     *
      * @generated from protobuf enum value: SKIP = 2;
      */
     SKIP = 2
 }
 /**
+ * BodySendMode sets whether the body is sent to the ext_proc
+ * server
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc.ProcessingMode.BodySendMode
  */
 export enum Service_Spec_Config_HTTP_Plugin_ExtProc_ProcessingMode_BodySendMode {
     /**
+     * BODY_SEND_MODE_UNSET falls back to the default behavior
+     *
      * @generated from protobuf enum value: BODY_SEND_MODE_UNSET = 0;
      */
     BODY_SEND_MODE_UNSET = 0,
     /**
+     * NONE does not send the body to the ext_proc server
+     *
      * @generated from protobuf enum value: NONE = 1;
      */
     NONE = 1,
     /**
+     * BUFFERED buffers the entire body and sends it to the
+     * ext_proc server in a single message
+     *
      * @generated from protobuf enum value: BUFFERED = 2;
      */
     BUFFERED = 2
 }
 /**
+ * Lua invokes a Lua script that can define an `onRequest` function
+ * which is invoked upon receiving the request before proxying it to
+ * the upstream, and an `onResponse` function which is invoked upon
+ * receiving the response from the upstream. A function that is not
+ * defined is silently skipped.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Lua
  */
 export interface Service_Spec_Config_HTTP_Plugin_Lua {
@@ -1566,6 +1991,8 @@ export interface Service_Spec_Config_HTTP_Plugin_Lua {
     type: {
         oneofKind: "inline";
         /**
+         * Inline is the Lua script itself
+         *
          * @generated from protobuf field: string inline = 1
          */
         inline: string;
@@ -1574,23 +2001,35 @@ export interface Service_Spec_Config_HTTP_Plugin_Lua {
     };
 }
 /**
+ * Direct returns a response directly without proxying the request to
+ * the upstream
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct
  */
 export interface Service_Spec_Config_HTTP_Plugin_Direct {
     /**
+     * StatusCode is the status code of the returned response
+     *
      * @generated from protobuf field: int32 statusCode = 1
      */
     statusCode: number;
     /**
+     * Body is the body of the returned response
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.Body body = 2
      */
     body?: Service_Spec_Config_HTTP_Plugin_Direct_Body;
     /**
+     * Headers is the list of the headers that are set in the returned
+     * response
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.KeyValue headers = 3
      */
     headers: Service_Spec_Config_HTTP_Plugin_Direct_KeyValue[];
 }
 /**
+ * Body is the body of the returned response
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.Body
  */
 export interface Service_Spec_Config_HTTP_Plugin_Direct_Body {
@@ -1600,12 +2039,16 @@ export interface Service_Spec_Config_HTTP_Plugin_Direct_Body {
     type: {
         oneofKind: "inline";
         /**
+         * Inline is the response body as a string
+         *
          * @generated from protobuf field: string inline = 1
          */
         inline: string;
     } | {
         oneofKind: "inlineBytes";
         /**
+         * InlineBytes is the response body as raw bytes
+         *
          * @generated from protobuf field: bytes inlineBytes = 2
          */
         inlineBytes: Uint8Array;
@@ -1614,48 +2057,76 @@ export interface Service_Spec_Config_HTTP_Plugin_Direct_Body {
     };
 }
 /**
+ * KeyValue is a header that is set in the returned response
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct.KeyValue
  */
 export interface Service_Spec_Config_HTTP_Plugin_Direct_KeyValue {
     /**
+     * Key is the header's name
+     *
      * @generated from protobuf field: string key = 1
      */
     key: string;
     /**
+     * Value is the header's value
+     *
      * @generated from protobuf field: string value = 2
      */
     value: string;
 }
 /**
+ * RateLimit provides a global sliding-window rate limiting mechanism
+ * that is backed by the Cluster's Redis store
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit
  */
 export interface Service_Spec_Config_HTTP_Plugin_RateLimit {
     /**
+     * StatusCode is the status code that is returned once the rate
+     * limit is exceeded. It is 429 by default.
+     *
      * @generated from protobuf field: int32 statusCode = 2
      */
     statusCode: number;
     /**
+     * Body is the body of the response that is returned once the rate
+     * limit is exceeded
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.Body body = 3
      */
     body?: Service_Spec_Config_HTTP_Plugin_RateLimit_Body;
     /**
+     * Key sets the key by which the requests are counted
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.Key key = 4
      */
     key?: Service_Spec_Config_HTTP_Plugin_RateLimit_Key;
     /**
+     * Limit is the maximum number of requests that are allowed within
+     * the window
+     *
      * @generated from protobuf field: int64 limit = 5
      */
     limit: number;
     /**
+     * Window is the duration of the sliding window
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration window = 6
      */
     window?: Duration;
     /**
+     * Headers is the list of the headers that are set in the response
+     * that is returned once the rate limit is exceeded
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.KeyValue headers = 7
      */
     headers: Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue[];
 }
 /**
+ * Body is the body of the response that is returned once the rate
+ * limit is exceeded
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.Body
  */
 export interface Service_Spec_Config_HTTP_Plugin_RateLimit_Body {
@@ -1665,12 +2136,16 @@ export interface Service_Spec_Config_HTTP_Plugin_RateLimit_Body {
     type: {
         oneofKind: "inline";
         /**
+         * Inline is the response body as a string
+         *
          * @generated from protobuf field: string inline = 1
          */
         inline: string;
     } | {
         oneofKind: "inlineBytes";
         /**
+         * InlineBytes is the response body as raw bytes
+         *
          * @generated from protobuf field: bytes inlineBytes = 2
          */
         inlineBytes: Uint8Array;
@@ -1679,27 +2154,39 @@ export interface Service_Spec_Config_HTTP_Plugin_RateLimit_Body {
     };
 }
 /**
+ * Key is the key by which the requests are counted. By default,
+ * the rate limit is applied on a per-Session basis.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.Key
  */
 export interface Service_Spec_Config_HTTP_Plugin_RateLimit_Key {
     /**
+     * Type sets how the rate limiting key is computed
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "eval";
         /**
+         * Eval sets the key to the result of a CEL expression that is
+         * evaluated against the request context.
+         *
          * @generated from protobuf field: string eval = 1
          */
         eval: string;
     } | {
         oneofKind: "perSession";
         /**
+         * PerSession applies the rate limit on a per-Session basis
+         *
          * @generated from protobuf field: bool perSession = 2
          */
         perSession: boolean;
     } | {
         oneofKind: "perUser";
         /**
+         * PerUser applies the rate limit on a per-User basis
+         *
          * @generated from protobuf field: bool perUser = 3
          */
         perUser: boolean;
@@ -1708,44 +2195,71 @@ export interface Service_Spec_Config_HTTP_Plugin_RateLimit_Key {
     };
 }
 /**
+ * KeyValue is a header that is set in the returned response
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.KeyValue
  */
 export interface Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue {
     /**
+     * Key is the header's name
+     *
      * @generated from protobuf field: string key = 1
      */
     key: string;
     /**
+     * Value is the header's value
+     *
      * @generated from protobuf field: string value = 2
      */
     value: string;
 }
 /**
+ * Cache returns globally cached responses that are stored in the
+ * Cluster's Redis store
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Cache
  */
 export interface Service_Spec_Config_HTTP_Plugin_Cache {
     /**
+     * Key sets the key of the cache entry
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Cache.Key key = 1
      */
     key?: Service_Spec_Config_HTTP_Plugin_Cache_Key;
     /**
+     * TTL is the duration after which a cache entry expires
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration ttl = 2
      */
     ttl?: Duration;
     /**
+     * MaxSize is the maximum size in bytes of a response that can be
+     * cached
+     *
      * @generated from protobuf field: uint64 maxSize = 3
      */
     maxSize: number;
     /**
+     * UseXCacheHeader sets the `X-Cache` response header to indicate
+     * whether the response was served from the cache.
+     *
      * @generated from protobuf field: bool useXCacheHeader = 4
      */
     useXCacheHeader: boolean;
     /**
+     * AllowUnsafeMethods additionally caches the responses of the HTTP
+     * methods other than GET and HEAD which are the only cached
+     * methods by default.
+     *
      * @generated from protobuf field: bool allowUnsafeMethods = 5
      */
     allowUnsafeMethods: boolean;
 }
 /**
+ * Key is the key of the cache entry. By default, the request URI
+ * (i.e. the path and the query parameters) is used as the key on a
+ * per-Service basis.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Cache.Key
  */
 export interface Service_Spec_Config_HTTP_Plugin_Cache_Key {
@@ -1755,6 +2269,9 @@ export interface Service_Spec_Config_HTTP_Plugin_Cache_Key {
     type: {
         oneofKind: "eval";
         /**
+         * Eval sets the key to the result of a CEL expression that is
+         * evaluated against the request context.
+         *
          * @generated from protobuf field: string eval = 1
          */
         eval: string;
@@ -1763,6 +2280,8 @@ export interface Service_Spec_Config_HTTP_Plugin_Cache_Key {
     };
 }
 /**
+ * JSONSchema validates the JSON request body against a JSON schema
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema
  */
 export interface Service_Spec_Config_HTTP_Plugin_JSONSchema {
@@ -1772,6 +2291,8 @@ export interface Service_Spec_Config_HTTP_Plugin_JSONSchema {
     type: {
         oneofKind: "inline";
         /**
+         * Inline is the JSON schema itself
+         *
          * @generated from protobuf field: string inline = 1
          */
         inline: string;
@@ -1779,19 +2300,31 @@ export interface Service_Spec_Config_HTTP_Plugin_JSONSchema {
         oneofKind: undefined;
     };
     /**
+     * StatusCode is the status code that is returned once the
+     * validation fails
+     *
      * @generated from protobuf field: int32 statusCode = 2
      */
     statusCode: number;
     /**
+     * Body is the body of the response that is returned once the
+     * validation fails
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.Body body = 3
      */
     body?: Service_Spec_Config_HTTP_Plugin_JSONSchema_Body;
     /**
+     * Headers is the list of the headers that are set in the response
+     * that is returned once the validation fails
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.KeyValue headers = 4
      */
     headers: Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue[];
 }
 /**
+ * Body is the body of the response that is returned once the
+ * validation fails
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.Body
  */
 export interface Service_Spec_Config_HTTP_Plugin_JSONSchema_Body {
@@ -1801,12 +2334,16 @@ export interface Service_Spec_Config_HTTP_Plugin_JSONSchema_Body {
     type: {
         oneofKind: "inline";
         /**
+         * Inline is the response body as a string
+         *
          * @generated from protobuf field: string inline = 1
          */
         inline: string;
     } | {
         oneofKind: "inlineBytes";
         /**
+         * InlineBytes is the response body as raw bytes
+         *
          * @generated from protobuf field: bytes inlineBytes = 2
          */
         inlineBytes: Uint8Array;
@@ -1815,19 +2352,27 @@ export interface Service_Spec_Config_HTTP_Plugin_JSONSchema_Body {
     };
 }
 /**
+ * KeyValue is a header that is set in the returned response
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema.KeyValue
  */
 export interface Service_Spec_Config_HTTP_Plugin_JSONSchema_KeyValue {
     /**
+     * Key is the header's name
+     *
      * @generated from protobuf field: string key = 1
      */
     key: string;
     /**
+     * Value is the header's value
+     *
      * @generated from protobuf field: string value = 2
      */
     value: string;
 }
 /**
+ * Path removes and/or adds prefixes of the request path
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Path
  */
 export interface Service_Spec_Config_HTTP_Plugin_Path {
@@ -1847,23 +2392,41 @@ export interface Service_Spec_Config_HTTP_Plugin_Path {
     removePrefix: string;
 }
 /**
+ * Phase sets whether the Plugin is invoked before or after the
+ * authentication and authorization processes
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Phase
  */
 export enum Service_Spec_Config_HTTP_Plugin_Phase {
     /**
+     * PHASE_UNSET falls back to the default behavior which is
+     * POST_AUTH
+     *
      * @generated from protobuf enum value: PHASE_UNSET = 0;
      */
     PHASE_UNSET = 0,
     /**
+     * PRE_AUTH invokes the Plugin before the authentication and
+     * authorization processes. This is useful to manipulate or even
+     * entirely drop the requests before proceeding further to the
+     * authentication and authorization processes. A PRE_AUTH Plugin
+     * has to be set in the "default" or global Configuration (as
+     * opposed to named dynamic Configs) in order to actually work.
+     *
      * @generated from protobuf enum value: PRE_AUTH = 1;
      */
     PRE_AUTH = 1,
     /**
+     * POST_AUTH invokes the Plugin after the authentication and
+     * authorization processes. This is the default behavior.
+     *
      * @generated from protobuf enum value: POST_AUTH = 2;
      */
     POST_AUTH = 2
 }
 /**
+ * Visibility sets the HTTP-specific access logging configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Visibility
  */
 export interface Service_Spec_Config_HTTP_Visibility {
@@ -1892,31 +2455,621 @@ export interface Service_Spec_Config_HTTP_Visibility {
      */
     enableResponseBodyMap: boolean;
     /**
+     * IncludeRequestHeaders is the list of the request headers that are
+     * recorded in the AccessLogs.
+     *
      * @generated from protobuf field: repeated string includeRequestHeaders = 5
      */
     includeRequestHeaders: string[];
     /**
+     * IncludeResponseHeaders is the list of the response headers that
+     * are recorded in the AccessLogs.
+     *
      * @generated from protobuf field: repeated string includeResponseHeaders = 6
      */
     includeResponseHeaders: string[];
     /**
+     * IncludeAllRequestHeaders records every request header in the
+     * AccessLogs except for the ones set in excludeRequestHeaders.
+     *
      * @generated from protobuf field: bool includeAllRequestHeaders = 7
      */
     includeAllRequestHeaders: boolean;
     /**
+     * IncludeAllResponseHeaders records every response header in the
+     * AccessLogs except for the ones set in excludeResponseHeaders.
+     *
      * @generated from protobuf field: bool includeAllResponseHeaders = 8
      */
     includeAllResponseHeaders: boolean;
     /**
+     * ExcludeRequestHeaders is the list of the request headers that are
+     * never recorded in the AccessLogs.
+     *
      * @generated from protobuf field: repeated string excludeRequestHeaders = 9
      */
     excludeRequestHeaders: string[];
     /**
+     * ExcludeResponseHeaders is the list of the response headers that
+     * are never recorded in the AccessLogs.
+     *
      * @generated from protobuf field: repeated string excludeResponseHeaders = 10
      */
     excludeResponseHeaders: string[];
 }
 /**
+ * MCP sets the Model Context Protocol-specific configuration. MCP
+ * Services are HTTP-based: they reuse the entire HTTP dataplane and
+ * additionally understand the MCP JSON-RPC semantics.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.MCP
+ */
+export interface Service_Spec_Config_MCP {
+    /**
+     * Endpoint is the canonical MCP endpoint path (e.g. `/mcp`) that is
+     * served to the downstreams. Any request whose path does not exactly
+     * match it is rejected. If not set, which is the default, every
+     * request path is accepted. Note that this field validates the
+     * downstream request path, it does not set the upstream one. Since MCP
+     * is a single endpoint protocol, the path of the upstream URL entirely
+     * replaces the request path that is proxied to the upstream. For
+     * instance, an upstream URL of `https://example.com/api/mcp` proxies
+     * every request to `/api/mcp` regardless of the downstream path. This
+     * is needed since many MCP servers are served at a path that differs
+     * from the one that the Service serves to its downstreams. Whenever
+     * the upstream URL carries no path at all, which is the default, the
+     * downstream request path is proxied to the upstream as is. This is needed since many MCP
+     * servers are served at the root path. This field has to be set in the
+     * "default" or global Configuration (as opposed to named dynamic
+     * Configs) in order to actually work.
+     *
+     * @generated from protobuf field: string endpoint = 1
+     */
+    endpoint: string;
+    /**
+     * Protocol sets the MCP protocol validation options. These fields have
+     * to be set in the "default" or global Configuration (as opposed to
+     * named dynamic Configs) in order to actually work.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.MCP.Protocol protocol = 2
+     */
+    protocol?: Service_Spec_Config_MCP_Protocol;
+    /**
+     * Limits sets the MCP request parsing limits. These fields have to be
+     * set in the "default" or global Configuration (as opposed to named
+     * dynamic Configs) in order to actually work.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.MCP.Limits limits = 3
+     */
+    limits?: Service_Spec_Config_MCP_Limits;
+    /**
+     * Auth sets authentication-to-upstream specific configuration
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth auth = 4
+     */
+    auth?: Service_Spec_Config_HTTP_Auth;
+    /**
+     * Header sets request and response header manipulation options. Note
+     * that the MCP reserved headers (i.e. `MCP-Protocol-Version`,
+     * `Mcp-Method`, `Mcp-Name` and `Mcp-Param-*`) can be manipulated here
+     * too. Octelium never uses them to make authorization decisions, which
+     * are always made from the JSON-RPC request body itself, however the
+     * upstream MCP server rejects the requests whose headers do not match
+     * the body.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header header = 5
+     */
+    header?: Service_Spec_Config_HTTP_Header;
+    /**
+     * Path sets the upstream request path options
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Path path = 6
+     */
+    path?: Service_Spec_Config_HTTP_Path;
+    /**
+     * Plugins is the list of plugins. The Cache plugin is unsupported for
+     * MCP Services since generic HTTP caching understands neither the
+     * authorization scope nor the MCP cache invalidation semantics. Note
+     * that a Plugin that rewrites the JSON-RPC request body (e.g. Lua,
+     * ExtProc) should also rewrite the corresponding MCP reserved headers
+     * whenever the downstream sets them, otherwise the upstream MCP server
+     * rejects the request since the headers no longer match the body.
+     *
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin plugins = 7
+     */
+    plugins: Service_Spec_Config_HTTP_Plugin[];
+    /**
+     * IsUpstreamHTTP2 sets HTTP connections to the upstream to HTTP/2. Not
+     * enabled by default.
+     *
+     * @generated from protobuf field: bool isUpstreamHTTP2 = 8
+     */
+    isUpstreamHTTP2: boolean;
+    /**
+     * ListenHTTP2 sets the Service to listen to HTTP 2.0 connections. This
+     * is only enabled by default for Services using TLS. This field has to
+     * be enabled in the "default" or global Configuration (as opposed to
+     * named dynamic Configs) in order to actually work.
+     *
+     * @generated from protobuf field: bool listenHTTP2 = 9
+     */
+    listenHTTP2: boolean;
+    /**
+     * Visibility sets the visibility/access logging specific options
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.MCP.Visibility visibility = 10
+     */
+    visibility?: Service_Spec_Config_MCP_Visibility;
+    /**
+     * CORS sets the Cross-Origin Resource Sharing options which are needed
+     * to access the Service from a browser-based application served at a
+     * different origin (e.g. the Cluster's own web dashboard). An Origin
+     * that is allowed here is also accepted by the Origin request header
+     * validation. This field has to be set in the "default" or global
+     * Configuration (as opposed to named dynamic Configs) in order to
+     * actually work since the CORS preflight requests carry no identity.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.CORS cors = 11
+     */
+    cors?: Service_Spec_Config_HTTP_CORS;
+    /**
+     * DisableOriginCheck disables the `Origin` request header validation
+     * entirely. The validation rejects any request whose Origin is neither
+     * the Service's own origin nor an origin that is allowed by the `cors`
+     * field. Requests that carry no Origin request header at all, which is
+     * the case for nearly every non-browser MCP client (e.g. IDEs, AI
+     * agents, CLI tools), are always accepted. This field has to be set in
+     * the "default" or global Configuration (as opposed to named dynamic
+     * Configs) in order to actually work.
+     *
+     * @generated from protobuf field: bool disableOriginCheck = 12
+     */
+    disableOriginCheck: boolean;
+}
+/**
+ * Protocol sets the MCP protocol validation options
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.MCP.Protocol
+ */
+export interface Service_Spec_Config_MCP_Protocol {
+    /**
+     * Versions is an optional allowlist of the accepted MCP protocol
+     * versions (e.g. "2026-07-28"). If not set, which is the default,
+     * every version is accepted. Octelium does not maintain its own set
+     * of supported MCP protocol versions.
+     *
+     * @generated from protobuf field: repeated string versions = 1
+     */
+    versions: string[];
+    /**
+     * RequireVersion rejects the requests that do not declare a protocol
+     * version in either the `MCP-Protocol-Version` request header or the
+     * request body's `_meta` field. It is disabled by default since the
+     * header was only introduced in the 2025-06-18 revision.
+     *
+     * @generated from protobuf field: bool requireVersion = 2
+     */
+    requireVersion: boolean;
+    /**
+     * RejectUnknownMethods rejects any JSON-RPC method that is unknown
+     * to Octelium. It is disabled by default. Keeping it disabled lets
+     * the official MCP extensions as well as the newer protocol
+     * revisions reach the upstream while still being visible to Policies
+     * via the `ctx.request.mcp.method` field.
+     *
+     * @generated from protobuf field: bool rejectUnknownMethods = 3
+     */
+    rejectUnknownMethods: boolean;
+}
+/**
+ * Limits sets the MCP request parsing limits
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.MCP.Limits
+ */
+export interface Service_Spec_Config_MCP_Limits {
+    /**
+     * MaxRequestBytes is the maximum size in bytes of the JSON-RPC
+     * request body that is buffered and parsed. Zero uses the default
+     * value. This value is always bounded by an internal hard limit.
+     *
+     * @generated from protobuf field: uint32 maxRequestBytes = 1
+     */
+    maxRequestBytes: number;
+    /**
+     * MaxStreamEventBytes is the maximum size in bytes of a single
+     * `text/event-stream` response event that is parsed. Larger events
+     * are still forwarded to the downstream as is, they are simply not
+     * inspected. Zero uses the default value.
+     *
+     * @generated from protobuf field: uint32 maxStreamEventBytes = 2
+     */
+    maxStreamEventBytes: number;
+}
+/**
+ * Visibility sets the MCP-specific access logging configuration
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.MCP.Visibility
+ */
+export interface Service_Spec_Config_MCP_Visibility {
+    /**
+     * DisableRequestBody disables recording the JSON-RPC request body in
+     * the AccessLogs. The request body is recorded by default since
+     * inspecting the MCP request is the whole point of using MCP mode as
+     * opposed to HTTP mode.
+     *
+     * @generated from protobuf field: bool disableRequestBody = 1
+     */
+    disableRequestBody: boolean;
+    /**
+     * DisableResponseBody disables recording the JSON-RPC response body,
+     * which includes the individual `text/event-stream` response events,
+     * in the AccessLogs. The response body is recorded by default.
+     *
+     * @generated from protobuf field: bool disableResponseBody = 2
+     */
+    disableResponseBody: boolean;
+    /**
+     * IncludeRequestHeaders is the list of the request headers that are
+     * recorded in the AccessLogs.
+     *
+     * @generated from protobuf field: repeated string includeRequestHeaders = 3
+     */
+    includeRequestHeaders: string[];
+    /**
+     * IncludeResponseHeaders is the list of the response headers that
+     * are recorded in the AccessLogs.
+     *
+     * @generated from protobuf field: repeated string includeResponseHeaders = 4
+     */
+    includeResponseHeaders: string[];
+    /**
+     * IncludeAllRequestHeaders records every request header in the
+     * AccessLogs except for the ones set in excludeRequestHeaders.
+     *
+     * @generated from protobuf field: bool includeAllRequestHeaders = 5
+     */
+    includeAllRequestHeaders: boolean;
+    /**
+     * IncludeAllResponseHeaders records every response header in the
+     * AccessLogs except for the ones set in excludeResponseHeaders.
+     *
+     * @generated from protobuf field: bool includeAllResponseHeaders = 6
+     */
+    includeAllResponseHeaders: boolean;
+    /**
+     * ExcludeRequestHeaders is the list of the request headers that are
+     * never recorded in the AccessLogs.
+     *
+     * @generated from protobuf field: repeated string excludeRequestHeaders = 7
+     */
+    excludeRequestHeaders: string[];
+    /**
+     * ExcludeResponseHeaders is the list of the response headers that
+     * are never recorded in the AccessLogs.
+     *
+     * @generated from protobuf field: repeated string excludeResponseHeaders = 8
+     */
+    excludeResponseHeaders: string[];
+}
+/**
+ * LLM sets the LLM-gateway-specific configuration. LLM Services are
+ * HTTP-based: they reuse the entire HTTP dataplane and additionally
+ * understand the inference API semantics.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM
+ */
+export interface Service_Spec_Config_LLM {
+    /**
+     * Protocol is the inference API protocol spoken by both the
+     * downstreams and the upstream. Note that the path of the upstream URL
+     * sets the upstream's base path in the same sense that the official
+     * OpenAI and Anthropic SDKs use a base URL. Octelium always serves the
+     * canonical routes of the protocol to the downstreams (e.g.
+     * `/v1/chat/completions`) and it rewrites the upstream request path to
+     * the base path followed by the route without its leading `/v1`
+     * segment. For instance, an upstream URL of
+     * `https://openrouter.ai/api/v1` turns a downstream request to
+     * `/v1/chat/completions` into an upstream request to
+     * `/api/v1/chat/completions`. The base path therefore has to contain
+     * the API version segment whenever the upstream uses one. Whenever the
+     * upstream URL carries no path at all, which is the default, the
+     * downstream request path is proxied to the upstream as is. The
+     * upstreams that serve neither of these two shapes (e.g. the ones that
+     * serve the routes with no version segment at all) are supported via
+     * the `path` field instead. If not set, which is the default, the
+     * OPENAI protocol is used. Note that Octelium currently proxies the
+     * requests to the upstream in the same protocol that it accepts them
+     * from the downstreams, it does not translate between the protocols.
+     * This field has to be set in the "default" or global Configuration
+     * (as opposed to named dynamic Configs) in order to actually work.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol = 1
+     */
+    protocol: Service_Spec_Config_LLM_Protocol;
+    /**
+     * Model overwrites the model name requested by the downstream before
+     * the request is proxied to the upstream. If not set, which is the
+     * default, the requested model name is preserved as is. Note that the
+     * model access control itself is done by the Policies via the
+     * `ctx.request.llm.model` field which always carries the model name as
+     * requested by the downstream.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Model model = 2
+     */
+    model?: Service_Spec_Config_LLM_Model;
+    /**
+     * Limits sets the request parsing and semantic limits. These fields
+     * have to be set in the "default" or global Configuration (as opposed
+     * to named dynamic Configs) in order to actually work.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Limits limits = 3
+     */
+    limits?: Service_Spec_Config_LLM_Limits;
+    /**
+     * Auth sets authentication-to-upstream specific configuration. This is
+     * where the upstream provider credentials (e.g. the OpenAI API key as
+     * a bearer token or the Anthropic API key as the `x-api-key` custom
+     * header) are set. Octelium never forwards the downstream credentials
+     * to the upstream provider.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth auth = 4
+     */
+    auth?: Service_Spec_Config_HTTP_Auth;
+    /**
+     * Header sets request and response header manipulation options
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header header = 5
+     */
+    header?: Service_Spec_Config_HTTP_Header;
+    /**
+     * Path sets the upstream request path options
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Path path = 6
+     */
+    path?: Service_Spec_Config_HTTP_Path;
+    /**
+     * Plugins is the list of plugins. The Cache plugin is unsupported for
+     * LLM Services since generic HTTP caching understands neither the
+     * authorization scope nor the model, tool and sampling parameters that
+     * make up a correct inference cache key.
+     *
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin plugins = 7
+     */
+    plugins: Service_Spec_Config_HTTP_Plugin[];
+    /**
+     * IsUpstreamHTTP2 sets HTTP connections to the upstream to HTTP/2. Not
+     * enabled by default.
+     *
+     * @generated from protobuf field: bool isUpstreamHTTP2 = 8
+     */
+    isUpstreamHTTP2: boolean;
+    /**
+     * ListenHTTP2 sets the Service to listen to HTTP 2.0 connections. This
+     * is only enabled by default for Services using TLS. This field has to
+     * be enabled in the "default" or global Configuration (as opposed to
+     * named dynamic Configs) in order to actually work.
+     *
+     * @generated from protobuf field: bool listenHTTP2 = 9
+     */
+    listenHTTP2: boolean;
+    /**
+     * Visibility sets the visibility/access logging specific options
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Visibility visibility = 10
+     */
+    visibility?: Service_Spec_Config_LLM_Visibility;
+    /**
+     * CORS sets the Cross-Origin Resource Sharing options which are needed
+     * to access the Service from a browser-based application served at a
+     * different origin (e.g. the Cluster's own web dashboard). This field
+     * has to be set in the "default" or global Configuration (as opposed
+     * to named dynamic Configs) in order to actually work since the CORS
+     * preflight requests carry no identity.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.CORS cors = 11
+     */
+    cors?: Service_Spec_Config_HTTP_CORS;
+}
+/**
+ * Model overwrites the model name requested by the downstream
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Model
+ */
+export interface Service_Spec_Config_LLM_Model {
+    /**
+     * Type sets how the model name is overwritten
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "value";
+        /**
+         * Value overwrites the model name requested by the downstream with
+         * a static one.
+         *
+         * @generated from protobuf field: string value = 1
+         */
+        value: string;
+    } | {
+        oneofKind: "eval";
+        /**
+         * Eval overwrites the model name requested by the downstream with
+         * the result of a CEL expression that is evaluated against the
+         * request context. An empty result preserves the requested model
+         * name.
+         *
+         * @generated from protobuf field: string eval = 2
+         */
+        eval: string;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * Limits sets the LLM request parsing and inference limits
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Limits
+ */
+export interface Service_Spec_Config_LLM_Limits {
+    /**
+     * MaxRequestBytes is the maximum size in bytes of the request body
+     * that is buffered and parsed. Zero uses the default value. This
+     * value is always bounded by an internal hard limit.
+     *
+     * @generated from protobuf field: uint32 maxRequestBytes = 1
+     */
+    maxRequestBytes: number;
+    /**
+     * MaxStreamEventBytes is the maximum size in bytes of a single
+     * `text/event-stream` response event that is parsed. Larger events
+     * are still forwarded to the downstream as is, they are simply not
+     * inspected. Zero uses the default value.
+     *
+     * @generated from protobuf field: uint32 maxStreamEventBytes = 2
+     */
+    maxStreamEventBytes: number;
+    /**
+     * MaxEstimatedInputTokens rejects the requests whose pre-flight
+     * estimated input token count is above this value. Note that this
+     * count is a byte-based heuristic calculated by Octelium itself, it
+     * is neither a provider-accurate token count nor an upper bound of
+     * one. Read the `ctx.request.llm.estimateQuality` field to know
+     * whether the estimate accounted for the entire input. Use the
+     * MaxRequestBytes field whenever an exact ceiling is needed.
+     *
+     * @generated from protobuf field: uint64 maxEstimatedInputTokens = 3
+     */
+    maxEstimatedInputTokens: number;
+    /**
+     * MaxOutputTokens rejects the requests whose own requested maximum
+     * output token count is above this value.
+     *
+     * @generated from protobuf field: uint64 maxOutputTokens = 4
+     */
+    maxOutputTokens: number;
+    /**
+     * MaxTools rejects the requests that declare more tools than this
+     * value.
+     *
+     * @generated from protobuf field: uint32 maxTools = 5
+     */
+    maxTools: number;
+}
+/**
+ * Visibility sets the LLM-specific access logging configuration
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Visibility
+ */
+export interface Service_Spec_Config_LLM_Visibility {
+    /**
+     * EnableRequestBody records the request body, which contains the
+     * prompt, in the AccessLogs. It is disabled by default since the
+     * prompts are far more sensitive than typical HTTP request bodies:
+     * they routinely contain secrets, PII, source code and proprietary
+     * data.
+     *
+     * @generated from protobuf field: bool enableRequestBody = 1
+     */
+    enableRequestBody: boolean;
+    /**
+     * EnableRequestBodyMap records the serialized request body in the
+     * AccessLogs. It is disabled by default for the same reason.
+     *
+     * @generated from protobuf field: bool enableRequestBodyMap = 2
+     */
+    enableRequestBodyMap: boolean;
+    /**
+     * EnableResponseBody records the response body, which contains the
+     * generated completion, in the AccessLogs. It is disabled by
+     * default. Note that it is only recorded for the responses that are
+     * not streamed.
+     *
+     * @generated from protobuf field: bool enableResponseBody = 3
+     */
+    enableResponseBody: boolean;
+    /**
+     * EnableResponseBodyMap records the serialized response body in the
+     * AccessLogs. It is disabled by default.
+     *
+     * @generated from protobuf field: bool enableResponseBodyMap = 4
+     */
+    enableResponseBodyMap: boolean;
+    /**
+     * IncludeRequestHeaders is the list of the request headers that are
+     * recorded in the AccessLogs.
+     *
+     * @generated from protobuf field: repeated string includeRequestHeaders = 5
+     */
+    includeRequestHeaders: string[];
+    /**
+     * IncludeResponseHeaders is the list of the response headers that
+     * are recorded in the AccessLogs.
+     *
+     * @generated from protobuf field: repeated string includeResponseHeaders = 6
+     */
+    includeResponseHeaders: string[];
+    /**
+     * IncludeAllRequestHeaders records every request header in the
+     * AccessLogs except for the ones set in excludeRequestHeaders.
+     *
+     * @generated from protobuf field: bool includeAllRequestHeaders = 7
+     */
+    includeAllRequestHeaders: boolean;
+    /**
+     * IncludeAllResponseHeaders records every response header in the
+     * AccessLogs except for the ones set in excludeResponseHeaders.
+     *
+     * @generated from protobuf field: bool includeAllResponseHeaders = 8
+     */
+    includeAllResponseHeaders: boolean;
+    /**
+     * ExcludeRequestHeaders is the list of the request headers that are
+     * never recorded in the AccessLogs.
+     *
+     * @generated from protobuf field: repeated string excludeRequestHeaders = 9
+     */
+    excludeRequestHeaders: string[];
+    /**
+     * ExcludeResponseHeaders is the list of the response headers that
+     * are never recorded in the AccessLogs.
+     *
+     * @generated from protobuf field: repeated string excludeResponseHeaders = 10
+     */
+    excludeResponseHeaders: string[];
+}
+/**
+ * Protocol is the inference API protocol served by the Service.
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol
+ */
+export enum Service_Spec_Config_LLM_Protocol {
+    /**
+     * PROTOCOL_UNSET falls back to the default behavior which is
+     * currently OPENAI
+     *
+     * @generated from protobuf enum value: PROTOCOL_UNSET = 0;
+     */
+    PROTOCOL_UNSET = 0,
+    /**
+     * OPENAI is the OpenAI REST API. It is also spoken by the
+     * OpenAI-compatible servers and provider surfaces that serve the
+     * same canonical `/v1` routes (e.g. vLLM, Ollama). The providers
+     * that use their own request paths or API versioning schemes (e.g.
+     * the Azure OpenAI deployment routes) are not supported.
+     *
+     * @generated from protobuf enum value: OPENAI = 1;
+     */
+    OPENAI = 1,
+    /**
+     * ANTHROPIC is the native Anthropic Messages API.
+     *
+     * @generated from protobuf enum value: ANTHROPIC = 2;
+     */
+    ANTHROPIC = 2
+}
+/**
+ * SSH sets the SSH-specific configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.SSH
  */
 export interface Service_Spec_Config_SSH {
@@ -1948,7 +3101,8 @@ export interface Service_Spec_Config_SSH {
      */
     enableLocalPortForwarding: boolean;
     /**
-     * EnableSubsystem enable subsystem requests
+     * EnableSubsystem enables subsystem requests (e.g. SFTP). Subsystem
+     * requests are disabled by default.
      *
      * @generated from protobuf field: bool enableSubsystem = 5
      */
@@ -1962,15 +3116,22 @@ export interface Service_Spec_Config_SSH {
      */
     eSSHMode: boolean;
     /**
+     * Visibility sets the SSH-specific access logging configuration
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.SSH.Visibility visibility = 7
      */
     visibility?: Service_Spec_Config_SSH_Visibility;
 }
 /**
+ * Auth sets the credentials used to authenticate to the upstream SSH
+ * server
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.SSH.Auth
  */
 export interface Service_Spec_Config_SSH_Auth {
     /**
+     * Type sets the authentication method used with the upstream
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -1996,6 +3157,8 @@ export interface Service_Spec_Config_SSH_Auth {
     };
 }
 /**
+ * Password is the password of the upstream SSH server
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.SSH.Auth.Password
  */
 export interface Service_Spec_Config_SSH_Auth_Password {
@@ -2005,6 +3168,9 @@ export interface Service_Spec_Config_SSH_Auth_Password {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains
+         * the Password
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -2013,6 +3179,9 @@ export interface Service_Spec_Config_SSH_Auth_Password {
     };
 }
 /**
+ * PrivateKey is the private key used to authenticate to the upstream
+ * SSH server
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.SSH.Auth.PrivateKey
  */
 export interface Service_Spec_Config_SSH_Auth_PrivateKey {
@@ -2022,6 +3191,9 @@ export interface Service_Spec_Config_SSH_Auth_PrivateKey {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains
+         * the PEM-encoded PrivateKey
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -2030,10 +3202,15 @@ export interface Service_Spec_Config_SSH_Auth_PrivateKey {
     };
 }
 /**
+ * UpstreamHostKey sets how the upstream SSH server's host public key
+ * is verified upon connecting to it
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.SSH.UpstreamHostKey
  */
 export interface Service_Spec_Config_SSH_UpstreamHostKey {
     /**
+     * Type sets how the upstream's host public key is verified
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -2059,19 +3236,29 @@ export interface Service_Spec_Config_SSH_UpstreamHostKey {
     };
 }
 /**
+ * Visibility sets the SSH-specific access logging configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.SSH.Visibility
  */
 export interface Service_Spec_Config_SSH_Visibility {
     /**
+     * DisableSessionRecording disables recording the SSH sessions in the
+     * access logs.
+     *
      * @generated from protobuf field: bool disableSessionRecording = 1
      */
     disableSessionRecording: boolean;
     /**
+     * EnableSessionStdinRecording additionally records the SSH sessions'
+     * stdin in the access logs.
+     *
      * @generated from protobuf field: bool enableSessionStdinRecording = 2
      */
     enableSessionStdinRecording: boolean;
 }
 /**
+ * Postgres sets the PostgreSQL-specific configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Postgres
  */
 export interface Service_Spec_Config_Postgres {
@@ -2112,15 +3299,22 @@ export interface Service_Spec_Config_Postgres {
     authorization?: Service_Spec_Config_Postgres_Authorization;
 }
 /**
+ * Auth sets the credentials used to authenticate to the upstream
+ * PostgreSQL server
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Postgres.Auth
  */
 export interface Service_Spec_Config_Postgres_Auth {
     /**
+     * Type sets the authentication method used with the upstream
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "password";
         /**
+         * Password sets the password used for authentication
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Postgres.Auth.Password password = 1
          */
         password: Service_Spec_Config_Postgres_Auth_Password;
@@ -2129,6 +3323,8 @@ export interface Service_Spec_Config_Postgres_Auth {
     };
 }
 /**
+ * Password is the password of the upstream PostgreSQL server
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Postgres.Auth.Password
  */
 export interface Service_Spec_Config_Postgres_Auth_Password {
@@ -2138,6 +3334,9 @@ export interface Service_Spec_Config_Postgres_Auth_Password {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains
+         * the Password
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -2146,6 +3345,9 @@ export interface Service_Spec_Config_Postgres_Auth_Password {
     };
 }
 /**
+ * Authorization sets the PostgreSQL-specific authorization
+ * configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Postgres.Authorization
  */
 export interface Service_Spec_Config_Postgres_Authorization {
@@ -2157,6 +3359,8 @@ export interface Service_Spec_Config_Postgres_Authorization {
     mode: Service_Spec_Config_Postgres_Authorization_Mode;
 }
 /**
+ * Mode sets when the authorization is enforced
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.Postgres.Authorization.Mode
  */
 export enum Service_Spec_Config_Postgres_Authorization_Mode {
@@ -2182,6 +3386,8 @@ export enum Service_Spec_Config_Postgres_Authorization_Mode {
     NONE = 2
 }
 /**
+ * SSLMode is the PostgreSQL SSL mode used to connect to the upstream
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.Postgres.SSLMode
  */
 export enum Service_Spec_Config_Postgres_SSLMode {
@@ -2208,36 +3414,59 @@ export enum Service_Spec_Config_Postgres_SSLMode {
     REQUIRE = 2
 }
 /**
+ * MySQL sets the MySQL-specific configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.MySQL
  */
 export interface Service_Spec_Config_MySQL {
     /**
+     * User is the MySQL user. If set, it overrides the user values
+     * requested by the downstreams. If not set, the user values requested
+     * by the downstreams is forwarded to the upstream as is.
+     *
      * @generated from protobuf field: string user = 1
      */
     user: string;
     /**
+     * Auth sets the upstream authentication information
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.MySQL.Auth auth = 2
      */
     auth?: Service_Spec_Config_MySQL_Auth;
     /**
+     * Database is the name of the database. If set, it overrides the
+     * database values requested by the downstreams. If not set, the
+     * database values requested by the downstreams is forwarded to the
+     * upstream as is.
+     *
      * @generated from protobuf field: string database = 3
      */
     database: string;
     /**
+     * IsTLS connects to the upstream over TLS. It must be enabled if the
+     * upstream database is listening over TLS.
+     *
      * @generated from protobuf field: bool isTLS = 4
      */
     isTLS: boolean;
 }
 /**
+ * Auth sets the credentials used to authenticate to the upstream MySQL
+ * server
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.MySQL.Auth
  */
 export interface Service_Spec_Config_MySQL_Auth {
     /**
+     * Type sets the authentication method used with the upstream
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "password";
         /**
+         * Password sets the password used for authentication
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.MySQL.Auth.Password password = 1
          */
         password: Service_Spec_Config_MySQL_Auth_Password;
@@ -2246,6 +3475,8 @@ export interface Service_Spec_Config_MySQL_Auth {
     };
 }
 /**
+ * Password is the password of the upstream MySQL server
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.MySQL.Auth.Password
  */
 export interface Service_Spec_Config_MySQL_Auth_Password {
@@ -2255,6 +3486,9 @@ export interface Service_Spec_Config_MySQL_Auth_Password {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains
+         * the Password
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -2263,10 +3497,16 @@ export interface Service_Spec_Config_MySQL_Auth_Password {
     };
 }
 /**
+ * ClientCertificate sets the x509 client certificate used to
+ * authenticate to an upstream that requires mTLS
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.ClientCertificate
  */
 export interface Service_Spec_Config_ClientCertificate {
     /**
+     * TrustedCAs is the list of the PEM-encoded root certificate
+     * authorities that are trusted to verify the upstream's certificate.
+     *
      * @generated from protobuf field: repeated string trustedCAs = 1
      */
     trustedCAs: string[];
@@ -2276,6 +3516,10 @@ export interface Service_Spec_Config_ClientCertificate {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains the
+         * PEM representations of both the client certificate chain and its
+         * corresponding private key
+         *
          * @generated from protobuf field: string fromSecret = 2
          */
         fromSecret: string;
@@ -2284,27 +3528,47 @@ export interface Service_Spec_Config_ClientCertificate {
     };
 }
 /**
+ * TLS sets the TLS client-side configuration used by the Service to
+ * connect to an upstream that is listening over TLS
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.TLS
  */
 export interface Service_Spec_Config_TLS {
     /**
+     * TrustedCAs is the list of the PEM-encoded root certificate
+     * authorities that are trusted to verify the upstream's certificate.
+     * By default, this list overrides the system's default trusted CAs.
+     *
      * @generated from protobuf field: repeated string trustedCAs = 1
      */
     trustedCAs: string[];
     /**
+     * AppendToSystemPool appends the trustedCAs to the system's default
+     * trusted CAs instead of overriding them.
+     *
      * @generated from protobuf field: bool appendToSystemPool = 2
      */
     appendToSystemPool: boolean;
     /**
+     * InsecureSkipVerify entirely skips verifying the certificate provided
+     * by the upstream. This is typically recommended only for
+     * troubleshooting/testing use cases.
+     *
      * @generated from protobuf field: bool insecureSkipVerify = 3
      */
     insecureSkipVerify: boolean;
     /**
+     * ClientCertificate sets the mTLS client certificate used to
+     * authenticate to the upstream
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.TLS.ClientCertificate clientCertificate = 4
      */
     clientCertificate?: Service_Spec_Config_TLS_ClientCertificate;
 }
 /**
+ * ClientCertificate sets the x509 client certificate used to
+ * authenticate to an upstream that requires mTLS
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.TLS.ClientCertificate
  */
 export interface Service_Spec_Config_TLS_ClientCertificate {
@@ -2314,6 +3578,10 @@ export interface Service_Spec_Config_TLS_ClientCertificate {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains the
+         * PEM representations of both the client certificate chain and its
+         * corresponding private key
+         *
          * @generated from protobuf field: string fromSecret = 2
          */
         fromSecret: string;
@@ -2322,17 +3590,22 @@ export interface Service_Spec_Config_TLS_ClientCertificate {
     };
 }
 /**
+ * Kubernetes sets the Kubernetes-specific configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Kubernetes
  */
 export interface Service_Spec_Config_Kubernetes {
     /**
+     * Type sets the credentials used to authenticate to the upstream
+     * Kubernetes cluster. Only one of Kubeconfig, BearerToken or
+     * ClientCertificate must be set.
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "kubeconfig";
         /**
-         * Kubeconfig sets the cluster configuration from a kubeconfig. Only
-         * one of ClusterInfo or Kubeconfig must be set.
+         * Kubeconfig sets the cluster configuration from a kubeconfig
          *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Kubernetes.Kubeconfig kubeconfig = 1
          */
@@ -2340,12 +3613,17 @@ export interface Service_Spec_Config_Kubernetes {
     } | {
         oneofKind: "bearerToken";
         /**
+         * BearerToken sets the bearer token used for authentication
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Kubernetes.BearerToken bearerToken = 2
          */
         bearerToken: Service_Spec_Config_Kubernetes_BearerToken;
     } | {
         oneofKind: "clientCertificate";
         /**
+         * ClientCertificate sets the x509 client certificate used for
+         * authentication
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.ClientCertificate clientCertificate = 3
          */
         clientCertificate: Service_Spec_Config_ClientCertificate;
@@ -2354,6 +3632,9 @@ export interface Service_Spec_Config_Kubernetes {
     };
 }
 /**
+ * BearerToken is the bearer token used to authenticate to the upstream
+ * Kubernetes cluster
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Kubernetes.BearerToken
  */
 export interface Service_Spec_Config_Kubernetes_BearerToken {
@@ -2363,6 +3644,9 @@ export interface Service_Spec_Config_Kubernetes_BearerToken {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains the
+         * bearer token
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -2370,11 +3654,16 @@ export interface Service_Spec_Config_Kubernetes_BearerToken {
         oneofKind: undefined;
     };
     /**
+     * TrustedCAs is the list of the PEM-encoded root certificate
+     * authorities that are trusted to verify the upstream's certificate.
+     *
      * @generated from protobuf field: repeated string trustedCAs = 2
      */
     trustedCAs: string[];
 }
 /**
+ * Kubeconfig is the kubeconfig of the upstream Kubernetes cluster
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Kubernetes.Kubeconfig
  */
 export interface Service_Spec_Config_Kubernetes_Kubeconfig {
@@ -2384,6 +3673,9 @@ export interface Service_Spec_Config_Kubernetes_Kubeconfig {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains the
+         * kubeconfig
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -2399,34 +3691,54 @@ export interface Service_Spec_Config_Kubernetes_Kubeconfig {
     context: string;
 }
 /**
+ * SOCKS5 sets the SOCKS5-specific configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.SOCKS5
  */
 export interface Service_Spec_Config_SOCKS5 {
     /**
+     * Auth sets the upstream authentication information
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.SOCKS5.Auth auth = 1
      */
     auth?: Service_Spec_Config_SOCKS5_Auth;
     /**
+     * IsEmbeddedMode enables the "embedded" mode where the SOCKS5 proxy is
+     * served from within a connected Octelium client instead of being
+     * proxied to a separate upstream SOCKS5 server. In this mode the
+     * connected client itself acts as the SOCKS5 egress point.
+     *
      * @generated from protobuf field: bool isEmbeddedMode = 2
      */
     isEmbeddedMode: boolean;
 }
 /**
+ * Auth sets the credentials used to authenticate to the upstream
+ * SOCKS5 server
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.SOCKS5.Auth
  */
 export interface Service_Spec_Config_SOCKS5_Auth {
     /**
+     * Type sets the authentication method used with the upstream
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "noAuth";
         /**
+         * NoAuth explicitly uses no authentication when connecting to the
+         * upstream SOCKS5 server
+         *
          * @generated from protobuf field: bool noAuth = 1
          */
         noAuth: boolean;
     } | {
         oneofKind: "usernamePassword";
         /**
+         * UsernamePassword sets the username and password used for
+         * authentication
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.SOCKS5.Auth.UsernamePassword usernamePassword = 2
          */
         usernamePassword: Service_Spec_Config_SOCKS5_Auth_UsernamePassword;
@@ -2435,19 +3747,28 @@ export interface Service_Spec_Config_SOCKS5_Auth {
     };
 }
 /**
+ * UsernamePassword authenticates to the upstream via a username and
+ * a password
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.SOCKS5.Auth.UsernamePassword
  */
 export interface Service_Spec_Config_SOCKS5_Auth_UsernamePassword {
     /**
+     * Username is the username used to authenticate to the upstream
+     *
      * @generated from protobuf field: string username = 1
      */
     username: string;
     /**
+     * Password is the password used to authenticate to the upstream
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.SOCKS5.Auth.UsernamePassword.Password password = 2
      */
     password?: Service_Spec_Config_SOCKS5_Auth_UsernamePassword_Password;
 }
 /**
+ * Password is the password of the upstream SOCKS5 server
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.SOCKS5.Auth.UsernamePassword.Password
  */
 export interface Service_Spec_Config_SOCKS5_Auth_UsernamePassword_Password {
@@ -2457,6 +3778,9 @@ export interface Service_Spec_Config_SOCKS5_Auth_UsernamePassword_Password {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains
+         * the Password
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -2465,36 +3789,55 @@ export interface Service_Spec_Config_SOCKS5_Auth_UsernamePassword_Password {
     };
 }
 /**
+ * RDP sets the RDP-specific configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.RDP
  */
 export interface Service_Spec_Config_RDP {
     /**
+     * Auth sets the upstream authentication information
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.RDP.Auth auth = 1
      */
     auth?: Service_Spec_Config_RDP_Auth;
     /**
+     * UpstreamTLS sets the verification of the upstream's certificate
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.RDP.UpstreamTLS upstreamTLS = 2
      */
     upstreamTLS?: Service_Spec_Config_RDP_UpstreamTLS;
 }
 /**
+ * Auth sets the credentials used to authenticate to the upstream RDP
+ * server over Network Level Authentication (NLA)
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.RDP.Auth
  */
 export interface Service_Spec_Config_RDP_Auth {
     /**
+     * User is the RDP user. If set, it overrides the user requested by
+     * the downstreams.
+     *
      * @generated from protobuf field: string user = 1
      */
     user: string;
     /**
+     * Domain is the Windows domain of the RDP user. It can be left
+     * unset if the upstream uses local accounts rather than a domain.
+     *
      * @generated from protobuf field: string domain = 2
      */
     domain: string;
     /**
+     * Password is the password used to authenticate to the upstream
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.RDP.Auth.Password password = 3
      */
     password?: Service_Spec_Config_RDP_Auth_Password;
 }
 /**
+ * Password is the password of the upstream RDP user
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.RDP.Auth.Password
  */
 export interface Service_Spec_Config_RDP_Auth_Password {
@@ -2504,6 +3847,9 @@ export interface Service_Spec_Config_RDP_Auth_Password {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains
+         * the Password
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -2512,19 +3858,38 @@ export interface Service_Spec_Config_RDP_Auth_Password {
     };
 }
 /**
+ * UpstreamTLS sets how the certificate presented by the upstream RDP
+ * server is verified. Windows RDP servers typically present
+ * self-signed certificates.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.RDP.UpstreamTLS
  */
 export interface Service_Spec_Config_RDP_UpstreamTLS {
     /**
+     * PinnedCertSHA256 is the list of the SHA-256 fingerprints of the
+     * upstream's certificate. The connection is rejected if the
+     * upstream's certificate matches none of them. More than one
+     * fingerprint can be set which is useful while rotating the
+     * upstream's certificate.
+     *
      * @generated from protobuf field: repeated string pinnedCertSHA256 = 1
      */
     pinnedCertSHA256: string[];
     /**
+     * AllowAnyCert entirely disables verifying the upstream's
+     * certificate. This is typically recommended only for
+     * troubleshooting/testing use cases.
+     *
      * @generated from protobuf field: bool allowAnyCert = 2
      */
     allowAnyCert: boolean;
 }
 /**
+ * Upstream is the actual protected resource behind the Service. It is
+ * either directly reachable from within the Cluster, remotely reachable
+ * via an actively connected User, or a container that is deployed and
+ * managed by the Cluster itself.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream
  */
 export interface Service_Spec_Config_Upstream {
@@ -2538,14 +3903,19 @@ export interface Service_Spec_Config_Upstream {
      */
     user: string;
     /**
+     * Type sets the actual upstream of the Service
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "url";
         /**
          * URL is the canonical URL of the upstream.
-         * Examples are`http://example.com`, `postgres://pg.default.svc`,
+         * Examples are `http://example.com`, `postgres://pg.default.svc`,
          * `tcp://my-custom-app:9090`,  and `https://api.sandbox.paypal.com`.
+         * Note that the URL path is ignored in every mode except for the LLM
+         * and the MCP modes where it sets the upstream's base path. Read the
+         * `llm` and the `mcp` Configuration fields for more details.
          *
          * @generated from protobuf field: string url = 2
          */
@@ -2563,7 +3933,7 @@ export interface Service_Spec_Config_Upstream {
         oneofKind: "container";
         /**
          * Container sets the Upstream to a managed container deployed
-         * on the same Kubernetes cluster that hosts the OCtelium Cluster
+         * on the same Kubernetes cluster that hosts the Octelium Cluster
          *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container container = 4
          */
@@ -2573,6 +3943,10 @@ export interface Service_Spec_Config_Upstream {
     };
 }
 /**
+ * Loadbalance is the list of upstreams to load balance among. Random
+ * load balancing is currently automatically enforced among the
+ * different endpoints.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Loadbalance
  */
 export interface Service_Spec_Config_Upstream_Loadbalance {
@@ -2584,12 +3958,14 @@ export interface Service_Spec_Config_Upstream_Loadbalance {
     endpoints: Service_Spec_Config_Upstream_Loadbalance_Endpoint[];
 }
 /**
+ * Endpoint is a single upstream endpoint
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Loadbalance.Endpoint
  */
 export interface Service_Spec_Config_Upstream_Loadbalance_Endpoint {
     /**
      * URL is the canonical URL of the upstream.
-     * Examples are`http://example.com`, `postgres://pg.default.svc`,
+     * Examples are `http://example.com`, `postgres://pg.default.svc`,
      * `tcp://my-custom-app:9090`,  and
      * `https://api.sandbox.paypal.com`.
      *
@@ -2607,6 +3983,10 @@ export interface Service_Spec_Config_Upstream_Loadbalance_Endpoint {
     user: string;
 }
 /**
+ * Container is a containerized application that is deployed, managed
+ * and scaled by the Cluster on top of the underlying Kubernetes
+ * infrastructure and served as the Service's upstream
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container
  */
 export interface Service_Spec_Config_Upstream_Container {
@@ -2667,33 +4047,47 @@ export interface Service_Spec_Config_Upstream_Container {
      */
     securityContext?: Service_Spec_Config_Upstream_Container_SecurityContext;
     /**
+     * Volumes is the list of the Kubernetes volumes defined for the
+     * container
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Volume volumes = 10
      */
     volumes: Service_Spec_Config_Upstream_Container_Volume[];
     /**
+     * VolumeMounts is the list of the defined Volumes that are mounted
+     * inside the container
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.VolumeMount volumeMounts = 11
      */
     volumeMounts: Service_Spec_Config_Upstream_Container_VolumeMount[];
     /**
+     * LivenessProbe sets the container's liveness probe
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Probe livenessProbe = 12
      */
     livenessProbe?: Service_Spec_Config_Upstream_Container_Probe;
     /**
+     * ReadinessProbe sets the container's readiness probe
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Probe readinessProbe = 13
      */
     readinessProbe?: Service_Spec_Config_Upstream_Container_Probe;
 }
 /**
+ * Env is an environment variable of the managed container
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Env
  */
 export interface Service_Spec_Config_Upstream_Container_Env {
     /**
-     * Name is  the environment variable key
+     * Name is the environment variable key
      *
      * @generated from protobuf field: string name = 1
      */
     name: string;
     /**
+     * Type sets the source of the environment variable's value
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -2727,6 +4121,9 @@ export interface Service_Spec_Config_Upstream_Container_Env {
     };
 }
 /**
+ * KubernetesSecretRef references an existent Kubernetes secret in
+ * the `octelium` Kubernetes namespace
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Env.KubernetesSecretRef
  */
 export interface Service_Spec_Config_Upstream_Container_Env_KubernetesSecretRef {
@@ -2744,10 +4141,16 @@ export interface Service_Spec_Config_Upstream_Container_Env_KubernetesSecretRef 
     key: string;
 }
 /**
+ * Credentials sets the credentials used to pull the container image
+ * from a private container registry
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Credentials
  */
 export interface Service_Spec_Config_Upstream_Container_Credentials {
     /**
+     * Type sets the authentication method used with the container
+     * registry
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -2764,6 +4167,9 @@ export interface Service_Spec_Config_Upstream_Container_Credentials {
     };
 }
 /**
+ * UsernamePassword authenticates to the container registry via a
+ * username and a password
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Credentials.UsernamePassword
  */
 export interface Service_Spec_Config_Upstream_Container_Credentials_UsernamePassword {
@@ -2790,6 +4196,9 @@ export interface Service_Spec_Config_Upstream_Container_Credentials_UsernamePass
     server: string;
 }
 /**
+ * Password is the password used to authenticate to the
+ * container registry
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Credentials.UsernamePassword.Password
  */
 export interface Service_Spec_Config_Upstream_Container_Credentials_UsernamePassword_Password {
@@ -2810,6 +4219,9 @@ export interface Service_Spec_Config_Upstream_Container_Credentials_UsernamePass
     };
 }
 /**
+ * ResourceLimit sets how much compute resources the managed
+ * container is allowed to consume
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.ResourceLimit
  */
 export interface Service_Spec_Config_Upstream_Container_ResourceLimit {
@@ -2836,6 +4248,8 @@ export interface Service_Spec_Config_Upstream_Container_ResourceLimit {
     };
 }
 /**
+ * CPU is the CPU-related limit
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.ResourceLimit.CPU
  */
 export interface Service_Spec_Config_Upstream_Container_ResourceLimit_CPU {
@@ -2847,17 +4261,22 @@ export interface Service_Spec_Config_Upstream_Container_ResourceLimit_CPU {
     millicores: number;
 }
 /**
+ * Memory is the memory-related limit
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.ResourceLimit.Memory
  */
 export interface Service_Spec_Config_Upstream_Container_ResourceLimit_Memory {
     /**
-     * Megabytes is the integer that set the limit in megabytes
+     * Megabytes is the integer that sets the limit in megabytes
      *
      * @generated from protobuf field: uint32 megabytes = 1
      */
     megabytes: number;
 }
 /**
+ * SecurityContext sets the security-related configuration of the
+ * managed container
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.SecurityContext
  */
 export interface Service_Spec_Config_Upstream_Container_SecurityContext {
@@ -2881,38 +4300,60 @@ export interface Service_Spec_Config_Upstream_Container_SecurityContext {
     capabilities?: Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities;
 }
 /**
+ * Capabilities sets the Linux capabilities of the managed
+ * container
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.SecurityContext.Capabilities
  */
 export interface Service_Spec_Config_Upstream_Container_SecurityContext_Capabilities {
     /**
+     * Add is the list of the added Linux capabilities (e.g.
+     * "NET_ADMIN", "SYS_TIME")
+     *
      * @generated from protobuf field: repeated string add = 1
      */
     add: string[];
     /**
+     * Drop is the list of the dropped Linux capabilities (e.g.
+     * "ALL")
+     *
      * @generated from protobuf field: repeated string drop = 2
      */
     drop: string[];
 }
 /**
+ * Volume is a Kubernetes volume that is defined for the managed
+ * container
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Volume
  */
 export interface Service_Spec_Config_Upstream_Container_Volume {
     /**
+     * Name is the name of the Volume. It is used by the VolumeMounts
+     * to reference the Volume.
+     *
      * @generated from protobuf field: string name = 1
      */
     name: string;
     /**
+     * Type sets the type of the Volume
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "persistentVolumeClaim";
         /**
+         * PersistentVolumeClaim uses a Kubernetes persistent volume
+         * claim as the Volume
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Volume.PersistentVolumeClaim persistentVolumeClaim = 2
          */
         persistentVolumeClaim: Service_Spec_Config_Upstream_Container_Volume_PersistentVolumeClaim;
     } | {
         oneofKind: "emptyDir";
         /**
+         * EmptyDir uses a Kubernetes emptyDir as the Volume
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Volume.EmptyDir emptyDir = 3
          */
         emptyDir: Service_Spec_Config_Upstream_Container_Volume_EmptyDir;
@@ -2921,66 +4362,98 @@ export interface Service_Spec_Config_Upstream_Container_Volume {
     };
 }
 /**
+ * PersistentVolumeClaim is a Kubernetes persistent volume claim
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Volume.PersistentVolumeClaim
  */
 export interface Service_Spec_Config_Upstream_Container_Volume_PersistentVolumeClaim {
     /**
+     * Name is the name of the Kubernetes persistent volume claim
+     *
      * @generated from protobuf field: string name = 1
      */
     name: string;
 }
 /**
+ * EmptyDir is a Kubernetes emptyDir volume
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Volume.EmptyDir
  */
 export interface Service_Spec_Config_Upstream_Container_Volume_EmptyDir {
     /**
+     * SizeLimitMegabytes is the size limit of the volume in
+     * megabytes
+     *
      * @generated from protobuf field: uint32 sizeLimitMegabytes = 1
      */
     sizeLimitMegabytes: number;
 }
 /**
+ * VolumeMount mounts a defined Volume inside the managed container
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.VolumeMount
  */
 export interface Service_Spec_Config_Upstream_Container_VolumeMount {
     /**
+     * Name is the name of the mounted Volume
+     *
      * @generated from protobuf field: string name = 1
      */
     name: string;
     /**
+     * MountPath is the path inside the container at which the Volume
+     * is mounted
+     *
      * @generated from protobuf field: string mountPath = 2
      */
     mountPath: string;
     /**
+     * SubPath is the path within the Volume that is mounted instead of
+     * its root
+     *
      * @generated from protobuf field: string subPath = 3
      */
     subPath: string;
     /**
+     * ReadOnly mounts the Volume as read-only
+     *
      * @generated from protobuf field: bool readOnly = 4
      */
     readOnly: boolean;
 }
 /**
+ * Probe is a Kubernetes liveness or readiness probe of the managed
+ * container
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Probe
  */
 export interface Service_Spec_Config_Upstream_Container_Probe {
     /**
+     * Type sets the type of the Probe
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "httpGet";
         /**
+         * HTTPGet sets an HTTP GET probe
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Probe.HTTPGet httpGet = 1
          */
         httpGet: Service_Spec_Config_Upstream_Container_Probe_HTTPGet;
     } | {
         oneofKind: "tcpSocket";
         /**
+         * TCPSocket sets a TCP socket probe
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Probe.TCPSocket tcpSocket = 2
          */
         tcpSocket: Service_Spec_Config_Upstream_Container_Probe_TCPSocket;
     } | {
         oneofKind: "grpc";
         /**
+         * GRPC sets a gRPC probe
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Probe.GRPC grpc = 3
          */
         grpc: Service_Spec_Config_Upstream_Container_Probe_GRPC;
@@ -2988,58 +4461,90 @@ export interface Service_Spec_Config_Upstream_Container_Probe {
         oneofKind: undefined;
     };
     /**
+     * InitialDelaySeconds is the number of seconds after the container
+     * starts before the Probe is initiated
+     *
      * @generated from protobuf field: int32 initialDelaySeconds = 5
      */
     initialDelaySeconds: number;
     /**
+     * TimeoutSeconds is the number of seconds after which the Probe
+     * times out
+     *
      * @generated from protobuf field: int32 timeoutSeconds = 6
      */
     timeoutSeconds: number;
     /**
+     * PeriodSeconds is the number of seconds between performing the
+     * Probe
+     *
      * @generated from protobuf field: int32 periodSeconds = 7
      */
     periodSeconds: number;
     /**
+     * SuccessThreshold is the number of consecutive successes after
+     * which the Probe is considered successful
+     *
      * @generated from protobuf field: int32 successThreshold = 8
      */
     successThreshold: number;
     /**
+     * FailureThreshold is the number of consecutive failures after
+     * which the Probe is considered failed
+     *
      * @generated from protobuf field: int32 failureThreshold = 9
      */
     failureThreshold: number;
 }
 /**
+ * HTTPGet probes the container via an HTTP GET request
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Probe.HTTPGet
  */
 export interface Service_Spec_Config_Upstream_Container_Probe_HTTPGet {
     /**
+     * Path is the HTTP path of the probe request
+     *
      * @generated from protobuf field: string path = 1
      */
     path: string;
     /**
+     * Port is the port at which the probe request is sent
+     *
      * @generated from protobuf field: uint32 port = 2
      */
     port: number;
 }
 /**
+ * TCPSocket probes the container by opening a TCP connection
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Probe.TCPSocket
  */
 export interface Service_Spec_Config_Upstream_Container_Probe_TCPSocket {
     /**
+     * Port is the port at which the TCP connection is opened
+     *
      * @generated from protobuf field: uint32 port = 1
      */
     port: number;
 }
 /**
+ * GRPC probes the container via the gRPC health checking protocol
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Upstream.Container.Probe.GRPC
  */
 export interface Service_Spec_Config_Upstream_Container_Probe_GRPC {
     /**
+     * Port is the port at which the gRPC probe is sent
+     *
      * @generated from protobuf field: uint32 port = 1
      */
     port: number;
 }
 /**
+ * Deployment sets the configuration of the Kubernetes deployment
+ * implementing the Service
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Deployment
  */
 export interface Service_Spec_Deployment {
@@ -3051,6 +4556,10 @@ export interface Service_Spec_Deployment {
     replicas: number;
 }
 /**
+ * DynamicConfig overrides the global/static Service Config on a
+ * per-request basis. If no Rule matches, the global Config is used as a
+ * fallback.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.DynamicConfig
  */
 export interface Service_Spec_DynamicConfig {
@@ -3071,6 +4580,9 @@ export interface Service_Spec_DynamicConfig {
     rules: Service_Spec_DynamicConfig_Rule[];
 }
 /**
+ * Rule is evaluated on a per-request basis to choose or generate the
+ * Config used for that specific request
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.DynamicConfig.Rule
  */
 export interface Service_Spec_DynamicConfig_Rule {
@@ -3081,6 +4593,9 @@ export interface Service_Spec_DynamicConfig_Rule {
      */
     condition?: Condition;
     /**
+     * Type sets how the Config of a matching request is chosen or
+     * generated
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -3113,10 +4628,16 @@ export interface Service_Spec_DynamicConfig_Rule {
     };
 }
 /**
+ * Mode is the application-layer protocol understood by the proxy
+ * implementing the Service
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Mode
  */
 export enum Service_Spec_Mode {
     /**
+     * MODE_UNSET is the default value. The Cluster automatically decides the
+     * mode using the scheme of the Upstream's URL.
+     *
      * @generated from protobuf enum value: MODE_UNSET = 0;
      */
     MODE_UNSET = 0,
@@ -3183,15 +4704,40 @@ export enum Service_Spec_Mode {
      */
     DNS = 10,
     /**
+     * SOCKS5 is the SOCKS5 proxy mode
+     *
      * @generated from protobuf enum value: SOCKS5 = 11;
      */
     SOCKS5 = 11,
     /**
+     * RDP_WEB is the browser-based RDP mode. It provides clientless RDP
+     * access for HUMAN Users to upstream RDP servers directly from their
+     * browsers.
+     *
      * @generated from protobuf enum value: RDP_WEB = 12;
      */
-    RDP_WEB = 12
+    RDP_WEB = 12,
+    /**
+     * MCP is the Model Context Protocol mode. MCP Services are HTTP-based:
+     * they reuse the entire HTTP dataplane and additionally understand the
+     * MCP JSON-RPC semantics for access control, access logging and metrics.
+     *
+     * @generated from protobuf enum value: MCP = 13;
+     */
+    MCP = 13,
+    /**
+     * LLM is the LLM gateway mode. LLM Services are HTTP-based: they reuse
+     * the entire HTTP dataplane and additionally understand the inference
+     * API semantics (i.e. the operation, the model, the streaming mode and
+     * the token usage) for access control, access logging and metrics.
+     *
+     * @generated from protobuf enum value: LLM = 14;
+     */
+    LLM = 14
 }
 /**
+ * Status is the current status of the Service
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Status
  */
 export interface Service_Status {
@@ -3209,99 +4755,156 @@ export interface Service_Status {
      */
     namespaceRef?: ObjectReference;
     /**
+     * ManagedService is the configuration of the Service if it is deployed
+     * and maintained by the Cluster itself.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Status.ManagedService managedService = 3
      */
     managedService?: Service_Status_ManagedService;
     /**
+     * RegionRef is the reference of the Region in which the Service is
+     * deployed.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference regionRef = 4
      */
     regionRef?: ObjectReference;
     /**
+     * PrimaryHostname is the Service's primary hostname
+     *
      * @generated from protobuf field: string primaryHostname = 5
      */
     primaryHostname: string;
     /**
+     * AdditionalHostnames is the list of the Service's additional hostnames
+     *
      * @generated from protobuf field: repeated string additionalHostnames = 6
      */
     additionalHostnames: string[];
     /**
+     * Port is the port number used by the Service's listener
+     *
      * @generated from protobuf field: uint32 port = 7
      */
     port: number;
 }
 /**
+ * Address is a private address at which the Service is reachable by the
+ * Cluster's clients
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Status.Address
  */
 export interface Service_Status_Address {
     /**
+     * DualStackIP is the IPv4 and IPv6 addresses of the Service
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.DualStackIP dualStackIP = 1
      */
     dualStackIP?: DualStackIP;
     /**
+     * PodRef is the reference of the Pod serving the Service
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference podRef = 2
      */
     podRef?: ObjectReference;
 }
 /**
+ * ManagedService is the configuration of a Service that is deployed and
+ * maintained by the Cluster itself (e.g. the built-in Services of the
+ * Cluster such as the AuthService and the Portal)
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Status.ManagedService
  */
 export interface Service_Status_ManagedService {
     /**
+     * Image is the image URL of the managed Service's container
+     *
      * @generated from protobuf field: string image = 1
      */
     image: string;
     /**
+     * Port is the port exposed by the managed Service's container
+     *
      * @generated from protobuf field: uint32 port = 2
      */
     port: number;
     /**
+     * HasSubdomain determines whether the managed Service additionally
+     * serves the subdomains of its FQDNs.
+     *
      * @generated from protobuf field: bool hasSubdomain = 3
      */
     hasSubdomain: boolean;
     /**
+     * ForwardHost determines whether the downstream Host header is forwarded
+     * to the managed Service as is.
+     *
      * @generated from protobuf field: bool forwardHost = 4
      */
     forwardHost: boolean;
     /**
+     * Type is the type of the managed Service
+     *
      * @generated from protobuf field: string type = 5
      */
     type: string;
     /**
+     * K8sLabels is the map of the additional Kubernetes labels set for the
+     * managed Service's Kubernetes resources.
+     *
      * @generated from protobuf field: map<string, string> k8sLabels = 6
      */
     k8SLabels: {
         [key: string]: string;
     };
     /**
+     * Command overrides the container image's command
+     *
      * @generated from protobuf field: repeated string command = 7
      */
     command: string[];
     /**
+     * Args is the list of command arguments that override the image
+     * arguments
+     *
      * @generated from protobuf field: repeated string args = 8
      */
     args: string[];
     /**
+     * ImagePullSecret is the name of the Kubernetes secret used to pull the
+     * container image from a private registry.
+     *
      * @generated from protobuf field: string imagePullSecret = 9
      */
     imagePullSecret: string;
     /**
+     * HealthCheck sets the health check of the managed Service
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Status.ManagedService.HealthCheck healthCheck = 10
      */
     healthCheck?: Service_Status_ManagedService_HealthCheck;
     /**
+     * ResourceLimit sets the managed Service's container resource limits
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Status.ManagedService.ResourceLimit resourceLimit = 11
      */
     resourceLimit?: Service_Status_ManagedService_ResourceLimit;
     /**
+     * ReadOnlyFileSystem sets the container's root filesystem to read-only
+     *
      * @generated from protobuf field: bool readOnlyFileSystem = 12
      */
     readOnlyFileSystem: boolean;
 }
 /**
+ * HealthCheck is the health check used by the Cluster to probe the
+ * managed Service
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Status.ManagedService.HealthCheck
  */
 export interface Service_Status_ManagedService_HealthCheck {
     /**
+     * Type sets the type of the health check
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -3315,46 +4918,66 @@ export interface Service_Status_ManagedService_HealthCheck {
     };
 }
 /**
+ * GRPC is a gRPC health check
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Status.ManagedService.HealthCheck.GRPC
  */
 export interface Service_Status_ManagedService_HealthCheck_GRPC {
     /**
+     * Port is the port at which the health check is served
+     *
      * @generated from protobuf field: int32 port = 1
      */
     port: number;
 }
 /**
+ * ResourceLimit sets the compute resource limits of the managed Service
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Status.ManagedService.ResourceLimit
  */
 export interface Service_Status_ManagedService_ResourceLimit {
     /**
+     * CPU sets the CPU-related limit
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Status.ManagedService.ResourceLimit.CPU cpu = 1
      */
     cpu?: Service_Status_ManagedService_ResourceLimit_CPU;
     /**
+     * Memory sets the memory-related limit
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Status.ManagedService.ResourceLimit.Memory memory = 2
      */
     memory?: Service_Status_ManagedService_ResourceLimit_Memory;
 }
 /**
+ * CPU is the CPU-related limit
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Status.ManagedService.ResourceLimit.CPU
  */
 export interface Service_Status_ManagedService_ResourceLimit_CPU {
     /**
+     * Millicores is the integer that sets the limit milli-cores
+     *
      * @generated from protobuf field: uint32 millicores = 1
      */
     millicores: number;
 }
 /**
+ * Memory is the memory-related limit
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Status.ManagedService.ResourceLimit.Memory
  */
 export interface Service_Status_ManagedService_ResourceLimit_Memory {
     /**
+     * Megabytes is the integer that sets the limit in megabytes
+     *
      * @generated from protobuf field: uint32 megabytes = 1
      */
     megabytes: number;
 }
 /**
+ * ServiceList is the list of Services returned by the ListService method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ServiceList
  */
 export interface ServiceList {
@@ -3384,19 +5007,31 @@ export interface ServiceList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * GenerateCredentialTokenRequest is the request of the
+ * GenerateCredentialToken method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.GenerateCredentialTokenRequest
  */
 export interface GenerateCredentialTokenRequest {
     /**
+     * CredentialRef is the reference of the Credential whose token is generated
+     * or rotated
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference credentialRef = 1
      */
     credentialRef?: ObjectReference;
 }
 /**
+ * CredentialToken is the token generated by the GenerateCredentialToken
+ * method. Generating a new token for a Credential rotates it and immediately
+ * invalidates its older token.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.CredentialToken
  */
 export interface CredentialToken {
     /**
+     * Type is the returned token which corresponds to the Credential's type
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -3428,15 +5063,21 @@ export interface CredentialToken {
     };
 }
 /**
+ * AuthenticationToken is the token of an AUTH_TOKEN Credential
+ *
  * @generated from protobuf message octelium.api.main.core.v1.CredentialToken.AuthenticationToken
  */
 export interface CredentialToken_AuthenticationToken {
     /**
+     * AuthenticationToken is the authentication token itself
+     *
      * @generated from protobuf field: string authenticationToken = 1
      */
     authenticationToken: string;
 }
 /**
+ * OAuth2Credentials is the client credentials of an OAUTH2 Credential
+ *
  * @generated from protobuf message octelium.api.main.core.v1.CredentialToken.OAuth2Credentials
  */
 export interface CredentialToken_OAuth2Credentials {
@@ -3454,15 +5095,27 @@ export interface CredentialToken_OAuth2Credentials {
     clientSecret: string;
 }
 /**
+ * AccessToken is the token of an ACCESS_TOKEN Credential
+ *
  * @generated from protobuf message octelium.api.main.core.v1.CredentialToken.AccessToken
  */
 export interface CredentialToken_AccessToken {
     /**
+     * AccessToken is the bearer access token itself
+     *
      * @generated from protobuf field: string accessToken = 3
      */
     accessToken: string;
 }
 /**
+ * Session represents an authenticated session of a User. A User can interact
+ * with the Cluster and access its Services only through a valid Session which
+ * is automatically created by the Cluster upon a successful authentication.
+ * The Cluster issues an access token and a refresh token representing the
+ * Session's validity and the User has to periodically re-authenticate to keep
+ * the Session valid until it eventually expires and is automatically deleted
+ * by the Cluster.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session
  */
 export interface Session {
@@ -3479,7 +5132,7 @@ export interface Session {
      */
     kind: string;
     /**
-     * octelium.api.main.meta.v1.Metadata is the object's metadata.
+     * Metadata is the object's metadata.
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
@@ -3498,6 +5151,8 @@ export interface Session {
     status?: Session_Status;
 }
 /**
+ * Spec is the Session specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Spec
  */
 export interface Session_Spec {
@@ -3514,11 +5169,17 @@ export interface Session_Spec {
      */
     state: Session_Spec_State;
     /**
+     * Authorization sets the authorization-related configuration
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Session.Spec.Authorization authorization = 3
      */
     authorization?: Session_Spec_Authorization;
 }
 /**
+ * Authorization sets the Policies that are applied to the Session. These
+ * Policies are typically copied from the Credential that created the
+ * Session upon a successful authentication.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Spec.Authorization
  */
 export interface Session_Spec_Authorization {
@@ -3536,6 +5197,8 @@ export interface Session_Spec_Authorization {
     inlinePolicies: InlinePolicy[];
 }
 /**
+ * State is the state of the Session
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Session.Spec.State
  */
 export enum Session_Spec_State {
@@ -3565,6 +5228,8 @@ export enum Session_Spec_State {
     REJECTED = 3
 }
 /**
+ * Status is the current status of the Session
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status
  */
 export interface Session_Status {
@@ -3626,16 +5291,24 @@ export interface Session_Status {
      */
     connection?: Session_Status_Connection;
     /**
+     * CredentialRef is the reference of the Credential that created the
+     * Session, if any
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference credentialRef = 10
      */
     credentialRef?: ObjectReference;
     /**
+     * Ext is a map of internal Cluster-managed extension data
+     *
      * @generated from protobuf field: map<string, google.protobuf.Struct> ext = 11
      */
     ext: {
         [key: string]: Struct;
     };
     /**
+     * TotalAuthentications is the total number of the authentication
+     * operations performed by the Session
+     *
      * @generated from protobuf field: uint32 totalAuthentications = 12
      */
     totalAuthentications: number;
@@ -3646,35 +5319,56 @@ export interface Session_Status {
      */
     scopes: Scope[];
     /**
+     * TotalConnections is the total number of the connections established by
+     * the Session
+     *
      * @generated from protobuf field: uint32 totalConnections = 14
      */
     totalConnections: number;
     /**
+     * LastConnections is the list of the last connections of the Session
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Session.Status.LastConnection lastConnections = 15
      */
     lastConnections: Session_Status_LastConnection[];
     /**
+     * IsLocked indicates whether the Session is locked by the Cluster
+     *
      * @generated from protobuf field: bool isLocked = 16
      */
     isLocked: boolean;
     /**
+     * AuthenticatorAction is the Authenticator-related action that the Session
+     * is currently required or recommended to perform
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.AuthenticatorAction authenticatorAction = 17
      */
     authenticatorAction: Session_Status_AuthenticatorAction;
     /**
+     * RequiredAuthenticatorRef is the reference of the Authenticator that the
+     * Session is required to authenticate with, if any
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference requiredAuthenticatorRef = 18
      */
     requiredAuthenticatorRef?: ObjectReference;
 }
 /**
+ * Connection is the information of the currently connected client of a
+ * CLIENT Session
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Connection
  */
 export interface Session_Status_Connection {
     /**
+     * StartedAt is the timestamp at which the connection started
+     *
      * @generated from protobuf field: google.protobuf.Timestamp startedAt = 1
      */
     startedAt?: Timestamp;
     /**
+     * LastSeenAt is the timestamp at which the connected client was last
+     * seen by the Cluster
+     *
      * @generated from protobuf field: google.protobuf.Timestamp lastSeenAt = 2
      */
     lastSeenAt?: Timestamp;
@@ -3751,15 +5445,23 @@ export interface Session_Status_Connection {
      */
     eSSHPort: number;
     /**
+     * ESOCKS5Enable means that serving embedded SOCKS5 Services is enabled
+     *
      * @generated from protobuf field: bool eSOCKS5Enable = 14
      */
     eSOCKS5Enable: boolean;
     /**
+     * ESOCKS5Port is the port number of the embedded SOCKS5 server. Only
+     * meaningful if ESOCKS5Enable is set to true
+     *
      * @generated from protobuf field: int32 eSOCKS5Port = 15
      */
     eSOCKS5Port: number;
 }
 /**
+ * ServiceOptions is the configuration of the Services that the connected
+ * Session is willing to serve as upstreams
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Connection.ServiceOptions
  */
 export interface Session_Status_Connection_ServiceOptions {
@@ -3771,6 +5473,9 @@ export interface Session_Status_Connection_ServiceOptions {
      */
     serveAll: boolean;
     /**
+     * RequestedServices is the list of the Services that the Session
+     * explicitly requested to serve
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Session.Status.Connection.ServiceOptions.RequestedService requestedServices = 2
      */
     requestedServices: Session_Status_Connection_ServiceOptions_RequestedService[];
@@ -3783,48 +5488,75 @@ export interface Session_Status_Connection_ServiceOptions {
     portStart: number;
 }
 /**
+ * RequestedService is a Service that the Session explicitly requested
+ * to serve
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Connection.ServiceOptions.RequestedService
  */
 export interface Session_Status_Connection_ServiceOptions_RequestedService {
     /**
+     * ServiceRef is the reference of the requested Service
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference serviceRef = 1
      */
     serviceRef?: ObjectReference;
     /**
+     * NamespaceRef is the reference of the requested Service's Namespace
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference namespaceRef = 2
      */
     namespaceRef?: ObjectReference;
 }
 /**
+ * Upstream is a Service that is actually served by the connected
+ * Session (i.e. the Session's host reaches the actual upstream on behalf
+ * of the Cluster)
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Connection.Upstream
  */
 export interface Session_Status_Connection_Upstream {
     /**
+     * Port is the port at which the client listens to serve the upstream
+     *
      * @generated from protobuf field: int32 port = 1
      */
     port: number;
     /**
+     * L4Type is the layer-4 protocol of the upstream
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Connection.Upstream.L4Type l4Type = 2
      */
     l4Type: Session_Status_Connection_Upstream_L4Type;
     /**
+     * ServiceRef is the reference of the served Service
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference serviceRef = 3
      */
     serviceRef?: ObjectReference;
     /**
+     * NamespaceRef is the reference of the served Service's Namespace
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference namespaceRef = 4
      */
     namespaceRef?: ObjectReference;
     /**
+     * Backend is the actual upstream reachable from the connected
+     * Session's host
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Connection.Upstream.Backend backend = 5
      */
     backend?: Session_Status_Connection_Upstream_Backend;
     /**
+     * Mode is how the upstream is served by the connected Session
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Connection.Upstream.Mode mode = 6
      */
     mode: Session_Status_Connection_Upstream_Mode;
 }
 /**
+ * Backend is the actual upstream that is reachable from the connected
+ * Session's host
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Connection.Upstream.Backend
  */
 export interface Session_Status_Connection_Upstream_Backend {
@@ -3842,6 +5574,8 @@ export interface Session_Status_Connection_Upstream_Backend {
     port: number;
 }
 /**
+ * L4Type is the layer-4 protocol of the upstream
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Session.Status.Connection.Upstream.L4Type
  */
 export enum Session_Status_Connection_Upstream_L4Type {
@@ -3865,6 +5599,8 @@ export enum Session_Status_Connection_Upstream_L4Type {
     UDP = 2
 }
 /**
+ * Mode is how the upstream is served by the connected Session
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Session.Status.Connection.Upstream.Mode
  */
 export enum Session_Status_Connection_Upstream_Mode {
@@ -3890,23 +5626,34 @@ export enum Session_Status_Connection_Upstream_Mode {
     ESSH = 2
 }
 /**
+ * PublishedService is a Service that is published to the connected
+ * client's host (i.e. reachable locally at the client's side)
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Connection.PublishedService
  */
 export interface Session_Status_Connection_PublishedService {
     /**
+     * ServiceRef is the reference of the published Service
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference serviceRef = 1
      */
     serviceRef?: ObjectReference;
     /**
+     * Port is the local port at which the Service is published
+     *
      * @generated from protobuf field: int32 port = 2
      */
     port: number;
     /**
+     * Address is the local address at which the Service is published
+     *
      * @generated from protobuf field: string address = 3
      */
     address: string;
 }
 /**
+ * L3Mode is the layer-3 mode of the connection
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Session.Status.Connection.L3Mode
  */
 export enum Session_Status_Connection_L3Mode {
@@ -3930,6 +5677,8 @@ export enum Session_Status_Connection_L3Mode {
     V6 = 2
 }
 /**
+ * Type is the type of the connection's tunnel
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Session.Status.Connection.Type
  */
 export enum Session_Status_Connection_Type {
@@ -3953,62 +5702,94 @@ export enum Session_Status_Connection_Type {
     QUICV0 = 2
 }
 /**
+ * Authentication is the information of a single authentication operation
+ * of the Session
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Authentication
  */
 export interface Session_Status_Authentication {
     /**
+     * Info is the detailed information of the authentication operation
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Authentication.Info info = 1
      */
     info?: Session_Status_Authentication_Info;
     /**
+     * SetAt is the timestamp at which the authentication was performed
+     *
      * @generated from protobuf field: google.protobuf.Timestamp setAt = 2
      */
     setAt?: Timestamp;
     /**
+     * TokenID is the ID of the Session's token pair that was issued by this
+     * authentication. It is rotated with every re-authentication.
+     *
      * @generated from protobuf field: string tokenID = 3
      */
     tokenID: string;
     /**
+     * AccessTokenDuration is the duration of the issued access token
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration accessTokenDuration = 4
      */
     accessTokenDuration?: Duration;
     /**
+     * RefreshTokenDuration is the duration of the issued refresh token. Once
+     * the refresh token expires, the Session as a whole is deemed expired.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration refreshTokenDuration = 5
      */
     refreshTokenDuration?: Duration;
 }
 /**
+ * Info is the detailed information of the authentication operation
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Authentication.Info
  */
 export interface Session_Status_Authentication_Info {
     /**
+     * Type is the method by which the Session was authenticated
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Authentication.Info.Type type = 1
      */
     type: Session_Status_Authentication_Info_Type;
     /**
+     * Details is the method-specific information of the authentication
+     *
      * @generated from protobuf oneof: details
      */
     details: {
         oneofKind: "external";
         /**
+         * External is the information of an authentication done by an
+         * external owner of the Session
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Authentication.Info.External external = 2
          */
         external: Session_Status_Authentication_Info_External;
     } | {
         oneofKind: "identityProvider";
         /**
+         * IdentityProvider is the information of an IdentityProvider-based
+         * authentication
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Authentication.Info.IdentityProvider identityProvider = 3
          */
         identityProvider: Session_Status_Authentication_Info_IdentityProvider;
     } | {
         oneofKind: "credential";
         /**
+         * Credential is the information of a Credential-based authentication
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Authentication.Info.Credential credential = 4
          */
         credential: Session_Status_Authentication_Info_Credential;
     } | {
         oneofKind: "authenticator";
         /**
+         * Authenticator is the information of an Authenticator-based
+         * authentication
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Authentication.Info.Authenticator authenticator = 7
          */
         authenticator: Session_Status_Authentication_Info_Authenticator;
@@ -4016,99 +5797,158 @@ export interface Session_Status_Authentication_Info {
         oneofKind: undefined;
     };
     /**
+     * AAL is the authenticator assurance level of the authentication
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Authentication.Info.AAL aal = 5
      */
     aal: Session_Status_Authentication_Info_AAL;
     /**
+     * Downstream is the information of the client that performed the
+     * authentication
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Authentication.Info.Downstream downstream = 6
      */
     downstream?: Session_Status_Authentication_Info_Downstream;
     /**
+     * GeoIP is the geolocation information of the client that performed
+     * the authentication. It is only set if geolocation is enabled in the
+     * ClusterConfig.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.GeoIP geoip = 8
      */
     geoip?: GeoIP;
 }
 /**
+ * IdentityProvider is the information of an IdentityProvider-based
+ * authentication
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Authentication.Info.IdentityProvider
  */
 export interface Session_Status_Authentication_Info_IdentityProvider {
     /**
+     * IdentityProviderRef is the reference of the IdentityProvider that
+     * authenticated the User
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference identityProviderRef = 1
      */
     identityProviderRef?: ObjectReference;
     /**
+     * Type is the type of the IdentityProvider (e.g. OIDC, SAML)
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.IdentityProvider.Status.Type type = 2
      */
     type: IdentityProvider_Status_Type;
     /**
+     * Identifier is the value that identifies the User account according
+     * to the IdentityProvider
+     *
      * @generated from protobuf field: string identifier = 3
      */
     identifier: string;
     /**
+     * PicURL is the URL of the User's picture as provided by the
+     * IdentityProvider
+     *
      * @generated from protobuf field: string picURL = 4
      */
     picURL: string;
     /**
+     * Email is the User's email as provided by the IdentityProvider
+     *
      * @generated from protobuf field: string email = 5
      */
     email: string;
 }
 /**
+ * Credential is the information of a Credential-based authentication
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Authentication.Info.Credential
  */
 export interface Session_Status_Authentication_Info_Credential {
     /**
+     * CredentialRef is the reference of the Credential that
+     * authenticated the User
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference credentialRef = 1
      */
     credentialRef?: ObjectReference;
     /**
+     * Type is the type of the Credential
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Credential.Spec.Type type = 2
      */
     type: Credential_Spec_Type;
     /**
+     * TokenID is the ID of the Credential's token that was used for the
+     * authentication. It is rotated whenever the Credential is rotated.
+     *
      * @generated from protobuf field: string tokenID = 3
      */
     tokenID: string;
 }
 /**
+ * External is the information of an authentication done by an external
+ * owner of the Session
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Authentication.Info.External
  */
 export interface Session_Status_Authentication_Info_External {
     /**
+     * OwnerRef is the reference of the external owner of the Session
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference ownerRef = 1
      */
     ownerRef?: ObjectReference;
     /**
+     * Attrs is a map of the attributes provided by the external owner
+     *
      * @generated from protobuf field: google.protobuf.Struct attrs = 2
      */
     attrs?: Struct;
 }
 /**
+ * Authenticator is the information of an Authenticator-based
+ * authentication (e.g. MFA or a Passkey login)
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Authentication.Info.Authenticator
  */
 export interface Session_Status_Authentication_Info_Authenticator {
     /**
+     * AuthenticatorRef is the reference of the Authenticator that
+     * authenticated the User
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference authenticatorRef = 1
      */
     authenticatorRef?: ObjectReference;
     /**
+     * Type is the type of the Authenticator (e.g. FIDO, TOTP)
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.Type type = 2
      */
     type: Authenticator_Status_Type;
     /**
+     * Info is the type-specific information of the Authenticator
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Authentication.Info.Authenticator.Info info = 3
      */
     info?: Session_Status_Authentication_Info_Authenticator_Info;
     /**
+     * Mode is the role that the Authenticator played in the
+     * authentication
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Authentication.Info.Authenticator.Mode mode = 4
      */
     mode: Session_Status_Authentication_Info_Authenticator_Mode;
 }
 /**
+ * Info is the type-specific information of the Authenticator
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Authentication.Info.Authenticator.Info
  */
 export interface Session_Status_Authentication_Info_Authenticator_Info {
     /**
+     * Type sets the type of the Authenticator
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -4122,148 +5962,238 @@ export interface Session_Status_Authentication_Info_Authenticator_Info {
     };
 }
 /**
+ * FIDO is the information of a FIDO/WebAuthn Authenticator
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Authentication.Info.Authenticator.Info.FIDO
  */
 export interface Session_Status_Authentication_Info_Authenticator_Info_FIDO {
     /**
+     * UserPresent means that the User presence check was satisfied
+     *
      * @generated from protobuf field: bool userPresent = 1
      */
     userPresent: boolean;
     /**
+     * UserVerified means that the User was verified by the
+     * Authenticator (e.g. via a PIN or a biometric)
+     *
      * @generated from protobuf field: bool userVerified = 2
      */
     userVerified: boolean;
     /**
+     * IsHardware means that the Authenticator is hardware-backed
+     * (e.g. a security key or a platform authenticator)
+     *
      * @generated from protobuf field: bool isHardware = 3
      */
     isHardware: boolean;
     /**
+     * IsSoftware means that the Authenticator is software-based
+     * (e.g. a password manager)
+     *
      * @generated from protobuf field: bool isSoftware = 4
      */
     isSoftware: boolean;
     /**
+     * IsAttestationVerified means that the Authenticator's
+     * attestation was verified
+     *
      * @generated from protobuf field: bool isAttestationVerified = 5
      */
     isAttestationVerified: boolean;
     /**
+     * IsPasskey means that the Authenticator is a Passkey (i.e. it
+     * uses a resident/discoverable key credential)
+     *
      * @generated from protobuf field: bool isPasskey = 6
      */
     isPasskey: boolean;
     /**
+     * AAGUID is the Authenticator Attestation GUID that identifies
+     * the model of the Authenticator
+     *
      * @generated from protobuf field: string aaguid = 7
      */
     aaguid: string;
 }
 /**
+ * Mode is the role that the Authenticator played in the
+ * authentication
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Session.Status.Authentication.Info.Authenticator.Mode
  */
 export enum Session_Status_Authentication_Info_Authenticator_Mode {
     /**
+     * MODE_UNSET is not used
+     *
      * @generated from protobuf enum value: MODE_UNSET = 0;
      */
     MODE_UNSET = 0,
     /**
+     * DEFAULT means that the Authenticator was used for a
+     * re-authentication of an existent Session
+     *
      * @generated from protobuf enum value: DEFAULT = 1;
      */
     DEFAULT = 1,
     /**
+     * PASSKEY means that the Authenticator was used for a direct
+     * passwordless Passkey login
+     *
      * @generated from protobuf enum value: PASSKEY = 2;
      */
     PASSKEY = 2,
     /**
+     * MFA means that the Authenticator was used as a second factor
+     * after a successful IdentityProvider authentication
+     *
      * @generated from protobuf enum value: MFA = 3;
      */
     MFA = 3
 }
 /**
+ * Downstream is the information of the client that performed the
+ * authentication
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.Authentication.Info.Downstream
  */
 export interface Session_Status_Authentication_Info_Downstream {
     /**
+     * IPAddress is the IP address of the client
+     *
      * @generated from protobuf field: string ipAddress = 1
      */
     ipAddress: string;
     /**
+     * UserAgent is the `User-Agent` request header of the client
+     *
      * @generated from protobuf field: string userAgent = 2
      */
     userAgent: string;
     /**
+     * ClientVersion is the version of the Octelium client
+     *
      * @generated from protobuf field: string clientVersion = 3
      */
     clientVersion: string;
 }
 /**
+ * Type is the method by which the Session was authenticated
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Session.Status.Authentication.Info.Type
  */
 export enum Session_Status_Authentication_Info_Type {
     /**
+     * TYPE_UNSET is not used
+     *
      * @generated from protobuf enum value: TYPE_UNSET = 0;
      */
     TYPE_UNSET = 0,
     /**
+     * CREDENTIAL means that the authentication was done via a Credential
+     *
      * @generated from protobuf enum value: CREDENTIAL = 1;
      */
     CREDENTIAL = 1,
     /**
+     * INTERNAL means that the authentication was done internally by the
+     * Cluster itself
+     *
      * @generated from protobuf enum value: INTERNAL = 2;
      */
     INTERNAL = 2,
     /**
+     * REFRESH_TOKEN means that the authentication was a
+     * re-authentication done via the Session's refresh token
+     *
      * @generated from protobuf enum value: REFRESH_TOKEN = 3;
      */
     REFRESH_TOKEN = 3,
     /**
+     * EXTERNAL means that the authentication was done by an external
+     * owner of the Session
+     *
      * @generated from protobuf enum value: EXTERNAL = 4;
      */
     EXTERNAL = 4,
     /**
+     * IDENTITY_PROVIDER means that the authentication was done via an
+     * IdentityProvider
+     *
      * @generated from protobuf enum value: IDENTITY_PROVIDER = 5;
      */
     IDENTITY_PROVIDER = 5,
     /**
+     * AUTHENTICATOR means that the authentication was done via an
+     * Authenticator
+     *
      * @generated from protobuf enum value: AUTHENTICATOR = 6;
      */
     AUTHENTICATOR = 6
 }
 /**
+ * AAL is the authenticator assurance level (AAL) of the
+ * authentication as defined by NIST SP 800-63B
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Session.Status.Authentication.Info.AAL
  */
 export enum Session_Status_Authentication_Info_AAL {
     /**
+     * AAL_UNSET is not used
+     *
      * @generated from protobuf enum value: AAL_UNSET = 0;
      */
     AAL_UNSET = 0,
     /**
+     * AAL1 provides some assurance that the User controls a single
+     * authentication factor
+     *
      * @generated from protobuf enum value: AAL1 = 1;
      */
     AAL1 = 1,
     /**
+     * AAL2 provides high confidence that the User controls two distinct
+     * authentication factors
+     *
      * @generated from protobuf enum value: AAL2 = 2;
      */
     AAL2 = 2,
     /**
+     * AAL3 provides very high confidence that the User controls a
+     * hardware-based authenticator
+     *
      * @generated from protobuf enum value: AAL3 = 3;
      */
     AAL3 = 3
 }
 /**
+ * LastConnection is the information of a past connection of the Session
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Session.Status.LastConnection
  */
 export interface Session_Status_LastConnection {
     /**
+     * StartedAt is the timestamp at which the connection started
+     *
      * @generated from protobuf field: google.protobuf.Timestamp startedAt = 1
      */
     startedAt?: Timestamp;
     /**
+     * EndedAt is the timestamp at which the connection ended
+     *
      * @generated from protobuf field: google.protobuf.Timestamp endedAt = 2
      */
     endedAt?: Timestamp;
 }
 /**
+ * Type is the type of the Session
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Session.Status.Type
  */
 export enum Session_Status_Type {
     /**
+     * TYPE_UNKNOWN is not used
+     *
      * @generated from protobuf enum value: TYPE_UNKNOWN = 0;
      */
     TYPE_UNKNOWN = 0,
@@ -4281,31 +6211,50 @@ export enum Session_Status_Type {
     CLIENTLESS = 2
 }
 /**
+ * AuthenticatorAction is the Authenticator-related action that the
+ * Session is currently required or recommended to perform
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Session.Status.AuthenticatorAction
  */
 export enum Session_Status_AuthenticatorAction {
     /**
+     * AUTHENTICATOR_ACTION_UNSET means that no action is needed
+     *
      * @generated from protobuf enum value: AUTHENTICATOR_ACTION_UNSET = 0;
      */
     AUTHENTICATOR_ACTION_UNSET = 0,
     /**
+     * AUTHENTICATION_REQUIRED means that the Session must authenticate via
+     * an Authenticator (i.e. MFA is enforced)
+     *
      * @generated from protobuf enum value: AUTHENTICATION_REQUIRED = 1;
      */
     AUTHENTICATION_REQUIRED = 1,
     /**
+     * REGISTRATION_REQUIRED means that the Session must register an
+     * Authenticator
+     *
      * @generated from protobuf enum value: REGISTRATION_REQUIRED = 2;
      */
     REGISTRATION_REQUIRED = 2,
     /**
+     * AUTHENTICATION_RECOMMENDED means that authenticating via an
+     * Authenticator is recommended but not enforced
+     *
      * @generated from protobuf enum value: AUTHENTICATION_RECOMMENDED = 3;
      */
     AUTHENTICATION_RECOMMENDED = 3,
     /**
+     * REGISTRATION_RECOMMENDED means that registering an Authenticator is
+     * recommended but not enforced
+     *
      * @generated from protobuf enum value: REGISTRATION_RECOMMENDED = 4;
      */
     REGISTRATION_RECOMMENDED = 4
 }
 /**
+ * SessionList is the list of Sessions returned by the ListSession method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.SessionList
  */
 export interface SessionList {
@@ -4335,6 +6284,13 @@ export interface SessionList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * Secret stores a sensitive value (e.g. an API key, a password, a private key
+ * or a TLS certificate) that is referenced by its name from the other Cluster
+ * resources. It avoids storing the sensitive data itself along with the rest
+ * of the Cluster configuration. The Cluster does not expose the Secret's data
+ * via the API, therefore a Secret that is read back from the API contains
+ * everything but its data.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Secret
  */
 export interface Secret {
@@ -4351,7 +6307,7 @@ export interface Secret {
      */
     kind: string;
     /**
-     * octelium.api.main.meta.v1.Metadata is the object's metadata.
+     * Metadata is the object's metadata.
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
@@ -4376,53 +6332,27 @@ export interface Secret {
     data?: Secret_Data;
 }
 /**
+ * Spec is the Secret specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Secret.Spec
  */
 export interface Secret_Spec {
     /**
+     * Data is the Secret's sensitive data content
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Secret.Spec.Data data = 1
      */
     data?: Secret_Spec_Data;
 }
 /**
+ * Data is the Secret's sensitive data content
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Secret.Spec.Data
  */
 export interface Secret_Spec_Data {
     /**
-     * @generated from protobuf oneof: type
-     */
-    type: {
-        oneofKind: "value";
-        /**
-         * @generated from protobuf field: string value = 1
-         */
-        value: string;
-    } | {
-        oneofKind: "valueBytes";
-        /**
-         * @generated from protobuf field: bytes valueBytes = 2
-         */
-        valueBytes: Uint8Array;
-    } | {
-        oneofKind: undefined;
-    };
-}
-/**
- * @generated from protobuf message octelium.api.main.core.v1.Secret.Status
- */
-export interface Secret_Status {
-    /**
-     * @generated from protobuf field: map<string, google.protobuf.Struct> ext = 1
-     */
-    ext: {
-        [key: string]: Struct;
-    };
-}
-/**
- * @generated from protobuf message octelium.api.main.core.v1.Secret.Data
- */
-export interface Secret_Data {
-    /**
+     * Type sets the format of the Secret's data
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -4446,6 +6376,54 @@ export interface Secret_Data {
     };
 }
 /**
+ * Status is the current status of the Secret
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Secret.Status
+ */
+export interface Secret_Status {
+    /**
+     * Ext is a map of internal Cluster-managed extension data
+     *
+     * @generated from protobuf field: map<string, google.protobuf.Struct> ext = 1
+     */
+    ext: {
+        [key: string]: Struct;
+    };
+}
+/**
+ * Data is the Secret's sensitive data content
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Secret.Data
+ */
+export interface Secret_Data {
+    /**
+     * Type sets the format of the Secret's data
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "value";
+        /**
+         * Value is a string value
+         *
+         * @generated from protobuf field: string value = 1
+         */
+        value: string;
+    } | {
+        oneofKind: "valueBytes";
+        /**
+         * ValueBytes is a raw sequence of bytes value
+         *
+         * @generated from protobuf field: bytes valueBytes = 2
+         */
+        valueBytes: Uint8Array;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * SecretList is the list of Secrets returned by the ListSecret method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.SecretList
  */
 export interface SecretList {
@@ -4475,6 +6453,13 @@ export interface SecretList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * Credential is a confidential token that is issued by the Cluster to a
+ * certain User to be used later for authentication. Credentials are typically,
+ * but not necessarily, created for WORKLOAD Users since HUMAN Users should
+ * almost always authenticate via an IdentityProvider. The Policies attached to
+ * a Credential are automatically copied to the Sessions created by it upon a
+ * successful authentication.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Credential
  */
 export interface Credential {
@@ -4491,7 +6476,7 @@ export interface Credential {
      */
     kind: string;
     /**
-     * octelium.api.main.meta.v1.Metadata is the object's metadata.
+     * Metadata is the object's metadata.
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
@@ -4510,6 +6495,8 @@ export interface Credential {
     status?: Credential_Status;
 }
 /**
+ * Spec is the Credential specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Credential.Spec
  */
 export interface Credential_Spec {
@@ -4520,6 +6507,8 @@ export interface Credential_Spec {
      */
     type: Credential_Spec_Type;
     /**
+     * User is the name of the User that the Credential is created for
+     *
      * @generated from protobuf field: string user = 2
      */
     user: string;
@@ -4537,10 +6526,15 @@ export interface Credential_Spec {
      */
     expiresAt?: Timestamp;
     /**
+     * SessionType is the type of the Sessions created by the Credential. It is
+     * CLIENT by default.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Session.Status.Type sessionType = 5
      */
     sessionType: Session_Status_Type;
     /**
+     * Authorization sets the authorization-related configuration
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Credential.Spec.Authorization authorization = 6
      */
     authorization?: Credential_Spec_Authorization;
@@ -4559,6 +6553,9 @@ export interface Credential_Spec {
     autoDelete: boolean;
 }
 /**
+ * Authorization sets the Policies that are copied to the Sessions created
+ * by the Credential upon a successful authentication
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Credential.Spec.Authorization
  */
 export interface Credential_Spec_Authorization {
@@ -4576,10 +6573,14 @@ export interface Credential_Spec_Authorization {
     inlinePolicies: InlinePolicy[];
 }
 /**
+ * Type is the type of the Credential
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Credential.Spec.Type
  */
 export enum Credential_Spec_Type {
     /**
+     * TYPE_UNKNOWN is not used
+     *
      * @generated from protobuf enum value: TYPE_UNKNOWN = 0;
      */
     TYPE_UNKNOWN = 0,
@@ -4607,6 +6608,8 @@ export enum Credential_Spec_Type {
     ACCESS_TOKEN = 3
 }
 /**
+ * Status is the current status of the Credential
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Credential.Status
  */
 export interface Credential_Status {
@@ -4617,31 +6620,71 @@ export interface Credential_Status {
      */
     userRef?: ObjectReference;
     /**
+     * ID is the Credential's identifier. It is used as the OAuth2 client ID
+     * for the OAUTH2 Credentials.
+     *
      * @generated from protobuf field: string id = 2
      */
     id: string;
     /**
+     * TokenID is the ID of the Credential's currently valid token. It is
+     * rotated whenever a new token is generated for the Credential, which
+     * immediately invalidates its older token.
+     *
      * @generated from protobuf field: string tokenID = 3
      */
     tokenID: string;
     /**
+     * LastRotationAt is the timestamp at which the Credential was last rotated
+     *
      * @generated from protobuf field: google.protobuf.Timestamp lastRotationAt = 4
      */
     lastRotationAt?: Timestamp;
     /**
+     * TotalRotations is the total number of the Credential's rotations
+     *
      * @generated from protobuf field: uint32 totalRotations = 5
      */
     totalRotations: number;
     /**
+     * TotalAuthentications is the total number of the authentications
+     * performed via the Credential
+     *
      * @generated from protobuf field: uint32 totalAuthentications = 6
      */
     totalAuthentications: number;
     /**
+     * IsLocked indicates whether the Credential is locked by the Cluster
+     *
      * @generated from protobuf field: bool isLocked = 7
      */
     isLocked: boolean;
+    /**
+     * PKCE is set when the Credential is issued to a client login flow that
+     * supplied a code challenge.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Credential.Status.PKCE pkce = 8
+     */
+    pkce?: Credential_Status_PKCE;
 }
 /**
+ * PKCE binds the Credential to a code challenge supplied by the client
+ * that initiated the login.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Credential.Status.PKCE
+ */
+export interface Credential_Status_PKCE {
+    /**
+     * CodeChallenge is the SHA256 digest of the code verifier.
+     *
+     * @generated from protobuf field: bytes codeChallenge = 1
+     */
+    codeChallenge: Uint8Array;
+}
+/**
+ * CredentialList is the list of Credentials returned by the ListCredential
+ * method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.CredentialList
  */
 export interface CredentialList {
@@ -4671,6 +6714,12 @@ export interface CredentialList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * Group is a collection of Users according to whatever classification is
+ * needed by the Cluster administrators (e.g. roles in a company such as DevOps
+ * or developers, different groupings of workloads, etc...). A User can belong
+ * to one or more Groups. Groups are especially useful for access control where
+ * a Policy can be applied to a whole set of Users at once.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Group
  */
 export interface Group {
@@ -4687,7 +6736,7 @@ export interface Group {
      */
     kind: string;
     /**
-     * octelium.api.main.meta.v1.Metadata is the object's metadata.
+     * Metadata is the object's metadata.
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
@@ -4706,6 +6755,8 @@ export interface Group {
     status?: Group_Status;
 }
 /**
+ * Spec is the Group specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Group.Spec
  */
 export interface Group_Spec {
@@ -4716,11 +6767,18 @@ export interface Group_Spec {
      */
     authorization?: Group_Spec_Authorization;
     /**
+     * Attrs is a map of user-defined attributes, mostly used in authorization
+     * rules. It is strongly recommended to stick to camelCase in order to be
+     * conformant with Octelium's API naming conventions.
+     *
      * @generated from protobuf field: google.protobuf.Struct attrs = 2
      */
     attrs?: Struct;
 }
 /**
+ * Authorization sets the Policies that are applied to the Users belonging
+ * to the Group
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Group.Spec.Authorization
  */
 export interface Group_Spec_Authorization {
@@ -4738,10 +6796,14 @@ export interface Group_Spec_Authorization {
     inlinePolicies: InlinePolicy[];
 }
 /**
+ * Status is the current status of the Group
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Group.Status
  */
 export interface Group_Status {
     /**
+     * Ext is a map of internal Cluster-managed extension data
+     *
      * @generated from protobuf field: map<string, google.protobuf.Struct> ext = 1
      */
     ext: {
@@ -4749,6 +6811,8 @@ export interface Group_Status {
     };
 }
 /**
+ * GroupList is the list of Groups returned by the ListGroup method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.GroupList
  */
 export interface GroupList {
@@ -4778,6 +6842,12 @@ export interface GroupList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * Device is the Cluster's representation of a User's machine. A Device is
+ * optionally registered/enrolled by a logged-in User and it belongs to the one
+ * User that registered it. One or more of the User's Sessions can belong to
+ * the same Device. It is up to the access control Policies to allow or deny a
+ * request based on the Device's information.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Device
  */
 export interface Device {
@@ -4794,7 +6864,7 @@ export interface Device {
      */
     kind: string;
     /**
-     * octelium.api.main.meta.v1.Metadata is the object's metadata.
+     * Metadata is the object's metadata.
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
@@ -4813,6 +6883,8 @@ export interface Device {
     status?: Device_Status;
 }
 /**
+ * Spec is the Device specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Device.Spec
  */
 export interface Device_Spec {
@@ -4823,11 +6895,16 @@ export interface Device_Spec {
      */
     state: Device_Spec_State;
     /**
+     * Authorization sets the authorization-related configuration
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Device.Spec.Authorization authorization = 2
      */
     authorization?: Device_Spec_Authorization;
 }
 /**
+ * Authorization sets the Policies that are applied to the Sessions
+ * belonging to the Device
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Device.Spec.Authorization
  */
 export interface Device_Spec_Authorization {
@@ -4845,6 +6922,8 @@ export interface Device_Spec_Authorization {
     inlinePolicies: InlinePolicy[];
 }
 /**
+ * State is the state of the Device
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Device.Spec.State
  */
 export enum Device_Spec_State {
@@ -4874,10 +6953,14 @@ export enum Device_Spec_State {
     REJECTED = 3
 }
 /**
+ * Status is the current status of the Device
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Device.Status
  */
 export interface Device_Status {
     /**
+     * Ext is a map of internal Cluster-managed extension data
+     *
      * @generated from protobuf field: map<string, google.protobuf.Struct> ext = 1
      */
     ext: {
@@ -4896,69 +6979,111 @@ export interface Device_Status {
      */
     osType: Device_Status_OSType;
     /**
+     * Hostname is the Device's hostname
+     *
      * @generated from protobuf field: string hostname = 4
      */
     hostname: string;
     /**
+     * ID is a unique Device identifier that is derived from the Device's host
+     *
      * @generated from protobuf field: string id = 5
      */
     id: string;
     /**
+     * SerialNumber is the Device's hardware serial number
+     *
      * @generated from protobuf field: string serialNumber = 6
      */
     serialNumber: string;
     /**
+     * IsLocked indicates whether the Device is locked by the Cluster
+     *
      * @generated from protobuf field: bool isLocked = 7
      */
     isLocked: boolean;
     /**
+     * MacAddresses is the list of the MAC addresses of the Device's network
+     * interfaces
+     *
      * @generated from protobuf field: repeated string macAddresses = 8
      */
     macAddresses: string[];
     /**
+     * Posture is the Device's security posture as reported by the
+     * DeviceManager that the Device is bound to
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Device.Status.Posture posture = 9
      */
     posture?: Device_Status_Posture;
     /**
+     * Binding is the link between the Device and its DeviceManager
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Device.Status.Binding binding = 10
      */
     binding?: Device_Status_Binding;
     /**
+     * ProbeAttempt is the most recent device probing attempt
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Device.Status.ProbeAttempt probeAttempt = 11
      */
     probeAttempt?: Device_Status_ProbeAttempt;
 }
 /**
+ * Posture is the Device's security posture as reported by the
+ * DeviceManager that the Device is bound to (e.g. an EDR or an MDM
+ * provider). It is only valid while binding.state is ACCEPTED.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Device.Status.Posture
  */
 export interface Device_Status_Posture {
     /**
+     * RiskLevel is the overall risk level of the Device as assessed by the
+     * provider
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Device.Status.Posture.RiskLevel riskLevel = 1
      */
     riskLevel: Device_Status_Posture_RiskLevel;
     /**
+     * DiskEncryption reports whether the Device's disk is encrypted
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Device.Status.Posture.SignalState diskEncryption = 2
      */
     diskEncryption: Device_Status_Posture_SignalState;
     /**
+     * Compliant reports whether the Device is compliant with the provider's
+     * policies. It is typically reported by the MDM providers.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Device.Status.Posture.SignalState compliant = 3
      */
     compliant: Device_Status_Posture_SignalState;
     /**
+     * ThreatFree reports whether the Device is free of the threats detected
+     * by the provider. It is typically reported by the EDR providers.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Device.Status.Posture.SignalState threatFree = 4
      */
     threatFree: Device_Status_Posture_SignalState;
     /**
+     * Signals is the map of the additional provider-specific signals keyed
+     * by the signal's name
+     *
      * @generated from protobuf field: map<string, octelium.api.main.core.v1.Device.Status.Posture.SignalState> signals = 5
      */
     signals: {
         [key: string]: Device_Status_Posture_SignalState;
     };
     /**
+     * LastSyncAt is the timestamp at which the Posture was last synced from
+     * the provider
+     *
      * @generated from protobuf field: google.protobuf.Timestamp lastSyncAt = 6
      */
     lastSyncAt?: Timestamp;
     /**
+     * LastSeenAt is the timestamp at which the Device was last seen by the
+     * provider
+     *
      * @generated from protobuf field: google.protobuf.Timestamp lastSeenAt = 7
      */
     lastSeenAt?: Timestamp;
@@ -4970,31 +7095,47 @@ export interface Device_Status_Posture {
      */
     expiresAt?: Timestamp;
     /**
+     * Attrs is a map of the additional provider-specific attributes of the
+     * Device. It is mostly used in authorization rules.
+     *
      * @generated from protobuf field: google.protobuf.Struct attrs = 9
      */
     attrs?: Struct;
 }
 /**
+ * RiskLevel is the overall risk level of the Device as assessed by the
+ * provider
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Device.Status.Posture.RiskLevel
  */
 export enum Device_Status_Posture_RiskLevel {
     /**
+     * RISK_LEVEL_UNKNOWN means that the provider reported no risk level
+     *
      * @generated from protobuf enum value: RISK_LEVEL_UNKNOWN = 0;
      */
     RISK_LEVEL_UNKNOWN = 0,
     /**
+     * LOW is a low risk level
+     *
      * @generated from protobuf enum value: LOW = 1;
      */
     LOW = 1,
     /**
+     * MEDIUM is a medium risk level
+     *
      * @generated from protobuf enum value: MEDIUM = 2;
      */
     MEDIUM = 2,
     /**
+     * HIGH is a high risk level
+     *
      * @generated from protobuf enum value: HIGH = 3;
      */
     HIGH = 3,
     /**
+     * CRITICAL is a critical risk level
+     *
      * @generated from protobuf enum value: CRITICAL = 4;
      */
     CRITICAL = 4
@@ -5013,18 +7154,28 @@ export enum Device_Status_Posture_RiskLevel {
  */
 export enum Device_Status_Posture_SignalState {
     /**
+     * SIGNAL_STATE_UNKNOWN means that the provider should know this signal
+     * but did not report it. It fails closed in policy.
+     *
      * @generated from protobuf enum value: SIGNAL_STATE_UNKNOWN = 0;
      */
     SIGNAL_STATE_UNKNOWN = 0,
     /**
+     * PASS means that the signal is satisfied
+     *
      * @generated from protobuf enum value: PASS = 1;
      */
     PASS = 1,
     /**
+     * FAIL means that the signal is not satisfied
+     *
      * @generated from protobuf enum value: FAIL = 2;
      */
     FAIL = 2,
     /**
+     * NOT_APPLICABLE means that the signal is outside the provider's
+     * domain
+     *
      * @generated from protobuf enum value: NOT_APPLICABLE = 3;
      */
     NOT_APPLICABLE = 3
@@ -5045,47 +7196,73 @@ export enum Device_Status_Posture_SignalState {
  */
 export interface Device_Status_Binding {
     /**
+     * UID is the unique identifier of the Binding
+     *
      * @generated from protobuf field: string uid = 1
      */
     uid: string;
     /**
+     * OwnerRef is the reference of the DeviceManager that the Device is
+     * bound to
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference ownerRef = 2
      */
     ownerRef?: ObjectReference;
     /**
+     * ExternalID is the identifier of the Device according to the
+     * DeviceManager's provider
+     *
      * @generated from protobuf field: string externalID = 3
      */
     externalID: string;
     /**
+     * State is the state of the Binding
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Device.Status.Binding.State state = 4
      */
     state: Device_Status_Binding_State;
     /**
+     * AcceptanceMethod is how the Binding was accepted
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Device.Status.Binding.AcceptanceMethod acceptanceMethod = 5
      */
     acceptanceMethod: Device_Status_Binding_AcceptanceMethod;
     /**
+     * AcceptedAt is the timestamp at which the Binding was accepted
+     *
      * @generated from protobuf field: google.protobuf.Timestamp acceptedAt = 6
      */
     acceptedAt?: Timestamp;
     /**
+     * ExpiresAt is the timestamp at which a WAITING_APPROVAL Binding
+     * expires. Expiry clears the Binding so that a later attempt can retry.
+     *
      * @generated from protobuf field: google.protobuf.Timestamp expiresAt = 7
      */
     expiresAt?: Timestamp;
     /**
+     * LastVerifiedAt is the timestamp at which the Binding was last verified
+     *
      * @generated from protobuf field: google.protobuf.Timestamp lastVerifiedAt = 8
      */
     lastVerifiedAt?: Timestamp;
     /**
+     * VerificationFailures is the number of the consecutive failures to
+     * verify the Binding
+     *
      * @generated from protobuf field: uint32 verificationFailures = 9
      */
     verificationFailures: number;
 }
 /**
+ * State is the state of the Binding
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Device.Status.Binding.State
  */
 export enum Device_Status_Binding_State {
     /**
+     * STATE_UNKNOWN is not used
+     *
      * @generated from protobuf enum value: STATE_UNKNOWN = 0;
      */
     STATE_UNKNOWN = 0,
@@ -5099,6 +7276,9 @@ export enum Device_Status_Binding_State {
      */
     WAITING_APPROVAL = 1,
     /**
+     * ACCEPTED means that the Device is bound to ownerRef. It is a sticky
+     * state that is cleared only by reset.
+     *
      * @generated from protobuf enum value: ACCEPTED = 2;
      */
     ACCEPTED = 2,
@@ -5122,67 +7302,101 @@ export enum Device_Status_Binding_State {
     AMBIGUOUS = 4
 }
 /**
+ * AcceptanceMethod is how the Binding was accepted
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Device.Status.Binding.AcceptanceMethod
  */
 export enum Device_Status_Binding_AcceptanceMethod {
     /**
+     * ACCEPTANCE_METHOD_UNKNOWN is not used
+     *
      * @generated from protobuf enum value: ACCEPTANCE_METHOD_UNKNOWN = 0;
      */
     ACCEPTANCE_METHOD_UNKNOWN = 0,
     /**
+     * AUTOMATIC means that the Binding was accepted automatically
+     *
      * @generated from protobuf enum value: AUTOMATIC = 1;
      */
     AUTOMATIC = 1,
     /**
+     * EMAIL means that the Binding was accepted by the User via an email
+     * confirmation
+     *
      * @generated from protobuf enum value: EMAIL = 2;
      */
     EMAIL = 2,
     /**
+     * MANUAL means that the Binding was accepted by an administrator
+     *
      * @generated from protobuf enum value: MANUAL = 3;
      */
     MANUAL = 3
 }
 /**
+ * ProbeAttempt is the most recent attempt to run the Cluster's device
+ * probes on the Device in order to collect the information used to bind it
+ * to a DeviceManager
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Device.Status.ProbeAttempt
  */
 export interface Device_Status_ProbeAttempt {
     /**
+     * UID is the unique identifier of the ProbeAttempt
+     *
      * @generated from protobuf field: string uid = 1
      */
     uid: string;
     /**
+     * StartedAt is the timestamp at which the ProbeAttempt started
+     *
      * @generated from protobuf field: google.protobuf.Timestamp startedAt = 2
      */
     startedAt?: Timestamp;
     /**
+     * Probes is the list of the Probes that were requested to be run on the
+     * Device
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.ClusterConfig.Status.Device.Probe probes = 3
      */
     probes: ClusterConfig_Status_Device_Probe[];
     /**
+     * Results is the list of the results of the requested Probes
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Device.Status.ProbeAttempt.Result results = 4
      */
     results: Device_Status_ProbeAttempt_Result[];
 }
 /**
+ * Result is the result of running a single Probe
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Device.Status.ProbeAttempt.Result
  */
 export interface Device_Status_ProbeAttempt_Result {
     /**
+     * ProbeID is the identifier of the Probe that produced the Result
+     *
      * @generated from protobuf field: string probeID = 1
      */
     probeID: string;
     /**
+     * Type sets the outcome of running the Probe
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "output";
         /**
+         * Output is the raw output produced by the Probe
+         *
          * @generated from protobuf field: bytes output = 2
          */
         output: Uint8Array;
     } | {
         oneofKind: "error";
         /**
+         * Error is the error message if running the Probe failed
+         *
          * @generated from protobuf field: string error = 3
          */
         error: string;
@@ -5191,35 +7405,51 @@ export interface Device_Status_ProbeAttempt_Result {
     };
 }
 /**
+ * OSType is the operating system of the Device
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Device.Status.OSType
  */
 export enum Device_Status_OSType {
     /**
+     * OS_TYPE_UNKNOWN is not used
+     *
      * @generated from protobuf enum value: OS_TYPE_UNKNOWN = 0;
      */
     OS_TYPE_UNKNOWN = 0,
     /**
+     * LINUX means that the Device runs Linux
+     *
      * @generated from protobuf enum value: LINUX = 1;
      */
     LINUX = 1,
     /**
+     * WINDOWS means that the Device runs Windows
+     *
      * @generated from protobuf enum value: WINDOWS = 2;
      */
     WINDOWS = 2,
     /**
+     * MAC means that the Device runs macOS
+     *
      * @generated from protobuf enum value: MAC = 3;
      */
     MAC = 3,
     /**
+     * ANDROID means that the Device runs Android
+     *
      * @generated from protobuf enum value: ANDROID = 4;
      */
     ANDROID = 4,
     /**
+     * IOS means that the Device runs iOS
+     *
      * @generated from protobuf enum value: IOS = 5;
      */
     IOS = 5
 }
 /**
+ * DeviceList is the list of Devices returned by the ListDevice method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.DeviceList
  */
 export interface DeviceList {
@@ -5249,107 +7479,166 @@ export interface DeviceList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * ListUserOptions is the request of the ListUser method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListUserOptions
  */
 export interface ListUserOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
 }
 /**
+ * ListNamespaceOptions is the request of the ListNamespace method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListNamespaceOptions
  */
 export interface ListNamespaceOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
 }
 /**
+ * ListServiceOptions is the request of the ListService method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListServiceOptions
  */
 export interface ListServiceOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
     /**
+     * NamespaceRef filters the Services by their owner Namespace
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference namespaceRef = 2
      */
     namespaceRef?: ObjectReference;
     /**
+     * RegionRef filters the Services by the Region in which they are deployed
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference regionRef = 3
      */
     regionRef?: ObjectReference;
 }
 /**
+ * ListSessionOptions is the request of the ListSession method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListSessionOptions
  */
 export interface ListSessionOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
     /**
+     * UserRef filters the Sessions by their User
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 2
      */
     userRef?: ObjectReference;
 }
 /**
+ * ListSecretOptions is the request of the ListSecret method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListSecretOptions
  */
 export interface ListSecretOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
 }
 /**
+ * ListCredentialOptions is the request of the ListCredential method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListCredentialOptions
  */
 export interface ListCredentialOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
     /**
+     * UserRef filters the Credentials by their User
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 2
      */
     userRef?: ObjectReference;
 }
 /**
+ * ListGroupOptions is the request of the ListGroup method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListGroupOptions
  */
 export interface ListGroupOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
 }
 /**
+ * ListDeviceOptions is the request of the ListDevice method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListDeviceOptions
  */
 export interface ListDeviceOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
     /**
+     * UserRef filters the Devices by their User
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 2
      */
     userRef?: ObjectReference;
 }
 /**
+ * ListConfigOptions is the request of the ListConfig method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListConfigOptions
  */
 export interface ListConfigOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
 }
 /**
+ * Config stores arbitrary non-sensitive configuration data that is referenced
+ * by its name from the other Cluster resources. It is the non-sensitive
+ * counterpart of a Secret
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Config
  */
 export interface Config {
@@ -5360,41 +7649,59 @@ export interface Config {
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `Config`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Metadata is the object's metadata.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
     metadata?: Metadata;
     /**
+     * Spec is the Config specification.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Config.Spec spec = 4
      */
     spec?: Config_Spec;
     /**
+     * Status is the current status of the Config.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Config.Status status = 5
      */
     status?: Config_Status;
     /**
+     * Data is the Config's actual data content.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Config.Data data = 6
      */
     data?: Config_Data;
 }
 /**
+ * Spec is the Config specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Config.Spec
  */
 export interface Config_Spec {
 }
 /**
+ * Status is the current status of the Config
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Config.Status
  */
 export interface Config_Status {
 }
 /**
+ * Data is the Config's data content
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Config.Data
  */
 export interface Config_Data {
     /**
+     * Type sets the format of the Config's data
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -5436,10 +7743,14 @@ export interface Config_Data {
     };
 }
 /**
+ * DataMap is a map of byte array values keyed by a string
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Config.Data.DataMap
  */
 export interface Config_Data_DataMap {
     /**
+     * Map is the map of the byte array values
+     *
      * @generated from protobuf field: map<string, bytes> map = 1
      */
     map: {
@@ -5447,6 +7758,8 @@ export interface Config_Data_DataMap {
     };
 }
 /**
+ * ConfigList is the list of Configs returned by the ListConfig method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ConfigList
  */
 export interface ConfigList {
@@ -5476,10 +7789,17 @@ export interface ConfigList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * Scope restricts what a Session is allowed to reach. A Session that carries
+ * no Scopes is unrestricted, otherwise it can only reach what its Scopes
+ * allow. Scopes narrow a Session down, they never widen it beyond what the
+ * authorization Policies already allow.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Scope
  */
 export interface Scope {
     /**
+     * Type sets the type of the Scope
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -5503,10 +7823,14 @@ export interface Scope {
     };
 }
 /**
+ * Service scopes the access to the Cluster's Services
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Scope.Service
  */
 export interface Scope_Service {
     /**
+     * Type sets the extent of the Service scope
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -5530,11 +7854,15 @@ export interface Scope_Service {
     };
 }
 /**
+ * All allows access to all Services
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Scope.Service.All
  */
 export interface Scope_Service_All {
 }
 /**
+ * Filter restricts the access to certain Services or Namespaces
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Scope.Service.Filter
  */
 export interface Scope_Service_Filter {
@@ -5552,10 +7880,14 @@ export interface Scope_Service_Filter {
     namespaces: string[];
 }
 /**
+ * API scopes the access to the Cluster's own gRPC APIs
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Scope.API
  */
 export interface Scope_API {
     /**
+     * Type sets the extent of the API scope
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -5580,11 +7912,16 @@ export interface Scope_API {
     };
 }
 /**
+ * All allows access to all APIs
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Scope.API.All
  */
 export interface Scope_API_All {
 }
 /**
+ * Filter restricts the access to certain gRPC packages, services or
+ * methods
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Scope.API.Filter
  */
 export interface Scope_API_Filter {
@@ -5608,6 +7945,10 @@ export interface Scope_API_Filter {
     methods: string[];
 }
 /**
+ * Policy is a set of policy-as-code rules that decide whether a request is
+ * allowed or denied. A  Policy that is attached to the resources involved in a
+ * request is evaluated for that request.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Policy
  */
 export interface Policy {
@@ -5624,7 +7965,7 @@ export interface Policy {
      */
     kind: string;
     /**
-     * octelium.api.main.meta.v1.Metadata is the object's metadata.
+     * Metadata is the object's metadata.
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
@@ -5643,6 +7984,8 @@ export interface Policy {
     status?: Policy_Status;
 }
 /**
+ * Spec is the Policy specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Policy.Spec
  */
 export interface Policy_Spec {
@@ -5662,6 +8005,10 @@ export interface Policy_Spec {
      */
     enforcementRules: Policy_Spec_EnforcementRule[];
     /**
+     * Attrs is a map of user-defined attributes that can be reused inside the
+     * Policy rules. It is strongly recommended to stick to camelCase in order
+     * to be conformant with Octelium's API naming conventions.
+     *
      * @generated from protobuf field: google.protobuf.Struct attrs = 3
      */
     attrs?: Struct;
@@ -5675,6 +8022,8 @@ export interface Policy_Spec {
     isDisabled: boolean;
 }
 /**
+ * Rule is a single access control rule of the Policy
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Policy.Spec.Rule
  */
 export interface Policy_Spec_Rule {
@@ -5710,6 +8059,8 @@ export interface Policy_Spec_Rule {
     priority: number;
 }
 /**
+ * Effect is the decision of the Rule once its Condition matches
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Policy.Spec.Rule.Effect
  */
 export enum Policy_Spec_Rule_Effect {
@@ -5733,6 +8084,12 @@ export enum Policy_Spec_Rule_Effect {
     DENY = 2
 }
 /**
+ * EnforcementRule is a pre-condition that decides whether the Policy is
+ * evaluated at all. If no EnforcementRule matches, or if the list of
+ * EnforcementRules is empty, then the Policy is enforced. ENFORCE rules
+ * always override IGNORE rules in the same way that DENY rules override
+ * ALLOW rules.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Policy.Spec.EnforcementRule
  */
 export interface Policy_Spec_EnforcementRule {
@@ -5743,14 +8100,17 @@ export interface Policy_Spec_EnforcementRule {
      */
     condition?: Condition;
     /**
-     * Effect is the effect of the policy when a match happens to any of the
-     * Conditions.
+     * Effect is the effect of the enforcement rule when a match happens to
+     * any of the Conditions.
      *
      * @generated from protobuf field: octelium.api.main.core.v1.Policy.Spec.EnforcementRule.Effect effect = 2
      */
     effect: Policy_Spec_EnforcementRule_Effect;
 }
 /**
+ * Effect is the decision of the EnforcementRule once its Condition
+ * matches
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Policy.Spec.EnforcementRule.Effect
  */
 export enum Policy_Spec_EnforcementRule_Effect {
@@ -5761,30 +8121,34 @@ export enum Policy_Spec_EnforcementRule_Effect {
      */
     EFFECT_UNKNOWN = 0,
     /**
-     * ALLOW means that the policy allows the request if any of the
-     * Conditions are matched.
+     * ENFORCE forces the Policy to be evaluated
      *
      * @generated from protobuf enum value: ENFORCE = 1;
      */
     ENFORCE = 1,
     /**
-     * DENY means that the policy denies the request if any of the
-     * Conditions are matched.
+     * IGNORE forces the Policy to be ignored altogether
      *
      * @generated from protobuf enum value: IGNORE = 2;
      */
     IGNORE = 2
 }
 /**
+ * Status is the current status of the Policy
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Policy.Status
  */
 export interface Policy_Status {
     /**
+     * ParentPolicyRef is the reference of the parent Policy, if any
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference parentPolicyRef = 1
      */
     parentPolicyRef?: ObjectReference;
 }
 /**
+ * PolicyList is the list of Policies returned by the ListPolicy method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.PolicyList
  */
 export interface PolicyList {
@@ -5814,15 +8178,25 @@ export interface PolicyList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * ListPolicyOptions is the request of the ListPolicy method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListPolicyOptions
  */
 export interface ListPolicyOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
 }
 /**
+ * AccessLog is a log entry of a request that and is emitted in real time by a
+ * Service to the Cluster collector. It records a User's access to the Service
+ * with the application-layer aware information of the protocol used by that
+ * Service.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog
  */
 export interface AccessLog {
@@ -5852,10 +8226,14 @@ export interface AccessLog {
     entry?: AccessLog_Entry;
 }
 /**
+ * Entry is the AccessLog's entry information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry
  */
 export interface AccessLog_Entry {
     /**
+     * Common is the information that is common to every AccessLog entry
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Common common = 1
      */
     common?: AccessLog_Entry_Common;
@@ -5867,6 +8245,8 @@ export interface AccessLog_Entry {
     info?: AccessLog_Entry_Info;
 }
 /**
+ * Info is the application-layer specific information of the entry
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info
  */
 export interface AccessLog_Entry_Info {
@@ -5948,14 +8328,34 @@ export interface AccessLog_Entry_Info {
     } | {
         oneofKind: "socks5";
         /**
+         * SOCKS5 sets the SOCKS5-specific entry details
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.SOCKS5 socks5 = 10
          */
         socks5: AccessLog_Entry_Info_SOCKS5;
+    } | {
+        oneofKind: "mcp";
+        /**
+         * MCP sets the Model Context Protocol-specific entry details
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.MCP mcp = 11
+         */
+        mcp: AccessLog_Entry_Info_MCP;
+    } | {
+        oneofKind: "llm";
+        /**
+         * LLM sets the LLM-gateway-specific entry details
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM llm = 12
+         */
+        llm: AccessLog_Entry_Info_LLM;
     } | {
         oneofKind: undefined;
     };
 }
 /**
+ * HTTP is the HTTP-specific information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.HTTP
  */
 export interface AccessLog_Entry_Info_HTTP {
@@ -5979,6 +8379,8 @@ export interface AccessLog_Entry_Info_HTTP {
     httpVersion: AccessLog_Entry_Info_HTTP_HTTPVersion;
 }
 /**
+ * Request is the HTTP request information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.HTTP.Request
  */
 export interface AccessLog_Entry_Info_HTTP_Request {
@@ -6059,6 +8461,8 @@ export interface AccessLog_Entry_Info_HTTP_Request {
     };
 }
 /**
+ * Response is the HTTP response information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.HTTP.Response
  */
 export interface AccessLog_Entry_Info_HTTP_Response {
@@ -6102,6 +8506,8 @@ export interface AccessLog_Entry_Info_HTTP_Response {
     };
 }
 /**
+ * HTTPVersion is the HTTP version of the request
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.HTTP.HTTPVersion
  */
 export enum AccessLog_Entry_Info_HTTP_HTTPVersion {
@@ -6137,6 +8543,8 @@ export enum AccessLog_Entry_Info_HTTP_HTTPVersion {
     HTTP3 = 4
 }
 /**
+ * TCP is the TCP-specific information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.TCP
  */
 export interface AccessLog_Entry_Info_TCP {
@@ -6162,6 +8570,8 @@ export interface AccessLog_Entry_Info_TCP {
     sentBytes: number;
 }
 /**
+ * Type is the TCP-specific type of the entry
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.TCP.Type
  */
 export enum AccessLog_Entry_Info_TCP_Type {
@@ -6185,6 +8595,8 @@ export enum AccessLog_Entry_Info_TCP_Type {
     END = 2
 }
 /**
+ * SSH is the SSH-specific information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.SSH
  */
 export interface AccessLog_Entry_Info_SSH {
@@ -6195,6 +8607,8 @@ export interface AccessLog_Entry_Info_SSH {
      */
     type: AccessLog_Entry_Info_SSH_Type;
     /**
+     * Details is the type-specific details of the entry
+     *
      * @generated from protobuf oneof: details
      */
     details: {
@@ -6244,6 +8658,8 @@ export interface AccessLog_Entry_Info_SSH {
     };
 }
 /**
+ * Start is the details of a new SSH connection
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.SSH.Start
  */
 export interface AccessLog_Entry_Info_SSH_Start {
@@ -6262,6 +8678,8 @@ export interface AccessLog_Entry_Info_SSH_Start {
     user: string;
 }
 /**
+ * SessionRecording is a recording chunk of an SSH session
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.SSH.SessionRecording
  */
 export interface AccessLog_Entry_Info_SSH_SessionRecording {
@@ -6279,6 +8697,8 @@ export interface AccessLog_Entry_Info_SSH_SessionRecording {
     data: Uint8Array;
 }
 /**
+ * Type is the type of the recording chunk
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.SSH.SessionRecording.Type
  */
 export enum AccessLog_Entry_Info_SSH_SessionRecording_Type {
@@ -6302,6 +8722,8 @@ export enum AccessLog_Entry_Info_SSH_SessionRecording_Type {
     STDOUT = 2
 }
 /**
+ * SessionRequestExec is the details of a session exec request
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.SSH.SessionRequestExec
  */
 export interface AccessLog_Entry_Info_SSH_SessionRequestExec {
@@ -6313,6 +8735,9 @@ export interface AccessLog_Entry_Info_SSH_SessionRequestExec {
     command: string;
 }
 /**
+ * SessionRequestSubsystem is the details of a session subsystem
+ * request
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.SSH.SessionRequestSubsystem
  */
 export interface AccessLog_Entry_Info_SSH_SessionRequestSubsystem {
@@ -6324,6 +8749,9 @@ export interface AccessLog_Entry_Info_SSH_SessionRequestSubsystem {
     name: string;
 }
 /**
+ * DirectTCPIPStart is the details of a requested "direct-tcpip"
+ * channel
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.SSH.DirectTCPIPStart
  */
 export interface AccessLog_Entry_Info_SSH_DirectTCPIPStart {
@@ -6341,6 +8769,8 @@ export interface AccessLog_Entry_Info_SSH_DirectTCPIPStart {
     port: number;
 }
 /**
+ * Type is the SSH-specific type of the entry
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.SSH.Type
  */
 export enum AccessLog_Entry_Info_SSH_Type {
@@ -6412,6 +8842,8 @@ export enum AccessLog_Entry_Info_SSH_Type {
     SESSION_REQUEST_SUBSYSTEM = 10
 }
 /**
+ * UDP is the UDP-specific information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.UDP
  */
 export interface AccessLog_Entry_Info_UDP {
@@ -6423,6 +8855,8 @@ export interface AccessLog_Entry_Info_UDP {
     type: AccessLog_Entry_Info_UDP_Type;
 }
 /**
+ * Type is the UDP-specific type of the entry
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.UDP.Type
  */
 export enum AccessLog_Entry_Info_UDP_Type {
@@ -6446,6 +8880,8 @@ export enum AccessLog_Entry_Info_UDP_Type {
     END = 2
 }
 /**
+ * Postgres is the PostgreSQL-specific information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.Postgres
  */
 export interface AccessLog_Entry_Info_Postgres {
@@ -6456,6 +8892,8 @@ export interface AccessLog_Entry_Info_Postgres {
      */
     type: AccessLog_Entry_Info_Postgres_Type;
     /**
+     * Details is the type-specific details of the entry
+     *
      * @generated from protobuf oneof: details
      */
     details: {
@@ -6487,6 +8925,8 @@ export interface AccessLog_Entry_Info_Postgres {
     };
 }
 /**
+ * Start is the details of the start of a PostgreSQL connection
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.Postgres.Start
  */
 export interface AccessLog_Entry_Info_Postgres_Start {
@@ -6526,6 +8966,8 @@ export interface AccessLog_Entry_Info_Postgres_Start {
     applicationName: string;
 }
 /**
+ * Query is the details of a PostgreSQL query message
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.Postgres.Query
  */
 export interface AccessLog_Entry_Info_Postgres_Query {
@@ -6537,6 +8979,8 @@ export interface AccessLog_Entry_Info_Postgres_Query {
     query: string;
 }
 /**
+ * Parse is the details of a PostgreSQL parse message
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.Postgres.Parse
  */
 export interface AccessLog_Entry_Info_Postgres_Parse {
@@ -6554,6 +8998,8 @@ export interface AccessLog_Entry_Info_Postgres_Parse {
     query: string;
 }
 /**
+ * Type is the PostgreSQL-specific type of the entry
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.Postgres.Type
  */
 export enum AccessLog_Entry_Info_Postgres_Type {
@@ -6613,43 +9059,61 @@ export enum AccessLog_Entry_Info_Postgres_Type {
     FUNCTION_CALL = 8
 }
 /**
+ * MySQL is the MySQL-specific information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL
  */
 export interface AccessLog_Entry_Info_MySQL {
     /**
+     * Type is the MySQL-specific type of the entry
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL.Type type = 1
      */
     type: AccessLog_Entry_Info_MySQL_Type;
     /**
+     * Details is the type-specific details of the entry
+     *
      * @generated from protobuf oneof: details
      */
     details: {
         oneofKind: "query";
         /**
+         * Query shows the details of a query command
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL.Query query = 2
          */
         query: AccessLog_Entry_Info_MySQL_Query;
     } | {
         oneofKind: "initDB";
         /**
+         * InitDB shows the details of a command that changes the default
+         * database
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL.InitDB initDB = 3
          */
         initDB: AccessLog_Entry_Info_MySQL_InitDB;
     } | {
         oneofKind: "createDB";
         /**
+         * CreateDB shows the details of a command that creates a database
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL.CreateDB createDB = 4
          */
         createDB: AccessLog_Entry_Info_MySQL_CreateDB;
     } | {
         oneofKind: "dropDB";
         /**
+         * DropDB shows the details of a command that drops a database
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL.DropDB dropDB = 5
          */
         dropDB: AccessLog_Entry_Info_MySQL_DropDB;
     } | {
         oneofKind: "prepareStatement";
         /**
+         * PrepareStatement shows the details of a command that prepares a
+         * statement
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL.PrepareStatement prepareStatement = 6
          */
         prepareStatement: AccessLog_Entry_Info_MySQL_PrepareStatement;
@@ -6658,116 +9122,172 @@ export interface AccessLog_Entry_Info_MySQL {
     };
 }
 /**
+ * Query is the details of a query command
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL.Query
  */
 export interface AccessLog_Entry_Info_MySQL_Query {
     /**
+     * Query is the query itself
+     *
      * @generated from protobuf field: string query = 1
      */
     query: string;
 }
 /**
+ * InitDB is the details of a command that changes the default database
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL.InitDB
  */
 export interface AccessLog_Entry_Info_MySQL_InitDB {
     /**
+     * Database is the name of the database
+     *
      * @generated from protobuf field: string database = 1
      */
     database: string;
 }
 /**
+ * CreateDB is the details of a command that creates a database
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL.CreateDB
  */
 export interface AccessLog_Entry_Info_MySQL_CreateDB {
     /**
+     * Database is the name of the database
+     *
      * @generated from protobuf field: string database = 1
      */
     database: string;
 }
 /**
+ * DropDB is the details of a command that drops a database
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL.DropDB
  */
 export interface AccessLog_Entry_Info_MySQL_DropDB {
     /**
+     * Database is the name of the database
+     *
      * @generated from protobuf field: string database = 1
      */
     database: string;
 }
 /**
+ * PrepareStatement is the details of a command that prepares a
+ * statement
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL.PrepareStatement
  */
 export interface AccessLog_Entry_Info_MySQL_PrepareStatement {
     /**
+     * Query is the query of the prepared statement
+     *
      * @generated from protobuf field: string query = 1
      */
     query: string;
 }
 /**
+ * Type is the MySQL-specific type of the entry
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL.Type
  */
 export enum AccessLog_Entry_Info_MySQL_Type {
     /**
+     * TYPE_UNKNOWN is not used
+     *
      * @generated from protobuf enum value: TYPE_UNKNOWN = 0;
      */
     TYPE_UNKNOWN = 0,
     /**
+     * SESSION_START is the start of a new MySQL connection
+     *
      * @generated from protobuf enum value: SESSION_START = 1;
      */
     SESSION_START = 1,
     /**
+     * SESSION_END is the end of a MySQL connection
+     *
      * @generated from protobuf enum value: SESSION_END = 2;
      */
     SESSION_END = 2,
     /**
+     * QUERY is a query command
+     *
      * @generated from protobuf enum value: QUERY = 3;
      */
     QUERY = 3,
     /**
+     * INIT_DB is a command that changes the default database
+     *
      * @generated from protobuf enum value: INIT_DB = 4;
      */
     INIT_DB = 4,
     /**
+     * CREATE_DB is a command that creates a database
+     *
      * @generated from protobuf enum value: CREATE_DB = 5;
      */
     CREATE_DB = 5,
     /**
+     * DROP_DB is a command that drops a database
+     *
      * @generated from protobuf enum value: DROP_DB = 6;
      */
     DROP_DB = 6,
     /**
+     * QUIT is a command that closes the connection
+     *
      * @generated from protobuf enum value: QUIT = 7;
      */
     QUIT = 7,
     /**
+     * PREPARE_STATEMENT is a command that prepares a statement
+     *
      * @generated from protobuf enum value: PREPARE_STATEMENT = 8;
      */
     PREPARE_STATEMENT = 8,
     /**
+     * EXECUTE_STATEMENT is a command that executes a prepared statement
+     *
      * @generated from protobuf enum value: EXECUTE_STATEMENT = 9;
      */
     EXECUTE_STATEMENT = 9,
     /**
+     * CLOSE_STATEMENT is a command that closes a prepared statement
+     *
      * @generated from protobuf enum value: CLOSE_STATEMENT = 10;
      */
     CLOSE_STATEMENT = 10,
     /**
+     * FETCH_STATEMENT is a command that fetches the rows of a prepared
+     * statement
+     *
      * @generated from protobuf enum value: FETCH_STATEMENT = 11;
      */
     FETCH_STATEMENT = 11,
     /**
+     * RESET_STATEMENT is a command that resets a prepared statement
+     *
      * @generated from protobuf enum value: RESET_STATEMENT = 12;
      */
     RESET_STATEMENT = 12,
     /**
+     * DEBUG is a command that dumps the upstream's debug information
+     *
      * @generated from protobuf enum value: DEBUG = 13;
      */
     DEBUG = 13,
     /**
+     * CHANGE_USER is a command that changes the connection's user
+     *
      * @generated from protobuf enum value: CHANGE_USER = 14;
      */
     CHANGE_USER = 14
 }
 /**
+ * Kubernetes is the Kubernetes-specific information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.Kubernetes
  */
 export interface AccessLog_Entry_Info_Kubernetes {
@@ -6828,6 +9348,8 @@ export interface AccessLog_Entry_Info_Kubernetes {
     name: string;
 }
 /**
+ * GRPC is the gRPC-specific information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.GRPC
  */
 export interface AccessLog_Entry_Info_GRPC {
@@ -6876,139 +9398,693 @@ export interface AccessLog_Entry_Info_GRPC {
     message: string;
 }
 /**
+ * DNS is the DNS-specific information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.DNS
  */
 export interface AccessLog_Entry_Info_DNS {
     /**
+     * Type is the type of the DNS query
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.DNS.Type type = 1
      */
     type: AccessLog_Entry_Info_DNS_Type;
     /**
+     * TypeID is the numeric DNS query type
+     *
      * @generated from protobuf field: int64 typeID = 2
      */
     typeID: number;
     /**
+     * Name is the queried domain name
+     *
      * @generated from protobuf field: string name = 3
      */
     name: string;
     /**
+     * Answer is the answer of the DNS query
+     *
      * @generated from protobuf field: string answer = 4
      */
     answer: string;
     /**
+     * Rcode is the DNS response code
+     *
      * @generated from protobuf field: int64 rcode = 5
      */
     rcode: number;
 }
 /**
+ * Type is the type of the DNS query
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.DNS.Type
  */
 export enum AccessLog_Entry_Info_DNS_Type {
     /**
+     * TYPE_UNSET is not used
+     *
      * @generated from protobuf enum value: TYPE_UNSET = 0;
      */
     TYPE_UNSET = 0,
     /**
+     * A is an IPv4 address query
+     *
      * @generated from protobuf enum value: A = 1;
      */
     A = 1,
     /**
+     * AAAA is an IPv6 address query
+     *
      * @generated from protobuf enum value: AAAA = 2;
      */
     AAAA = 2,
     /**
+     * TXT is a text record query
+     *
      * @generated from protobuf enum value: TXT = 3;
      */
     TXT = 3,
     /**
+     * CNAME is a canonical name query
+     *
      * @generated from protobuf enum value: CNAME = 4;
      */
     CNAME = 4,
     /**
+     * MX is a mail exchange query
+     *
      * @generated from protobuf enum value: MX = 5;
      */
     MX = 5,
     /**
+     * TYPE_OTHER is any other query type. The numeric type is available
+     * in the TypeID field.
+     *
      * @generated from protobuf enum value: TYPE_OTHER = 6;
      */
     TYPE_OTHER = 6
 }
 /**
+ * SOCKS5 is the SOCKS5-specific information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.SOCKS5
  */
 export interface AccessLog_Entry_Info_SOCKS5 {
     /**
+     * Type is the SOCKS5-specific type of the entry
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.SOCKS5.Type type = 1
      */
     type: AccessLog_Entry_Info_SOCKS5_Type;
     /**
+     * Host is the requested destination host
+     *
      * @generated from protobuf field: string host = 2
      */
     host: string;
     /**
+     * Port is the requested destination port
+     *
      * @generated from protobuf field: uint32 port = 3
      */
     port: number;
     /**
+     * AddressType is the type of the requested destination address
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.SOCKS5.AddressType addressType = 4
      */
     addressType: AccessLog_Entry_Info_SOCKS5_AddressType;
     /**
+     * ReceivedBytes is the number of bytes received from the downstream.
+     * Only used with SESSION_END entries.
+     *
      * @generated from protobuf field: uint64 receivedBytes = 5
      */
     receivedBytes: number;
     /**
+     * SentBytes is the number of bytes sent to the downstream. Only used
+     * with SESSION_END entries.
+     *
      * @generated from protobuf field: uint64 sentBytes = 6
      */
     sentBytes: number;
     /**
+     * UpstreamHost is the host of the upstream SOCKS5 server
+     *
      * @generated from protobuf field: string upstreamHost = 7
      */
     upstreamHost: string;
     /**
+     * UpstreamPort is the port of the upstream SOCKS5 server
+     *
      * @generated from protobuf field: uint32 upstreamPort = 8
      */
     upstreamPort: number;
 }
 /**
+ * Type is the SOCKS5-specific type of the entry
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.SOCKS5.Type
  */
 export enum AccessLog_Entry_Info_SOCKS5_Type {
     /**
+     * TYPE_UNSPECIFIED is not used
+     *
      * @generated from protobuf enum value: TYPE_UNSPECIFIED = 0;
      */
     TYPE_UNSPECIFIED = 0,
     /**
+     * CONNECT is a SOCKS5 connection request
+     *
      * @generated from protobuf enum value: CONNECT = 1;
      */
     CONNECT = 1,
     /**
+     * SESSION_END is the end of a SOCKS5 connection
+     *
      * @generated from protobuf enum value: SESSION_END = 2;
      */
     SESSION_END = 2
 }
 /**
+ * AddressType is the type of the requested destination address
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.SOCKS5.AddressType
  */
 export enum AccessLog_Entry_Info_SOCKS5_AddressType {
     /**
+     * ADDRESS_TYPE_UNSPECIFIED is not used
+     *
      * @generated from protobuf enum value: ADDRESS_TYPE_UNSPECIFIED = 0;
      */
     ADDRESS_TYPE_UNSPECIFIED = 0,
     /**
+     * IPV4 means that the destination is an IPv4 address
+     *
      * @generated from protobuf enum value: IPV4 = 1;
      */
     IPV4 = 1,
     /**
+     * DOMAIN means that the destination is a domain name
+     *
      * @generated from protobuf enum value: DOMAIN = 2;
      */
     DOMAIN = 2,
     /**
+     * IPV6 means that the destination is an IPv6 address
+     *
      * @generated from protobuf enum value: IPV6 = 3;
      */
     IPV6 = 3
 }
 /**
+ * MCP is the Model Context Protocol-specific information
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.MCP
+ */
+export interface AccessLog_Entry_Info_MCP {
+    /**
+     * HTTP shows the underlying HTTP information of the request/response
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.HTTP http = 1
+     */
+    http?: AccessLog_Entry_Info_HTTP;
+    /**
+     * Type is the MCP-specific log entry type
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.MCP.Type type = 2
+     */
+    type: AccessLog_Entry_Info_MCP_Type;
+    /**
+     * ProtocolVersion is the MCP protocol version declared by the request
+     * (e.g. "2026-07-28"). Note that it is read from the request itself
+     * and it is therefore also set for the requests that are eventually
+     * rejected by Octelium.
+     *
+     * @generated from protobuf field: string protocolVersion = 3
+     */
+    protocolVersion: string;
+    /**
+     * Method is the JSON-RPC method of the request (e.g. `tools/call`)
+     *
+     * @generated from protobuf field: string method = 4
+     */
+    method: string;
+    /**
+     * Name is the logical MCP target of the method whenever it has one
+     * (i.e. the tool name, the prompt name or the resource URI)
+     *
+     * @generated from protobuf field: string name = 5
+     */
+    name: string;
+    /**
+     * RequestID is the JSON-RPC request `id` normalized into a string
+     *
+     * @generated from protobuf field: string requestID = 6
+     */
+    requestID: string;
+    /**
+     * IsNotification is set for JSON-RPC notification requests
+     *
+     * @generated from protobuf field: bool isNotification = 7
+     */
+    isNotification: boolean;
+    /**
+     * ResultType is the `resultType` discriminator of a successful result
+     * (e.g. "complete", "input_required"). It is a string rather than an
+     * enum since MCP extensions can define further values.
+     *
+     * @generated from protobuf field: string resultType = 8
+     */
+    resultType: string;
+    /**
+     * IsProtocolError is set when the response carried a JSON-RPC `error`
+     *
+     * @generated from protobuf field: bool isProtocolError = 9
+     */
+    isProtocolError: boolean;
+    /**
+     * ErrorCode is the JSON-RPC error code of the response (e.g. -32601
+     * for `Method not found` or -32020 for `HeaderMismatch`)
+     *
+     * @generated from protobuf field: int32 errorCode = 10
+     */
+    errorCode: number;
+    /**
+     * ErrorMessage is the JSON-RPC error message of the response
+     *
+     * @generated from protobuf field: string errorMessage = 11
+     */
+    errorMessage: string;
+    /**
+     * IsToolError is set when the method is `tools/call` and the
+     * successful result carried an `isError` value. This is a different
+     * layer from the ErrorCode field: the call succeeded at the protocol
+     * layer while the tool itself failed.
+     *
+     * @generated from protobuf field: bool isToolError = 12
+     */
+    isToolError: boolean;
+    /**
+     * EventCount is the number of the `text/event-stream` events of the
+     * response
+     *
+     * @generated from protobuf field: uint64 eventCount = 13
+     */
+    eventCount: number;
+    /**
+     * NotificationCount is the number of the JSON-RPC notifications, such
+     * as progress notifications, of the response stream
+     *
+     * @generated from protobuf field: uint64 notificationCount = 14
+     */
+    notificationCount: number;
+    /**
+     * TTLMs is the `ttlMs` cache freshness hint of the result, if set
+     *
+     * @generated from protobuf field: uint64 ttlMs = 15
+     */
+    ttlMs: number;
+    /**
+     * CacheScope is the `cacheScope` of the result, if set (e.g. "public")
+     *
+     * @generated from protobuf field: string cacheScope = 16
+     */
+    cacheScope: string;
+    /**
+     * Client is the client information reported by the downstream itself.
+     * It is NOT an identity.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.MCP.Client client = 17
+     */
+    client?: AccessLog_Entry_Info_MCP_Client;
+    /**
+     * SessionID is the value of the `Mcp-Session-Id` header used by the
+     * protocol revisions between 2025-03-26 and 2025-11-25. It is an MCP
+     * transport identifier that is unrelated to the Octelium Session as
+     * well as to the AccessLog entry's own sessionID field.
+     *
+     * @generated from protobuf field: string sessionID = 18
+     */
+    sessionID: string;
+}
+/**
+ * Client is the client information reported by the downstream itself
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.MCP.Client
+ */
+export interface AccessLog_Entry_Info_MCP_Client {
+    /**
+     * Name is the name reported by the downstream client itself
+     *
+     * @generated from protobuf field: string name = 1
+     */
+    name: string;
+    /**
+     * Version is the version reported by the downstream client itself
+     *
+     * @generated from protobuf field: string version = 2
+     */
+    version: string;
+    /**
+     * Title is the human-readable title reported by the downstream
+     * client itself
+     *
+     * @generated from protobuf field: string title = 3
+     */
+    title: string;
+}
+/**
+ * Type is the MCP-specific type of the entry
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.MCP.Type
+ */
+export enum AccessLog_Entry_Info_MCP_Type {
+    /**
+     * TYPE_UNSET is not used
+     *
+     * @generated from protobuf enum value: TYPE_UNSET = 0;
+     */
+    TYPE_UNSET = 0,
+    /**
+     * COMPLETE is a request that received a finite response
+     *
+     * @generated from protobuf enum value: COMPLETE = 1;
+     */
+    COMPLETE = 1,
+    /**
+     * STREAM_START is the beginning of a `text/event-stream` response
+     *
+     * @generated from protobuf enum value: STREAM_START = 2;
+     */
+    STREAM_START = 2,
+    /**
+     * STREAM_END is the end of a `text/event-stream` response
+     *
+     * @generated from protobuf enum value: STREAM_END = 3;
+     */
+    STREAM_END = 3
+}
+/**
+ * LLM is the LLM-gateway-specific information
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM
+ */
+export interface AccessLog_Entry_Info_LLM {
+    /**
+     * HTTP shows the underlying HTTP information of the request/response
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.HTTP http = 1
+     */
+    http?: AccessLog_Entry_Info_HTTP;
+    /**
+     * Type is the LLM-specific log entry type
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Type type = 2
+     */
+    type: AccessLog_Entry_Info_LLM_Type;
+    /**
+     * Protocol is the inference API protocol of the request
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol = 3
+     */
+    protocol: Service_Spec_Config_LLM_Protocol;
+    /**
+     * Operation is the normalized inference operation of the request
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Operation operation = 4
+     */
+    operation: AccessLog_Entry_Info_LLM_Operation;
+    /**
+     * RequestedModel is the model name requested by the downstream. Note
+     * that it is read from the request itself and it is therefore also set
+     * for the requests that are eventually rejected by Octelium.
+     *
+     * @generated from protobuf field: string requestedModel = 5
+     */
+    requestedModel: string;
+    /**
+     * Model is the model name reported by the upstream provider itself. It
+     * can differ from the RequestedModel whenever the request used an
+     * alias or an unpinned model name.
+     *
+     * @generated from protobuf field: string model = 6
+     */
+    model: string;
+    /**
+     * Stream is set for the requests that asked for a streamed response
+     *
+     * @generated from protobuf field: bool stream = 7
+     */
+    stream: boolean;
+    /**
+     * Usage is the token usage of the request/response
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage usage = 8
+     */
+    usage?: AccessLog_Entry_Info_LLM_Usage;
+    /**
+     * EstimatedInputTokens is Octelium's own pre-flight input token
+     * estimate. It is always set for the parsed inference requests
+     * regardless of the Usage field.
+     *
+     * @generated from protobuf field: uint64 estimatedInputTokens = 9
+     */
+    estimatedInputTokens: number;
+    /**
+     * ResponseID is the response identifier reported by the upstream
+     * provider itself
+     *
+     * @generated from protobuf field: string responseID = 10
+     */
+    responseID: string;
+    /**
+     * FinishReason is the completion status reported by the upstream
+     * provider itself (e.g. "stop", "length", "tool_calls")
+     *
+     * @generated from protobuf field: string finishReason = 11
+     */
+    finishReason: string;
+    /**
+     * TimeToFirstToken is the duration between accepting the request and
+     * the first generated content of a streamed response
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.Duration timeToFirstToken = 12
+     */
+    timeToFirstToken?: Duration;
+    /**
+     * EventCount is the number of the `text/event-stream` events of the
+     * response
+     *
+     * @generated from protobuf field: uint64 eventCount = 13
+     */
+    eventCount: number;
+}
+/**
+ * Usage is the token usage of the request as reported by the upstream
+ * provider
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage
+ */
+export interface AccessLog_Entry_Info_LLM_Usage {
+    /**
+     * Source shows where the token counts came from
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.Source source = 1
+     */
+    source: AccessLog_Entry_Info_LLM_Usage_Source;
+    /**
+     * InputTokens is the number of the input/prompt tokens
+     *
+     * @generated from protobuf field: uint64 inputTokens = 2
+     */
+    inputTokens: number;
+    /**
+     * OutputTokens is the number of the generated/completion tokens
+     *
+     * @generated from protobuf field: uint64 outputTokens = 3
+     */
+    outputTokens: number;
+    /**
+     * TotalTokens is the total token count reported by the upstream
+     * provider itself. Whenever the provider reports none, which is the
+     * case for the ANTHROPIC protocol as well as for many
+     * OpenAI-compatible servers, it is computed as the sum of the input
+     * and output tokens plus only those cache token counts that the
+     * provider accounts for additively (i.e. the ANTHROPIC ones). The
+     * OPENAI cached and reasoning token counts are already included in
+     * the input and the output counts respectively and they are
+     * therefore never added again.
+     *
+     * @generated from protobuf field: uint64 totalTokens = 4
+     */
+    totalTokens: number;
+    /**
+     * CacheReadInputTokens is the number of the input tokens that were
+     * read from the provider's prompt cache. Note that the providers
+     * account for it differently: it is a subset of the InputTokens
+     * field for the OPENAI protocol while it is additive to it for the
+     * ANTHROPIC one.
+     *
+     * @generated from protobuf field: uint64 cacheReadInputTokens = 5
+     */
+    cacheReadInputTokens: number;
+    /**
+     * CacheCreationInputTokens is the number of the input tokens that
+     * were written to the provider's prompt cache. It is only reported
+     * by the ANTHROPIC protocol and it is additive to the InputTokens
+     * field.
+     *
+     * @generated from protobuf field: uint64 cacheCreationInputTokens = 6
+     */
+    cacheCreationInputTokens: number;
+    /**
+     * ReasoningTokens is the number of the reasoning tokens. It is only
+     * reported by the OPENAI protocol where it is already included in
+     * the OutputTokens field.
+     *
+     * @generated from protobuf field: uint64 reasoningTokens = 7
+     */
+    reasoningTokens: number;
+}
+/**
+ * Source shows where the token counts came from
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.Source
+ */
+export enum AccessLog_Entry_Info_LLM_Usage_Source {
+    /**
+     * SOURCE_UNSET means that no token usage could be determined at
+     * all
+     *
+     * @generated from protobuf enum value: SOURCE_UNSET = 0;
+     */
+    SOURCE_UNSET = 0,
+    /**
+     * PROVIDER is the exact token usage reported by the upstream
+     * provider itself
+     *
+     * @generated from protobuf enum value: PROVIDER = 1;
+     */
+    PROVIDER = 1,
+    /**
+     * ESTIMATED is Octelium's own pre-flight input token estimate. It
+     * is used whenever the provider reports no usage at all and it
+     * must never be treated as a billing truth.
+     *
+     * @generated from protobuf enum value: ESTIMATED = 2;
+     */
+    ESTIMATED = 2,
+    /**
+     * PARTIAL is the provider-reported token usage of a stream that
+     * ended before the final usage was received
+     *
+     * @generated from protobuf enum value: PARTIAL = 3;
+     */
+    PARTIAL = 3
+}
+/**
+ * Type is the LLM-specific type of the entry
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Type
+ */
+export enum AccessLog_Entry_Info_LLM_Type {
+    /**
+     * TYPE_UNSET is not used
+     *
+     * @generated from protobuf enum value: TYPE_UNSET = 0;
+     */
+    TYPE_UNSET = 0,
+    /**
+     * COMPLETE is a request that received a finite response
+     *
+     * @generated from protobuf enum value: COMPLETE = 1;
+     */
+    COMPLETE = 1,
+    /**
+     * STREAM_START is the beginning of a `text/event-stream` response
+     *
+     * @generated from protobuf enum value: STREAM_START = 2;
+     */
+    STREAM_START = 2,
+    /**
+     * STREAM_END is the end of a `text/event-stream` response
+     *
+     * @generated from protobuf enum value: STREAM_END = 3;
+     */
+    STREAM_END = 3
+}
+/**
+ * Operation is the normalized inference operation of the request
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Operation
+ */
+export enum AccessLog_Entry_Info_LLM_Operation {
+    /**
+     * OPERATION_UNSET is not used
+     *
+     * @generated from protobuf enum value: OPERATION_UNSET = 0;
+     */
+    OPERATION_UNSET = 0,
+    /**
+     * CHAT_COMPLETIONS is `POST /v1/chat/completions`
+     *
+     * @generated from protobuf enum value: CHAT_COMPLETIONS = 1;
+     */
+    CHAT_COMPLETIONS = 1,
+    /**
+     * RESPONSES is `POST /v1/responses`
+     *
+     * @generated from protobuf enum value: RESPONSES = 2;
+     */
+    RESPONSES = 2,
+    /**
+     * COMPLETIONS is the legacy `POST /v1/completions`
+     *
+     * @generated from protobuf enum value: COMPLETIONS = 3;
+     */
+    COMPLETIONS = 3,
+    /**
+     * EMBEDDINGS is `POST /v1/embeddings`
+     *
+     * @generated from protobuf enum value: EMBEDDINGS = 4;
+     */
+    EMBEDDINGS = 4,
+    /**
+     * MODERATIONS is `POST /v1/moderations`
+     *
+     * @generated from protobuf enum value: MODERATIONS = 5;
+     */
+    MODERATIONS = 5,
+    /**
+     * MODELS_LIST is `GET /v1/models`
+     *
+     * @generated from protobuf enum value: MODELS_LIST = 6;
+     */
+    MODELS_LIST = 6,
+    /**
+     * MODELS_GET is `GET /v1/models/{model}`
+     *
+     * @generated from protobuf enum value: MODELS_GET = 7;
+     */
+    MODELS_GET = 7,
+    /**
+     * MESSAGES is `POST /v1/messages`
+     *
+     * @generated from protobuf enum value: MESSAGES = 8;
+     */
+    MESSAGES = 8,
+    /**
+     * COUNT_TOKENS is `POST /v1/messages/count_tokens`
+     *
+     * @generated from protobuf enum value: COUNT_TOKENS = 9;
+     */
+    COUNT_TOKENS = 9
+}
+/**
+ * Common is the information that is common to every AccessLog entry
+ * regardless of the Service's mode
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Common
  */
 export interface AccessLog_Entry_Common {
@@ -7050,10 +10126,14 @@ export interface AccessLog_Entry_Common {
      */
     sessionRef?: ObjectReference;
     /**
+     * UserRef refers the User.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 7
      */
     userRef?: ObjectReference;
     /**
+     * DeviceRef refers the Device, if available.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference deviceRef = 8
      */
     deviceRef?: ObjectReference;
@@ -7064,63 +10144,95 @@ export interface AccessLog_Entry_Common {
      */
     serviceRef?: ObjectReference;
     /**
+     * NamespaceRef refers the Service's Namespace.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference namespaceRef = 10
      */
     namespaceRef?: ObjectReference;
     /**
+     * RegionRef refers the Region in which the Service is deployed.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference regionRef = 11
      */
     regionRef?: ObjectReference;
     /**
+     * ConnectionID is the identifier that correlates all the entries that
+     * belong to the same connection
+     *
      * @generated from protobuf field: string connectionID = 12
      */
     connectionID: string;
     /**
+     * SessionID is the identifier of the Session that issued the request
+     *
      * @generated from protobuf field: string sessionID = 13
      */
     sessionID: string;
     /**
+     * Sequence is the position of the entry within its connection
+     *
      * @generated from protobuf field: int64 sequence = 14
      */
     sequence: number;
     /**
+     * IsPublic shows whether the request was served over the public
+     * clientless/BeyondCorp mode
+     *
      * @generated from protobuf field: bool isPublic = 15
      */
     isPublic: boolean;
     /**
+     * IsAnonymous shows whether the request was served anonymously
+     *
      * @generated from protobuf field: bool isAnonymous = 16
      */
     isAnonymous: boolean;
 }
 /**
+ * Reason is why the request was allowed or denied
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Common.Reason
  */
 export interface AccessLog_Entry_Common_Reason {
     /**
+     * Type is the reason of the authorization decision
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Common.Reason.Type type = 1
      */
     type: AccessLog_Entry_Common_Reason_Type;
     /**
+     * Details is the type-specific details of the Reason
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Common.Reason.Details details = 2
      */
     details?: AccessLog_Entry_Common_Reason_Details;
 }
 /**
+ * Details is the type-specific details of the Reason
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Common.Reason.Details
  */
 export interface AccessLog_Entry_Common_Reason_Details {
     /**
+     * Type sets the type of the Details
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "policyMatch";
         /**
+         * PolicyMatch shows the details of the Policy rule that triggered
+         * the decision
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Common.Reason.Details.PolicyMatch policyMatch = 1
          */
         policyMatch: AccessLog_Entry_Common_Reason_Details_PolicyMatch;
     } | {
         oneofKind: "sessionNotActive";
         /**
+         * SessionNotActive shows the details of the Session that is not
+         * active
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Common.Reason.Details.SessionNotActive sessionNotActive = 2
          */
         sessionNotActive: AccessLog_Entry_Common_Reason_Details_SessionNotActive;
@@ -7129,10 +10241,16 @@ export interface AccessLog_Entry_Common_Reason_Details {
     };
 }
 /**
+ * PolicyMatch is the details of the Policy rule that triggered the
+ * authorization decision
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Common.Reason.Details.PolicyMatch
  */
 export interface AccessLog_Entry_Common_Reason_Details_PolicyMatch {
     /**
+     * Type sets whether the matched rule belongs to a standalone or an
+     * inline Policy
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -7157,15 +10275,22 @@ export interface AccessLog_Entry_Common_Reason_Details_PolicyMatch {
         oneofKind: undefined;
     };
     /**
+     * RuleName is the name of the Policy rule that matched, if
+     * available
+     *
      * @generated from protobuf field: string ruleName = 3
      */
     ruleName: string;
     /**
+     * Priority is the priority level of the Policy rule that matched
+     *
      * @generated from protobuf field: int32 priority = 4
      */
     priority: number;
 }
 /**
+ * InlinePolicy is the inline Policy whose rule matched
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Common.Reason.Details.PolicyMatch.InlinePolicy
  */
 export interface AccessLog_Entry_Common_Reason_Details_PolicyMatch_InlinePolicy {
@@ -7184,6 +10309,8 @@ export interface AccessLog_Entry_Common_Reason_Details_PolicyMatch_InlinePolicy 
     name: string;
 }
 /**
+ * Policy is the standalone Policy whose rule matched
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Common.Reason.Details.PolicyMatch.Policy
  */
 export interface AccessLog_Entry_Common_Reason_Details_PolicyMatch_Policy {
@@ -7195,15 +10322,22 @@ export interface AccessLog_Entry_Common_Reason_Details_PolicyMatch_Policy {
     policyRef?: ObjectReference;
 }
 /**
+ * SessionNotActive is the details of a decision that was triggered
+ * by a Session that is not active
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Common.Reason.Details.SessionNotActive
  */
 export interface AccessLog_Entry_Common_Reason_Details_SessionNotActive {
     /**
+     * State is the state of the Session at the time of the request
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Session.Spec.State state = 1
      */
     state: Session_Spec_State;
 }
 /**
+ * Type is the reason of the authorization decision
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Common.Reason.Type
  */
 export enum AccessLog_Entry_Common_Reason_Type {
@@ -7292,15 +10426,22 @@ export enum AccessLog_Entry_Common_Reason_Type {
      */
     SESSION_EXPIRED = 13,
     /**
+     * ACCESS_TOKEN_EXPIRED means that the Session's access token is
+     * expired
+     *
      * @generated from protobuf enum value: ACCESS_TOKEN_EXPIRED = 14;
      */
     ACCESS_TOKEN_EXPIRED = 14
 }
 /**
+ * Status is the authorization decision of the request
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Common.Status
  */
 export enum AccessLog_Entry_Common_Status {
     /**
+     * STATUS_UNSET is not used
+     *
      * @generated from protobuf enum value: STATUS_UNSET = 0;
      */
     STATUS_UNSET = 0,
@@ -7318,15 +10459,25 @@ export enum AccessLog_Entry_Common_Status {
     DENIED = 2
 }
 /**
+ * ListIdentityProviderOptions is the request of the ListIdentityProvider
+ * method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListIdentityProviderOptions
  */
 export interface ListIdentityProviderOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
 }
 /**
+ * IdentityProvider represents an identity provider (IdP) that is used by the
+ * Cluster to authenticate and re-authenticate the Users in order for them to
+ * obtain and keep a valid Session.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.IdentityProvider
  */
 export interface IdentityProvider {
@@ -7337,7 +10488,7 @@ export interface IdentityProvider {
      */
     apiVersion: string;
     /**
-     * Kind is the resource name (i.e. `User`).
+     * Kind is the resource name (i.e. `IdentityProvider`).
      *
      * @generated from protobuf field: string kind = 2
      */
@@ -7349,19 +10500,21 @@ export interface IdentityProvider {
      */
     metadata?: Metadata;
     /**
-     * Spec is the User specification.
+     * Spec is the IdentityProvider specification.
      *
      * @generated from protobuf field: octelium.api.main.core.v1.IdentityProvider.Spec spec = 4
      */
     spec?: IdentityProvider_Spec;
     /**
-     * Status is the current status of the User.
+     * Status is the current status of the IdentityProvider.
      *
      * @generated from protobuf field: octelium.api.main.core.v1.IdentityProvider.Status status = 5
      */
     status?: IdentityProvider_Status;
 }
 /**
+ * Spec is the IdentityProvider specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.IdentityProvider.Spec
  */
 export interface IdentityProvider_Spec {
@@ -7397,10 +10550,16 @@ export interface IdentityProvider_Spec {
      */
     disableEmailAsIdentity: boolean;
     /**
+     * PostAuthenticationRules is the list of the rules that decide whether an
+     * otherwise successful authentication via the IdentityProvider is
+     * eventually accepted or rejected
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.IdentityProvider.Spec.PostAuthenticationRule postAuthenticationRules = 9
      */
     postAuthenticationRules: IdentityProvider_Spec_PostAuthenticationRule[];
     /**
+     * Type sets the IdentityProvider's type-specific options
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -7441,19 +10600,27 @@ export interface IdentityProvider_Spec {
     };
 }
 /**
+ * Github sets the GitHub OAuth2 provider specific options
+ *
  * @generated from protobuf message octelium.api.main.core.v1.IdentityProvider.Spec.Github
  */
 export interface IdentityProvider_Spec_Github {
     /**
+     * ClientID is the GitHub OAuth2 client ID
+     *
      * @generated from protobuf field: string clientID = 1
      */
     clientID: string;
     /**
+     * ClientSecret is the GitHub OAuth2 client secret
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.IdentityProvider.Spec.Github.ClientSecret clientSecret = 2
      */
     clientSecret?: IdentityProvider_Spec_Github_ClientSecret;
 }
 /**
+ * ClientSecret is the GitHub OAuth2 client secret
+ *
  * @generated from protobuf message octelium.api.main.core.v1.IdentityProvider.Spec.Github.ClientSecret
  */
 export interface IdentityProvider_Spec_Github_ClientSecret {
@@ -7463,6 +10630,9 @@ export interface IdentityProvider_Spec_Github_ClientSecret {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains the
+         * ClientSecret
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -7471,6 +10641,8 @@ export interface IdentityProvider_Spec_Github_ClientSecret {
     };
 }
 /**
+ * OIDC sets the OpenID Connect provider specific options
+ *
  * @generated from protobuf message octelium.api.main.core.v1.IdentityProvider.Spec.OIDC
  */
 export interface IdentityProvider_Spec_OIDC {
@@ -7523,6 +10695,8 @@ export interface IdentityProvider_Spec_OIDC {
     useUserInfoEndpoint: boolean;
 }
 /**
+ * ClientSecret is the OIDC OAuth2 client secret
+ *
  * @generated from protobuf message octelium.api.main.core.v1.IdentityProvider.Spec.OIDC.ClientSecret
  */
 export interface IdentityProvider_Spec_OIDC_ClientSecret {
@@ -7532,6 +10706,9 @@ export interface IdentityProvider_Spec_OIDC_ClientSecret {
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value contains the
+         * ClientSecret
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -7540,10 +10717,14 @@ export interface IdentityProvider_Spec_OIDC_ClientSecret {
     };
 }
 /**
+ * SAML sets the SAML 2.0 identity provider specific options
+ *
  * @generated from protobuf message octelium.api.main.core.v1.IdentityProvider.Spec.SAML
  */
 export interface IdentityProvider_Spec_SAML {
     /**
+     * MetadataType sets how the SAML 2.0 metadata is obtained
+     *
      * @generated from protobuf oneof: metadataType
      */
     metadataType: {
@@ -7590,27 +10771,42 @@ export interface IdentityProvider_Spec_SAML {
     forceAuthn: boolean;
 }
 /**
+ * OIDCIdentityToken sets the OIDC-based assertion options used for
+ * WORKLOAD User authentication. The WORKLOAD User authenticates via an
+ * identity token that is issued by an external OIDC-compliant issuer (e.g.
+ * a CI platform or a cloud provider) instead of an interactive login.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.IdentityProvider.Spec.OIDCIdentityToken
  */
 export interface IdentityProvider_Spec_OIDCIdentityToken {
     /**
+     * Type sets how the issuer's public keys used to verify the identity
+     * token are obtained
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "issuerURL";
         /**
+         * IssuerURL is the issuer URL from which the OIDC configuration, and
+         * subsequently the JWKS, is obtained automatically
+         *
          * @generated from protobuf field: string issuerURL = 1
          */
         issuerURL: string;
     } | {
         oneofKind: "jwksURL";
         /**
+         * JWKSURL is the URL of the issuer's JSON Web Key Set
+         *
          * @generated from protobuf field: string jwksURL = 2
          */
         jwksURL: string;
     } | {
         oneofKind: "jwksContent";
         /**
+         * JWKSContent is the inline content of the issuer's JSON Web Key Set
+         *
          * @generated from protobuf field: string jwksContent = 3
          */
         jwksContent: string;
@@ -7618,15 +10814,24 @@ export interface IdentityProvider_Spec_OIDCIdentityToken {
         oneofKind: undefined;
     };
     /**
+     * Issuer is the expected value of the identity token's `iss` claim
+     *
      * @generated from protobuf field: string issuer = 4
      */
     issuer: string;
     /**
+     * Audience is the expected value of the identity token's `aud` claim
+     *
      * @generated from protobuf field: string audience = 5
      */
     audience: string;
 }
 /**
+ * AALRule sets the authenticator assurance level (AAL) of the
+ * authentication based on the content of the IdentityProvider's assertion.
+ * The AAL of the first rule whose Condition matches is the one that is
+ * used.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.IdentityProvider.Spec.AALRule
  */
 export interface IdentityProvider_Spec_AALRule {
@@ -7644,36 +10849,55 @@ export interface IdentityProvider_Spec_AALRule {
     aal: IdentityProvider_Spec_AALRule_AAL;
 }
 /**
+ * AAL is the authenticator assurance level as defined by NIST SP 800-63B
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.IdentityProvider.Spec.AALRule.AAL
  */
 export enum IdentityProvider_Spec_AALRule_AAL {
     /**
+     * AAL_UNSET is not used
+     *
      * @generated from protobuf enum value: AAL_UNSET = 0;
      */
     AAL_UNSET = 0,
     /**
+     * AAL1 provides some assurance that the User controls a single
+     * authentication factor
+     *
      * @generated from protobuf enum value: AAL1 = 1;
      */
     AAL1 = 1,
     /**
+     * AAL2 provides high confidence that the User controls two distinct
+     * authentication factors
+     *
      * @generated from protobuf enum value: AAL2 = 2;
      */
     AAL2 = 2,
     /**
+     * AAL3 provides very high confidence that the User controls a
+     * hardware-based authenticator
+     *
      * @generated from protobuf enum value: AAL3 = 3;
      */
     AAL3 = 3
 }
 /**
+ * PostAuthenticationRule decides whether an otherwise successful
+ * authentication via the IdentityProvider is eventually accepted or
+ * rejected
+ *
  * @generated from protobuf message octelium.api.main.core.v1.IdentityProvider.Spec.PostAuthenticationRule
  */
 export interface IdentityProvider_Spec_PostAuthenticationRule {
     /**
+     * Condition is the rule's Condition
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Condition condition = 1
      */
     condition?: Condition;
     /**
-     * Effect is the effect of the policy when a match happens to any of the
+     * Effect is the effect of the rule when a match happens to any of the
      * Conditions.
      *
      * @generated from protobuf field: octelium.api.main.core.v1.IdentityProvider.Spec.PostAuthenticationRule.Effect effect = 2
@@ -7681,6 +10905,8 @@ export interface IdentityProvider_Spec_PostAuthenticationRule {
     effect: IdentityProvider_Spec_PostAuthenticationRule_Effect;
 }
 /**
+ * Effect is the decision of the rule once its Condition matches
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.IdentityProvider.Spec.PostAuthenticationRule.Effect
  */
 export enum IdentityProvider_Spec_PostAuthenticationRule_Effect {
@@ -7691,57 +10917,79 @@ export enum IdentityProvider_Spec_PostAuthenticationRule_Effect {
      */
     EFFECT_UNKNOWN = 0,
     /**
-     * ALLOW allows the request.
+     * ALLOW accepts the authentication.
      *
      * @generated from protobuf enum value: ALLOW = 1;
      */
     ALLOW = 1,
     /**
-     * DENY denies the request.
+     * DENY rejects the authentication.
      *
      * @generated from protobuf enum value: DENY = 2;
      */
     DENY = 2
 }
 /**
+ * Status is the current status of the IdentityProvider
+ *
  * @generated from protobuf message octelium.api.main.core.v1.IdentityProvider.Status
  */
 export interface IdentityProvider_Status {
     /**
+     * Type is the type of the IdentityProvider
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.IdentityProvider.Status.Type type = 1
      */
     type: IdentityProvider_Status_Type;
     /**
+     * IsLocked indicates whether the IdentityProvider is locked by the Cluster
+     *
      * @generated from protobuf field: bool isLocked = 2
      */
     isLocked: boolean;
 }
 /**
+ * Type is the type of the IdentityProvider
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.IdentityProvider.Status.Type
  */
 export enum IdentityProvider_Status_Type {
     /**
+     * TYPE_UNKNOWN is not used
+     *
      * @generated from protobuf enum value: TYPE_UNKNOWN = 0;
      */
     TYPE_UNKNOWN = 0,
     /**
+     * GITHUB means that the IdentityProvider is a GitHub OAuth2 provider
+     *
      * @generated from protobuf enum value: GITHUB = 1;
      */
     GITHUB = 1,
     /**
+     * OIDC means that the IdentityProvider is an OpenID Connect provider
+     *
      * @generated from protobuf enum value: OIDC = 2;
      */
     OIDC = 2,
     /**
+     * SAML means that the IdentityProvider is a SAML 2.0 provider
+     *
      * @generated from protobuf enum value: SAML = 3;
      */
     SAML = 3,
     /**
+     * OIDC_IDENTITY_TOKEN means that the IdentityProvider verifies the OIDC
+     * identity tokens used by the WORKLOAD Users
+     *
      * @generated from protobuf enum value: OIDC_IDENTITY_TOKEN = 4;
      */
     OIDC_IDENTITY_TOKEN = 4
 }
 /**
+ * IdentityProviderList is the list of IdentityProviders returned by the
+ * ListIdentityProvider method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.IdentityProviderList
  */
 export interface IdentityProviderList {
@@ -7758,7 +11006,7 @@ export interface IdentityProviderList {
      */
     kind: string;
     /**
-     * Items is the list of IdentityProvider items.
+     * Items is the list of IdentityProviders.
      *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.IdentityProvider items = 3
      */
@@ -7771,6 +11019,12 @@ export interface IdentityProviderList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * Region represents a single Kubernetes cluster of the Octelium Cluster. A
+ * Cluster is designed to run on top of a single Kubernetes cluster or to be
+ * distributed over multiple ones where each Kubernetes cluster acts as a
+ * Region. The initial Kubernetes cluster represents the `default` Region upon
+ * which the Services are deployed by default.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Region
  */
 export interface Region {
@@ -7781,54 +11035,80 @@ export interface Region {
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `Region`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Metadata is the object's metadata.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
     metadata?: Metadata;
     /**
+     * Spec is the Region specification.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Region.Spec spec = 4
      */
     spec?: Region_Spec;
     /**
+     * Status is the current status of the Region.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Region.Status status = 5
      */
     status?: Region_Status;
 }
 /**
+ * Spec is the Region specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Region.Spec
  */
 export interface Region_Spec {
 }
 /**
+ * Status is the current status of the Region
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Region.Status
  */
 export interface Region_Status {
     /**
+     * Index is the Region's index within the Cluster
+     *
      * @generated from protobuf field: int32 index = 1
      */
     index: number;
     /**
+     * IngressAddresses is the list of the public addresses of the Region's
+     * Ingress
+     *
      * @generated from protobuf field: repeated string ingressAddresses = 2
      */
     ingressAddresses: string[];
     /**
+     * PublicHostname is the Region's public hostname
+     *
      * @generated from protobuf field: string publicHostname = 3
      */
     publicHostname: string;
     /**
+     * Ext is a map of internal Cluster-managed extension data
+     *
      * @generated from protobuf field: map<string, google.protobuf.Struct> ext = 4
      */
     ext: {
         [key: string]: Struct;
     };
     /**
+     * Version is the Region's version
+     *
      * @generated from protobuf field: string version = 5
      */
     version: string;
     /**
+     * VersionInfoMap is the map of the version information of the Region's
+     * components keyed by the component's name
+     *
      * @generated from protobuf field: map<string, octelium.api.main.core.v1.Region.Status.VersionInfo> versionInfoMap = 6
      */
     versionInfoMap: {
@@ -7836,26 +11116,38 @@ export interface Region_Status {
     };
 }
 /**
+ * VersionInfo is the version information of a single Cluster component
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Region.Status.VersionInfo
  */
 export interface Region_Status_VersionInfo {
     /**
+     * Version is the component's version
+     *
      * @generated from protobuf field: string version = 1
      */
     version: string;
     /**
+     * Package is the name of the component's package
+     *
      * @generated from protobuf field: string package = 2
      */
     package: string;
     /**
+     * ID is the unique identifier of the version
+     *
      * @generated from protobuf field: string id = 3
      */
     id: string;
     /**
+     * SetAt is the timestamp at which the version was set
+     *
      * @generated from protobuf field: google.protobuf.Timestamp setAt = 4
      */
     setAt?: Timestamp;
     /**
+     * Ext is a map of internal Cluster-managed extension data
+     *
      * @generated from protobuf field: map<string, google.protobuf.Struct> ext = 5
      */
     ext: {
@@ -7863,6 +11155,8 @@ export interface Region_Status_VersionInfo {
     };
 }
 /**
+ * RegionList is the list of Regions returned by the ListRegion method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RegionList
  */
 export interface RegionList {
@@ -7873,10 +11167,14 @@ export interface RegionList {
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `RegionList`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Items is the list of Regions.
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Region items = 3
      */
     items: Region[];
@@ -7888,6 +11186,11 @@ export interface RegionList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * Gateway represents a Kubernetes node that is part of the data-plane of the
+ * Cluster. A Gateway hosts the Services running on that node and maintains the
+ * WireGuard/QUIC tunnel interfaces at which the Users' tunneled traffic is
+ * terminated.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Gateway
  */
 export interface Gateway {
@@ -7904,7 +11207,7 @@ export interface Gateway {
      */
     kind: string;
     /**
-     * octelium.api.main.meta.v1.Metadata is the object's metadata.
+     * Metadata is the object's metadata.
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
@@ -7923,11 +11226,15 @@ export interface Gateway {
     status?: Gateway_Status;
 }
 /**
+ * Spec is the Gateway specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Gateway.Spec
  */
 export interface Gateway_Spec {
 }
 /**
+ * Status is the current status of the Gateway
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Gateway.Status
  */
 export interface Gateway_Status {
@@ -7978,18 +11285,21 @@ export interface Gateway_Status {
     publicIPs: string[];
     /**
      * Hostname is the public hostname of the Gateway when connected to by
-     * the User clients. Currently sed by QUICv0
-     * Gateways.
+     * the User clients. Currently used by QUICv0 Gateways.
      *
      * @generated from protobuf field: string hostname = 8
      */
     hostname: string;
     /**
+     * Index is the Gateway's index within its Region
+     *
      * @generated from protobuf field: optional int32 index = 9
      */
     index?: number;
 }
 /**
+ * WireGuard is the Gateway's WireGuard-specific information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Gateway.Status.WireGuard
  */
 export interface Gateway_Status_WireGuard {
@@ -8006,11 +11316,15 @@ export interface Gateway_Status_WireGuard {
      */
     publicKey: string;
     /**
+     * KeyRotatedAt is the timestamp at which the key pair was last rotated
+     *
      * @generated from protobuf field: google.protobuf.Timestamp keyRotatedAt = 3
      */
     keyRotatedAt?: Timestamp;
 }
 /**
+ * QUICV0 is the Gateway's QUICv0-specific information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Gateway.Status.QUICV0
  */
 export interface Gateway_Status_QUICV0 {
@@ -8022,6 +11336,8 @@ export interface Gateway_Status_QUICV0 {
     port: number;
 }
 /**
+ * GatewayList is the list of Gateways returned by the ListGateway method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.GatewayList
  */
 export interface GatewayList {
@@ -8051,32 +11367,51 @@ export interface GatewayList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * ListGatewayOptions is the request of the ListGateway method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListGatewayOptions
  */
 export interface ListGatewayOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
     /**
+     * RegionRef filters the Gateways by their owner Region
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference regionRef = 2
      */
     regionRef?: ObjectReference;
 }
 /**
+ * ListRegionOptions is the request of the ListRegion method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListRegionOptions
  */
 export interface ListRegionOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
 }
 /**
+ * Condition is a policy-as-code expression that is evaluated against the
+ * request context. It is used by the Policy rules, the Service dynamic
+ * configuration rules, the HTTP Plugins as well as by the IdentityProvider
+ * rules.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Condition
  */
 export interface Condition {
     /**
+     * Type sets how the Condition is evaluated
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -8141,41 +11476,53 @@ export interface Condition {
     };
 }
 /**
+ * All acts as a logical AND operator on its list of Conditions
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Condition.All
  */
 export interface Condition_All {
     /**
+     * Of is the list of the Conditions that must all match
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Condition of = 1
      */
     of: Condition[];
 }
 /**
+ * Any acts as a logical OR operator on its list of Conditions
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Condition.Any
  */
 export interface Condition_Any {
     /**
-     * Expressions is the list of CEL expressions
+     * Of is the list of the Conditions of which at least one must match
      *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Condition of = 1
      */
     of: Condition[];
 }
 /**
+ * None acts as a logical NOR operator on its list of Conditions
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Condition.None
  */
 export interface Condition_None {
     /**
-     * Expressions is the list of CEL expressions
+     * Of is the list of the Conditions of which none must match
      *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Condition of = 1
      */
     of: Condition[];
 }
 /**
+ * OPA evaluates the Condition via an Open Policy Agent Rego script
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Condition.OPA
  */
 export interface Condition_OPA {
     /**
+     * Type sets how the Rego script is provided
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -8191,11 +11538,18 @@ export interface Condition_OPA {
     };
 }
 /**
+ * GetClusterConfigRequest is the request of the GetClusterConfig method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.GetClusterConfigRequest
  */
 export interface GetClusterConfigRequest {
 }
 /**
+ * ClusterConfig is the Cluster-wide configuration. It is a singleton resource
+ * that sets the defaults and the global options that apply to the entire
+ * Cluster (e.g. the Session and Device defaults, the Cluster-wide Policies,
+ * the DNS and the Authenticator/MFA options).
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig
  */
 export interface ClusterConfig {
@@ -8206,27 +11560,39 @@ export interface ClusterConfig {
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `ClusterConfig`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Metadata is the object's metadata.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
     metadata?: Metadata;
     /**
+     * Spec is the ClusterConfig specification.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec spec = 4
      */
     spec?: ClusterConfig_Spec;
     /**
+     * Status is the current status of the ClusterConfig.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status status = 5
      */
     status?: ClusterConfig_Status;
 }
 /**
+ * Spec is the ClusterConfig specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec
  */
 export interface ClusterConfig_Spec {
     /**
+     * Authorization sets the Cluster-wide authorization configuration
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authorization authorization = 1
      */
     authorization?: ClusterConfig_Spec_Authorization;
@@ -8261,15 +11627,21 @@ export interface ClusterConfig_Spec {
      */
     dns?: ClusterConfig_Spec_DNS;
     /**
+     * Authenticator sets the Authenticator/MFA specific options.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator authenticator = 7
      */
     authenticator?: ClusterConfig_Spec_Authenticator;
     /**
+     * Authentication sets the authentication process specific options.
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication authentication = 8
      */
     authentication?: ClusterConfig_Spec_Authentication;
 }
 /**
+ * Ingress sets the options of the Cluster's internet-facing Ingress
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Ingress
  */
 export interface ClusterConfig_Spec_Ingress {
@@ -8281,11 +11653,16 @@ export interface ClusterConfig_Spec_Ingress {
      */
     useForwardedForHeader: boolean;
     /**
+     * XFFNumTrustedHops is the number of the trusted hops used to pick the
+     * downstream's public IP address out of the X-Forwarded-For header.
+     *
      * @generated from protobuf field: int32 xffNumTrustedHops = 2
      */
     xffNumTrustedHops: number;
 }
 /**
+ * Session sets the Cluster-wide defaults of the Sessions
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Session
  */
 export interface ClusterConfig_Spec_Session {
@@ -8303,6 +11680,8 @@ export interface ClusterConfig_Spec_Session {
     workload?: ClusterConfig_Spec_Session_Workload;
 }
 /**
+ * Human sets the Session defaults of the HUMAN Users
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Session.Human
  */
 export interface ClusterConfig_Spec_Session_Human {
@@ -8335,7 +11714,7 @@ export interface ClusterConfig_Spec_Session_Human {
      */
     refreshTokenDuration?: Duration;
     /**
-     * MaxPerUser sets the max number of of Sessions per User
+     * MaxPerUser sets the max number of Sessions per User
      *
      * @generated from protobuf field: uint32 maxPerUser = 5
      */
@@ -8348,6 +11727,8 @@ export interface ClusterConfig_Spec_Session_Human {
     defaultState: Session_Spec_State;
 }
 /**
+ * Workload sets the Session defaults of the WORKLOAD Users
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Session.Workload
  */
 export interface ClusterConfig_Spec_Session_Workload {
@@ -8380,7 +11761,7 @@ export interface ClusterConfig_Spec_Session_Workload {
      */
     refreshTokenDuration?: Duration;
     /**
-     * MaxPerUser sets the max number of of Sessions per User
+     * MaxPerUser sets the max number of Sessions per User
      *
      * @generated from protobuf field: uint32 maxPerUser = 5
      */
@@ -8393,6 +11774,8 @@ export interface ClusterConfig_Spec_Session_Workload {
     defaultState: Session_Spec_State;
 }
 /**
+ * Device sets the Cluster-wide defaults of the Devices
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Device
  */
 export interface ClusterConfig_Spec_Device {
@@ -8410,6 +11793,8 @@ export interface ClusterConfig_Spec_Device {
     workload?: ClusterConfig_Spec_Device_Workload;
 }
 /**
+ * Human sets the Device defaults of the HUMAN Users
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Device.Human
  */
 export interface ClusterConfig_Spec_Device_Human {
@@ -8420,13 +11805,15 @@ export interface ClusterConfig_Spec_Device_Human {
      */
     defaultState: Device_Spec_State;
     /**
-     * MaxPerUser sets the max number of of Devices per User
+     * MaxPerUser sets the max number of Devices per User
      *
      * @generated from protobuf field: uint32 maxPerUser = 2
      */
     maxPerUser: number;
 }
 /**
+ * Workload sets the Device defaults of the WORKLOAD Users
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Device.Workload
  */
 export interface ClusterConfig_Spec_Device_Workload {
@@ -8437,13 +11824,15 @@ export interface ClusterConfig_Spec_Device_Workload {
      */
     defaultState: Device_Spec_State;
     /**
-     * MaxPerUser sets the max number of of Devices per User
+     * MaxPerUser sets the max number of Devices per User
      *
      * @generated from protobuf field: uint32 maxPerUser = 2
      */
     maxPerUser: number;
 }
 /**
+ * Gateway sets the Cluster-wide options of the Gateways
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Gateway
  */
 export interface ClusterConfig_Spec_Gateway {
@@ -8456,28 +11845,43 @@ export interface ClusterConfig_Spec_Gateway {
     wireguardKeyRotationDuration?: Duration;
 }
 /**
+ * DNS sets the options of the Cluster's private DNS service
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.DNS
  */
 export interface ClusterConfig_Spec_DNS {
     /**
+     * FallbackZone sets the zone that resolves the names that are not served
+     * by the Cluster itself
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.DNS.Zone fallbackZone = 1
      */
     fallbackZone?: ClusterConfig_Spec_DNS_Zone;
 }
 /**
+ * Zone sets the options of a DNS zone
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.DNS.Zone
  */
 export interface ClusterConfig_Spec_DNS_Zone {
     /**
+     * Servers is the list of the upstream DNS servers of the zone
+     *
      * @generated from protobuf field: repeated string servers = 1
      */
     servers: string[];
     /**
+     * CacheDuration is the duration for which the zone's answers are
+     * cached
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration cacheDuration = 2
      */
     cacheDuration?: Duration;
 }
 /**
+ * Authorization sets the Cluster-wide Policies that are applied to every
+ * request
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authorization
  */
 export interface ClusterConfig_Spec_Authorization {
@@ -8495,44 +11899,71 @@ export interface ClusterConfig_Spec_Authorization {
     inlinePolicies: InlinePolicy[];
 }
 /**
+ * Authenticator sets the Cluster-wide options of the Authenticators and
+ * MFA
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator
  */
 export interface ClusterConfig_Spec_Authenticator {
     /**
+     * RegistrationEnforcementRules is the list of the rules that decide
+     * whether registering an Authenticator is enforced
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.EnforcementRule registrationEnforcementRules = 1
      */
     registrationEnforcementRules: ClusterConfig_Spec_Authenticator_EnforcementRule[];
     /**
+     * AuthenticationEnforcementRules is the list of the rules that decide
+     * whether authenticating via an Authenticator is enforced as MFA right
+     * after a successful IdentityProvider authentication
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.EnforcementRule authenticationEnforcementRules = 2
      */
     authenticationEnforcementRules: ClusterConfig_Spec_Authenticator_EnforcementRule[];
     /**
+     * PostAuthenticationRules is the list of the rules that decide whether
+     * an otherwise successful Authenticator authentication is eventually
+     * accepted or rejected
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.Rule postAuthenticationRules = 3
      */
     postAuthenticationRules: ClusterConfig_Spec_Authenticator_Rule[];
     /**
+     * EnablePasskeyLogin enables logging in directly with a Passkey. Once
+     * enabled, any registered FIDO Authenticator that supports resident key
+     * credentials can be used for a Passkey login.
+     *
      * @generated from protobuf field: bool enablePasskeyLogin = 4
      */
     enablePasskeyLogin: boolean;
     /**
+     * DefaultState is the default state of a newly registered Authenticator
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Spec.State defaultState = 5
      */
     defaultState: Authenticator_Spec_State;
     /**
+     * FIDO sets the options of the FIDO/WebAuthn Authenticators
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO fido = 6
      */
     fido?: ClusterConfig_Spec_Authenticator_FIDO;
 }
 /**
+ * EnforcementRule decides whether the Authenticator registration or
+ * authentication is enforced, recommended or ignored
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.EnforcementRule
  */
 export interface ClusterConfig_Spec_Authenticator_EnforcementRule {
     /**
+     * Condition is the rule's Condition
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Condition condition = 1
      */
     condition?: Condition;
     /**
-     * Effect is the effect of the policy when a match happens to any of the
+     * Effect is the effect of the rule when a match happens to any of the
      * Conditions.
      *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.EnforcementRule.Effect effect = 2
@@ -8540,6 +11971,8 @@ export interface ClusterConfig_Spec_Authenticator_EnforcementRule {
     effect: ClusterConfig_Spec_Authenticator_EnforcementRule_Effect;
 }
 /**
+ * Effect is the decision of the rule once its Condition matches
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.EnforcementRule.Effect
  */
 export enum ClusterConfig_Spec_Authenticator_EnforcementRule_Effect {
@@ -8550,25 +11983,30 @@ export enum ClusterConfig_Spec_Authenticator_EnforcementRule_Effect {
      */
     EFFECT_UNKNOWN = 0,
     /**
-     * ALLOW means that the policy allows the request if any of the
-     * Conditions are matched.
+     * ENFORCE requires the Authenticator registration/authentication
      *
      * @generated from protobuf enum value: ENFORCE = 1;
      */
     ENFORCE = 1,
     /**
-     * DENY means that the policy denies the request if any of the
-     * Conditions are matched.
+     * IGNORE does not require the Authenticator
+     * registration/authentication
      *
      * @generated from protobuf enum value: IGNORE = 2;
      */
     IGNORE = 2,
     /**
+     * RECOMMEND recommends, without requiring, the Authenticator
+     * registration/authentication
+     *
      * @generated from protobuf enum value: RECOMMEND = 3;
      */
     RECOMMEND = 3
 }
 /**
+ * Rule decides whether an otherwise successful Authenticator
+ * authentication is eventually accepted or rejected
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.Rule
  */
 export interface ClusterConfig_Spec_Authenticator_Rule {
@@ -8595,6 +12033,8 @@ export interface ClusterConfig_Spec_Authenticator_Rule {
     effect: ClusterConfig_Spec_Authenticator_Rule_Effect;
 }
 /**
+ * Effect is the decision of the rule once its Condition matches
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.Rule.Effect
  */
 export enum ClusterConfig_Spec_Authenticator_Rule_Effect {
@@ -8618,53 +12058,86 @@ export enum ClusterConfig_Spec_Authenticator_Rule_Effect {
     DENY = 2
 }
 /**
+ * FIDO sets the options of the FIDO/WebAuthn Authenticators
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO
  */
 export interface ClusterConfig_Spec_Authenticator_FIDO {
     /**
+     * AttestationConveyancePreference is the WebAuthn attestation
+     * conveyance preference used during the registration
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO.AttestationConveyancePreference attestationConveyancePreference = 1
      */
     attestationConveyancePreference: ClusterConfig_Spec_Authenticator_FIDO_AttestationConveyancePreference;
 }
 /**
+ * AttestationConveyancePreference is the WebAuthn attestation
+ * conveyance preference used during the registration
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO.AttestationConveyancePreference
  */
 export enum ClusterConfig_Spec_Authenticator_FIDO_AttestationConveyancePreference {
     /**
+     * ATTESTATION_CONVEYANCE_PREFERENCE_UNSET falls back to the default
+     * behavior
+     *
      * @generated from protobuf enum value: ATTESTATION_CONVEYANCE_PREFERENCE_UNSET = 0;
      */
     ATTESTATION_CONVEYANCE_PREFERENCE_UNSET = 0,
     /**
+     * DIRECT requests the Authenticator's attestation statement as is
+     *
      * @generated from protobuf enum value: DIRECT = 1;
      */
     DIRECT = 1,
     /**
+     * INDIRECT lets the client anonymize the Authenticator's attestation
+     * statement
+     *
      * @generated from protobuf enum value: INDIRECT = 2;
      */
     INDIRECT = 2,
     /**
+     * NONE requests no attestation statement at all
+     *
      * @generated from protobuf enum value: NONE = 3;
      */
     NONE = 3,
     /**
+     * ENTERPRISE requests an enterprise attestation that can carry a
+     * uniquely identifying Authenticator identifier
+     *
      * @generated from protobuf enum value: ENTERPRISE = 4;
      */
     ENTERPRISE = 4
 }
 /**
+ * Authentication sets the Cluster-wide options of the authentication
+ * process
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication
  */
 export interface ClusterConfig_Spec_Authentication {
     /**
+     * Geolocation sets the geolocation resolution of the authenticating
+     * clients
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation geolocation = 1
      */
     geolocation?: ClusterConfig_Spec_Authentication_Geolocation;
 }
 /**
+ * Geolocation sets the geolocation resolution of the authenticating
+ * clients. Once enabled, the resolved GeoIP information is set in the
+ * Session on each authentication and it can be used in the Policies.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation
  */
 export interface ClusterConfig_Spec_Authentication_Geolocation {
     /**
+     * Type sets the geolocation resolution method
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -8678,21 +12151,31 @@ export interface ClusterConfig_Spec_Authentication_Geolocation {
     };
 }
 /**
+ * MMDB resolves the geolocation from MaxMind MMDB databases (the
+ * `enterprise`, `city` and `country` database types are supported)
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB
  */
 export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB {
     /**
+     * Type sets the source of the MMDB database
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "fromConfig";
         /**
+         * FromConfig sets the name of the Config whose data contains the
+         * MMDB database
+         *
          * @generated from protobuf field: string fromConfig = 1
          */
         fromConfig: string;
     } | {
         oneofKind: "upstream";
         /**
+         * Upstream fetches the MMDB database from a URL
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream upstream = 2
          */
         upstream: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream;
@@ -8701,23 +12184,33 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB {
     };
 }
 /**
+ * Upstream fetches the MMDB database from a URL
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream
  */
 export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream {
     /**
+     * URL is the URL from which the MMDB database is fetched
+     *
      * @generated from protobuf field: string url = 1
      */
     url: string;
     /**
+     * Auth sets the credentials used to fetch the MMDB database
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth auth = 2
      */
     auth?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth;
 }
 /**
+ * Auth sets the credentials used to fetch the MMDB database
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth
  */
 export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth {
     /**
+     * Type sets the authentication method used with the upstream
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -8731,7 +12224,7 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Aut
     } | {
         oneofKind: "basic";
         /**
-         * Basis sets basic authentication details
+         * Basic sets basic authentication details
          *
          * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic basic = 2
          */
@@ -8747,6 +12240,8 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Aut
     } | {
         oneofKind: "query";
         /**
+         * Query sets authentication inside a URL query parameter
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query query = 4
          */
         query: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query;
@@ -8755,6 +12250,9 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Aut
     };
 }
 /**
+ * Bearer is the bearer token that is set in the `Authorization`
+ * request header
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Bearer
  */
 export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Bearer {
@@ -8764,6 +12262,9 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Aut
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value
+         * contains the bearer token
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -8772,6 +12273,8 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Aut
     };
 }
 /**
+ * Basic is the HTTP basic authentication credentials
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic
  */
 export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic {
@@ -8789,6 +12292,8 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Aut
     password?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password;
 }
 /**
+ * Password is the password value of HTTP basic authentication
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Basic.Password
  */
 export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Basic_Password {
@@ -8798,6 +12303,9 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Aut
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value
+         * contains the Password
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -8806,6 +12314,8 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Aut
     };
 }
 /**
+ * Custom is a credential that is set in a custom request header
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom
  */
 export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom {
@@ -8823,6 +12333,8 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Aut
     value?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value;
 }
 /**
+ * Value is the value of the custom request header
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Custom.Value
  */
 export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Custom_Value {
@@ -8832,6 +12344,9 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Aut
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value
+         * contains the header's Value
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -8840,19 +12355,27 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Aut
     };
 }
 /**
+ * Query is a credential that is set in a URL query parameter
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query
  */
 export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query {
     /**
+     * Key is the name of the query parameter
+     *
      * @generated from protobuf field: string key = 1
      */
     key: string;
     /**
+     * Value is the value of the query parameter
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query.Value value = 2
      */
     value?: ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value;
 }
 /**
+ * Value is the value of the query parameter
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authentication.Geolocation.MMDB.Upstream.Auth.Query.Value
  */
 export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Auth_Query_Value {
@@ -8862,6 +12385,9 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Aut
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret sets the name of the Secret whose value
+         * contains the query parameter's Value
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -8870,31 +12396,53 @@ export interface ClusterConfig_Spec_Authentication_Geolocation_MMDB_Upstream_Aut
     };
 }
 /**
+ * Status is the current status of the ClusterConfig
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status
  */
 export interface ClusterConfig_Status {
     /**
+     * Domain is the Cluster's domain (e.g. "example.com")
+     *
      * @generated from protobuf field: string domain = 1
      */
     domain: string;
     /**
+     * Network is the actual network ranges that were allocated by the Cluster
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.Network network = 2
      */
     network?: ClusterConfig_Status_Network;
     /**
+     * NetworkConfig is the Cluster's networking configuration
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.NetworkConfig networkConfig = 3
      */
     networkConfig?: ClusterConfig_Status_NetworkConfig;
     /**
+     * SecretManager is the external secret manager used by the Cluster, if any
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.SecretManager secretManager = 4
      */
     secretManager?: ClusterConfig_Status_SecretManager;
     /**
+     * Device is the Cluster-wide Device configuration
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.Device device = 5
      */
     device?: ClusterConfig_Status_Device;
+    /**
+     * Installation is the set of installation-time options that were supplied
+     * via the Cluster bootstrap configuration upon the Cluster installation or
+     * the latest upgrade.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.Installation installation = 6
+     */
+    installation?: ClusterConfig_Status_Installation;
 }
 /**
+ * NetworkConfig is the Cluster's networking configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.NetworkConfig
  */
 export interface ClusterConfig_Status_NetworkConfig {
@@ -8932,6 +12480,8 @@ export interface ClusterConfig_Status_NetworkConfig {
     quicv0?: ClusterConfig_Status_NetworkConfig_QUICV0;
 }
 /**
+ * V4 is the IPv4 Network configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.NetworkConfig.V4
  */
 export interface ClusterConfig_Status_NetworkConfig_V4 {
@@ -8943,15 +12493,23 @@ export interface ClusterConfig_Status_NetworkConfig_V4 {
      */
     clusterNetwork: string;
     /**
+     * GatewayBits is the number of the bits of the ClusterNetwork that are
+     * allocated to address the Gateways.
+     *
      * @generated from protobuf field: uint32 gatewayBits = 2
      */
     gatewayBits: number;
     /**
+     * RegionBits is the number of the bits of the ClusterNetwork that are
+     * allocated to address the Regions.
+     *
      * @generated from protobuf field: uint32 regionBits = 3
      */
     regionBits: number;
 }
 /**
+ * V6 is the IPv6 Network configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.NetworkConfig.V6
  */
 export interface ClusterConfig_Status_NetworkConfig_V6 {
@@ -8964,6 +12522,8 @@ export interface ClusterConfig_Status_NetworkConfig_V6 {
     clusterNetwork: string;
 }
 /**
+ * Wireguard is the WireGuard-specific configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.NetworkConfig.Wireguard
  */
 export interface ClusterConfig_Status_NetworkConfig_Wireguard {
@@ -8981,6 +12541,8 @@ export interface ClusterConfig_Status_NetworkConfig_Wireguard {
     mtu: number;
 }
 /**
+ * QUICV0 is the QUICv0-specific configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.NetworkConfig.QUICV0
  */
 export interface ClusterConfig_Status_NetworkConfig_QUICV0 {
@@ -9004,6 +12566,8 @@ export interface ClusterConfig_Status_NetworkConfig_QUICV0 {
     mtu: number;
 }
 /**
+ * Mode is the Cluster's networking mode
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.ClusterConfig.Status.NetworkConfig.Mode
  */
 export enum ClusterConfig_Status_NetworkConfig_Mode {
@@ -9039,95 +12603,146 @@ export enum ClusterConfig_Status_NetworkConfig_Mode {
     V4_ONLY = 3
 }
 /**
+ * Network is the actual network ranges that were allocated by the Cluster
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Network
  */
 export interface ClusterConfig_Status_Network {
     /**
+     * ClusterNetwork is the dual-stack network range of the entire Cluster
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.DualStackNetwork clusterNetwork = 1
      */
     clusterNetwork?: DualStackNetwork;
     /**
+     * WGConnSubnet is the dual-stack subnet from which the addresses of the
+     * WireGuard-based connections are allocated
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.DualStackNetwork wgConnSubnet = 2
      */
     wgConnSubnet?: DualStackNetwork;
     /**
+     * V6RangePrefix is the prefix of the Cluster's IPv6 range
+     *
      * @generated from protobuf field: bytes v6RangePrefix = 3
      */
     v6RangePrefix: Uint8Array;
     /**
+     * ServiceSubnet is the dual-stack subnet from which the private
+     * addresses of the Services are allocated
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.DualStackNetwork serviceSubnet = 4
      */
     serviceSubnet?: DualStackNetwork;
     /**
+     * QUICConnSubnet is the dual-stack subnet from which the addresses of
+     * the QUICv0-based connections are allocated
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.DualStackNetwork quicConnSubnet = 5
      */
     quicConnSubnet?: DualStackNetwork;
 }
 /**
+ * SecretManager is the external secret manager that intercepts the Secret
+ * operations in order to store the Secrets according to the operator's own
+ * requirements
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.SecretManager
  */
 export interface ClusterConfig_Status_SecretManager {
     /**
+     * Address is the address of the secret manager's gRPC server
+     *
      * @generated from protobuf field: string address = 1
      */
     address: string;
     /**
+     * TLS sets the TLS-related configuration
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.SecretManager.TLS tls = 2
      */
     tls?: ClusterConfig_Status_SecretManager_TLS;
 }
 /**
+ * TLS sets the TLS-related configuration used to connect to the secret
+ * manager
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.SecretManager.TLS
  */
 export interface ClusterConfig_Status_SecretManager_TLS {
 }
 /**
+ * Device is the Cluster-wide Device configuration
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Device
  */
 export interface ClusterConfig_Status_Device {
     /**
+     * Probes is the list of the Probes that are run on the Devices
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.ClusterConfig.Status.Device.Probe probes = 1
      */
     probes: ClusterConfig_Status_Device_Probe[];
 }
 /**
+ * Probe is a check that is run on the Devices in order to collect the
+ * information used to bind them to their DeviceManagers
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Device.Probe
  */
 export interface ClusterConfig_Status_Device_Probe {
     /**
+     * OwnerRef is the reference of the DeviceManager that owns the Probe
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference ownerRef = 1
      */
     ownerRef?: ObjectReference;
     /**
+     * OSType restricts the Probe to the Devices running a specific
+     * operating system
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Device.Status.OSType osType = 2
      */
     osType: Device_Status_OSType;
     /**
+     * RequireElevation requires the Probe to be run with elevated
+     * privileges
+     *
      * @generated from protobuf field: bool requireElevation = 3
      */
     requireElevation: boolean;
     /**
+     * Condition decides whether the Probe is run on a given Device
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Condition condition = 4
      */
     condition?: Condition;
     /**
+     * Type sets the type of the Probe
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "runCommand";
         /**
+         * RunCommand runs a command on the Device
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.Device.Probe.RunCommand runCommand = 5
          */
         runCommand: ClusterConfig_Status_Device_Probe_RunCommand;
     } | {
         oneofKind: "readFile";
         /**
+         * ReadFile reads a file from the Device
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.Device.Probe.ReadFile readFile = 6
          */
         readFile: ClusterConfig_Status_Device_Probe_ReadFile;
     } | {
         oneofKind: "readRegistry";
         /**
+         * ReadRegistry reads a value from the Device's Windows registry
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.Device.Probe.ReadRegistry readRegistry = 7
          */
         readRegistry: ClusterConfig_Status_Device_Probe_ReadRegistry;
@@ -9136,53 +12751,221 @@ export interface ClusterConfig_Status_Device_Probe {
     };
 }
 /**
+ * RunCommand runs a command on the Device and collects its output
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Device.Probe.RunCommand
  */
 export interface ClusterConfig_Status_Device_Probe_RunCommand {
     /**
+     * Command is the command to be run
+     *
      * @generated from protobuf field: string command = 1
      */
     command: string;
     /**
+     * Args is the list of the command's arguments
+     *
      * @generated from protobuf field: repeated string args = 2
      */
     args: string[];
     /**
+     * TimeoutSeconds is the number of seconds after which running the
+     * command times out
+     *
      * @generated from protobuf field: uint32 timeoutSeconds = 3
      */
     timeoutSeconds: number;
     /**
+     * MaxOutputBytes is the maximum size in bytes of the collected
+     * output
+     *
      * @generated from protobuf field: uint32 maxOutputBytes = 4
      */
     maxOutputBytes: number;
 }
 /**
+ * ReadFile reads a file from the Device
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Device.Probe.ReadFile
  */
 export interface ClusterConfig_Status_Device_Probe_ReadFile {
     /**
+     * Path is the path of the file to be read
+     *
      * @generated from protobuf field: string path = 1
      */
     path: string;
     /**
+     * MaxBytes is the maximum size in bytes that is read from the file
+     *
      * @generated from protobuf field: uint32 maxBytes = 2
      */
     maxBytes: number;
 }
 /**
+ * ReadRegistry reads a value from the Windows registry of the Device
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Device.Probe.ReadRegistry
  */
 export interface ClusterConfig_Status_Device_Probe_ReadRegistry {
     /**
+     * Key is the registry key to be read
+     *
      * @generated from protobuf field: string key = 1
      */
     key: string;
     /**
+     * Name is the name of the registry value to be read
+     *
      * @generated from protobuf field: string name = 2
      */
     name: string;
 }
 /**
+ * Installation contains the installation-time options that were supplied
+ * via the Cluster bootstrap configuration and that are remembered by the
+ * Cluster so that they do not have to be re-supplied on every upgrade.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Installation
+ */
+export interface ClusterConfig_Status_Installation {
+    /**
+     * SPIFFE sets the SPIFFE/SPIRE-specific configuration.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.Installation.SPIFFE spiffe = 1
+     */
+    spiffe?: ClusterConfig_Status_Installation_SPIFFE;
+    /**
+     * CNI sets the Kubernetes cluster CNI-specific configuration.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.Installation.CNI cni = 2
+     */
+    cni?: ClusterConfig_Status_Installation_CNI;
+    /**
+     * Ingress sets the Cluster Ingress-specific configuration.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.Installation.Ingress ingress = 3
+     */
+    ingress?: ClusterConfig_Status_Installation_Ingress;
+}
+/**
+ * SPIFFE is the SPIFFE/SPIRE-specific installation options
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Installation.SPIFFE
+ */
+export interface ClusterConfig_Status_Installation_SPIFFE {
+    /**
+     * Enable enables the SPIFFE mode where the Cluster components
+     * authenticate to each other using X.509 SVIDs that are obtained from
+     * the SPIRE Agent Workload API instead of the Cluster's own internal
+     * credentials.
+     *
+     * @generated from protobuf field: bool enable = 1
+     */
+    enable: boolean;
+    /**
+     * TrustDomain is the SPIFFE trust domain (e.g. `example.com`) that the
+     * Cluster components' SVIDs must belong to. If it is not set, the
+     * Cluster adopts the trust domain of the SVID that is served by the
+     * SPIRE Agent itself.
+     *
+     * @generated from protobuf field: string trustDomain = 2
+     */
+    trustDomain: string;
+    /**
+     * CSIDriver sets the SPIFFE CSI driver-specific configuration.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.Installation.SPIFFE.CSIDriver csiDriver = 3
+     */
+    csiDriver?: ClusterConfig_Status_Installation_SPIFFE_CSIDriver;
+}
+/**
+ * CSIDriver is the SPIFFE CSI driver-specific options
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Installation.SPIFFE.CSIDriver
+ */
+export interface ClusterConfig_Status_Installation_SPIFFE_CSIDriver {
+    /**
+     * Name is the name of the SPIFFE CSI driver that is used to mount
+     * the SPIRE Agent Workload API socket inside the Cluster components'
+     * Pods. By default it is set to `csi.spiffe.io`.
+     *
+     * @generated from protobuf field: string name = 1
+     */
+    name: string;
+}
+/**
+ * CNI is the Kubernetes cluster CNI-specific installation options
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Installation.CNI
+ */
+export interface ClusterConfig_Status_Installation_CNI {
+    /**
+     * ConfDirType sets the host path of the Multus delegate CNI
+     * configuration directory, either directly or by deriving it from the
+     * Kubernetes cluster's CNI configuration directory. If it is not set
+     * at all, the path defaults to `/etc/cni/multus/net.d`.
+     *
+     * @generated from protobuf oneof: confDirType
+     */
+    confDirType: {
+        oneofKind: "confDir";
+        /**
+         * ConfDir is the host path of the Kubernetes cluster's CNI
+         * configuration directory (e.g. `/var/lib/rancher/k3s/agent/etc/cni`
+         * for k3s clusters). The Multus delegate CNI configuration directory
+         * is derived from it as `<confDir>/multus/net.d`.
+         *
+         * @generated from protobuf field: string confDir = 1
+         */
+        confDir: string;
+    } | {
+        oneofKind: "multusConfDir";
+        /**
+         * MultusConfDir directly sets the host path of the Multus delegate
+         * CNI configuration directory (i.e. Multus's own `confDir`).
+         *
+         * @generated from protobuf field: string multusConfDir = 2
+         */
+        multusConfDir: string;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * Ingress is the Cluster Ingress-specific installation options
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Installation.Ingress
+ */
+export interface ClusterConfig_Status_Installation_Ingress {
+    /**
+     * FrontProxy sets the front proxy mode-specific configuration.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Status.Installation.Ingress.FrontProxy frontProxy = 1
+     */
+    frontProxy?: ClusterConfig_Status_Installation_Ingress_FrontProxy;
+}
+/**
+ * FrontProxy is the front proxy mode-specific options
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Installation.Ingress.FrontProxy
+ */
+export interface ClusterConfig_Status_Installation_Ingress_FrontProxy {
+    /**
+     * Enable enables the front proxy mode where the Cluster's Ingress
+     * sits behind an external L7 proxy/load balancer that terminates
+     * TLS.
+     *
+     * @generated from protobuf field: bool enable = 1
+     */
+    enable: boolean;
+}
+/**
+ * RequestContext is the context of a single request that is evaluated by the
+ * policy-as-code Conditions. It is exposed to the CEL expressions and the OPA
+ * Rego scripts as the `ctx` object (e.g. `ctx.user.spec.groups`,
+ * `ctx.request.http.path`).
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext
  */
 export interface RequestContext {
@@ -9230,10 +13013,15 @@ export interface RequestContext {
     namespace?: Namespace;
 }
 /**
+ * Request is the details of the request itself
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request
  */
 export interface RequestContext_Request {
     /**
+     * Type sets the application-layer specific details of the request. It
+     * corresponds to the Service's mode.
+     *
      * @generated from protobuf oneof: Type
      */
     type: {
@@ -9247,48 +13035,80 @@ export interface RequestContext_Request {
     } | {
         oneofKind: "ssh";
         /**
+         * SSH is the SSH specific details.
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.SSH ssh = 2
          */
         ssh: RequestContext_Request_SSH;
     } | {
         oneofKind: "kubernetes";
         /**
+         * Kubernetes is the Kubernetes specific details.
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.Kubernetes kubernetes = 3
          */
         kubernetes: RequestContext_Request_Kubernetes;
     } | {
         oneofKind: "grpc";
         /**
+         * GRPC is the gRPC specific details.
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.GRPC grpc = 4
          */
         grpc: RequestContext_Request_GRPC;
     } | {
         oneofKind: "postgres";
         /**
+         * Postgres is the PostgreSQL specific details.
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.Postgres postgres = 5
          */
         postgres: RequestContext_Request_Postgres;
     } | {
         oneofKind: "dns";
         /**
+         * DNS is the DNS specific details.
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.DNS dns = 6
          */
         dns: RequestContext_Request_DNS;
     } | {
         oneofKind: "socks5";
         /**
+         * SOCKS5 is the SOCKS5 specific details.
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.SOCKS5 socks5 = 8
          */
         socks5: RequestContext_Request_SOCKS5;
     } | {
+        oneofKind: "mcp";
+        /**
+         * MCP is the Model Context Protocol specific details.
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.MCP mcp = 9
+         */
+        mcp: RequestContext_Request_MCP;
+    } | {
+        oneofKind: "llm";
+        /**
+         * LLM is the LLM gateway specific details.
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.LLM llm = 10
+         */
+        llm: RequestContext_Request_LLM;
+    } | {
         oneofKind: undefined;
     };
     /**
+     * IP is the IP address of the downstream that issued the request
+     *
      * @generated from protobuf field: string ip = 7
      */
     ip: string;
 }
 /**
+ * HTTP is the HTTP-specific request details
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.HTTP
  */
 export interface RequestContext_Request_HTTP {
@@ -9367,10 +13187,14 @@ export interface RequestContext_Request_HTTP {
     };
 }
 /**
+ * SSH is the SSH-specific request details
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.SSH
  */
 export interface RequestContext_Request_SSH {
     /**
+     * Type sets the type of the SSH request
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -9384,102 +13208,150 @@ export interface RequestContext_Request_SSH {
     };
 }
 /**
+ * Connect is the details of the SSH connection request
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.SSH.Connect
  */
 export interface RequestContext_Request_SSH_Connect {
     /**
+     * User is the SSH user requested by the downstream
+     *
      * @generated from protobuf field: string user = 1
      */
     user: string;
 }
 /**
+ * Kubernetes is the Kubernetes-specific request details
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.Kubernetes
  */
 export interface RequestContext_Request_Kubernetes {
     /**
+     * HTTP is the underlying HTTP request details
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.HTTP http = 1
      */
     http?: RequestContext_Request_HTTP;
     /**
+     * Verb is the Kubernetes API verb (e.g. "get", "list", "create")
+     *
      * @generated from protobuf field: string verb = 2
      */
     verb: string;
     /**
+     * APIPrefix is the Kubernetes API path prefix (i.e. "api" or "apis")
+     *
      * @generated from protobuf field: string apiPrefix = 3
      */
     apiPrefix: string;
     /**
+     * APIGroup is the Kubernetes API group (e.g. "apps")
+     *
      * @generated from protobuf field: string apiGroup = 4
      */
     apiGroup: string;
     /**
+     * APIVersion is the Kubernetes API version (e.g. "v1")
+     *
      * @generated from protobuf field: string apiVersion = 5
      */
     apiVersion: string;
     /**
+     * Namespace is the Kubernetes namespace of the requested resource
+     *
      * @generated from protobuf field: string namespace = 6
      */
     namespace: string;
     /**
+     * Resource is the requested Kubernetes resource (e.g. "pods")
+     *
      * @generated from protobuf field: string resource = 7
      */
     resource: string;
     /**
+     * Subresource is the requested subresource of the resource (e.g. "log",
+     * "exec")
+     *
      * @generated from protobuf field: string subresource = 8
      */
     subresource: string;
     /**
+     * Name is the name of the requested Kubernetes resource
+     *
      * @generated from protobuf field: string name = 9
      */
     name: string;
 }
 /**
+ * GRPC is the gRPC-specific request details
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.GRPC
  */
 export interface RequestContext_Request_GRPC {
     /**
+     * HTTP is the underlying HTTP request details
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.HTTP http = 1
      */
     http?: RequestContext_Request_HTTP;
     /**
+     * Method is the name of the gRPC method
+     *
      * @generated from protobuf field: string method = 2
      */
     method: string;
     /**
+     * Service is the name of the gRPC service
+     *
      * @generated from protobuf field: string service = 3
      */
     service: string;
     /**
+     * ServiceFullName is the fully qualified name of the gRPC service (i.e.
+     * the package and the service name)
+     *
      * @generated from protobuf field: string serviceFullName = 4
      */
     serviceFullName: string;
     /**
+     * Package is the name of the gRPC package
+     *
      * @generated from protobuf field: string package = 5
      */
     package: string;
 }
 /**
+ * Postgres is the PostgreSQL-specific request details
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.Postgres
  */
 export interface RequestContext_Request_Postgres {
     /**
+     * Type sets the type of the PostgreSQL request
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "connect";
         /**
+         * Connect is the details of the connection request
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.Postgres.Connect connect = 1
          */
         connect: RequestContext_Request_Postgres_Connect;
     } | {
         oneofKind: "query";
         /**
+         * Query is the details of a simple query request
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.Postgres.Query query = 2
          */
         query: RequestContext_Request_Postgres_Query;
     } | {
         oneofKind: "parse";
         /**
+         * Parse is the details of a parse request
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.Postgres.Parse parse = 3
          */
         parse: RequestContext_Request_Postgres_Parse;
@@ -9488,62 +13360,90 @@ export interface RequestContext_Request_Postgres {
     };
 }
 /**
+ * Connect is the details of the PostgreSQL connection request
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.Postgres.Connect
  */
 export interface RequestContext_Request_Postgres_Connect {
     /**
+     * User is the database user requested by the downstream
+     *
      * @generated from protobuf field: string user = 1
      */
     user: string;
     /**
+     * Database is the database name requested by the downstream
+     *
      * @generated from protobuf field: string database = 2
      */
     database: string;
     /**
+     * ApplicationName is the application name reported by the downstream
+     *
      * @generated from protobuf field: string applicationName = 3
      */
     applicationName: string;
 }
 /**
+ * Query is the details of a simple query request
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.Postgres.Query
  */
 export interface RequestContext_Request_Postgres_Query {
     /**
+     * Query is the SQL query itself
+     *
      * @generated from protobuf field: string query = 1
      */
     query: string;
 }
 /**
+ * Parse is the details of an extended query protocol parse request
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.Postgres.Parse
  */
 export interface RequestContext_Request_Postgres_Parse {
     /**
+     * Name is the name of the prepared statement
+     *
      * @generated from protobuf field: string name = 1
      */
     name: string;
     /**
+     * Query is the SQL query itself
+     *
      * @generated from protobuf field: string query = 2
      */
     query: string;
 }
 /**
+ * DNS is the DNS-specific request details
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.DNS
  */
 export interface RequestContext_Request_DNS {
     /**
+     * Name is the queried domain name
+     *
      * @generated from protobuf field: string name = 1
      */
     name: string;
     /**
+     * TypeID is the numeric DNS query type (e.g. 1 for `A`, 28 for `AAAA`)
+     *
      * @generated from protobuf field: int32 typeID = 2
      */
     typeID: number;
 }
 /**
+ * SOCKS5 is the SOCKS5-specific request details
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.SOCKS5
  */
 export interface RequestContext_Request_SOCKS5 {
     /**
+     * Type sets the type of the SOCKS5 request
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -9557,44 +13457,381 @@ export interface RequestContext_Request_SOCKS5 {
     };
 }
 /**
+ * Connect is the details of the SOCKS5 connection request
+ *
  * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.SOCKS5.Connect
  */
 export interface RequestContext_Request_SOCKS5_Connect {
     /**
+     * Host is the requested destination host
+     *
      * @generated from protobuf field: string host = 1
      */
     host: string;
     /**
+     * Port is the requested destination port
+     *
      * @generated from protobuf field: uint32 port = 2
      */
     port: number;
     /**
+     * AddressType is the type of the requested destination address
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.SOCKS5.Connect.AddressType addressType = 3
      */
     addressType: RequestContext_Request_SOCKS5_Connect_AddressType;
 }
 /**
+ * AddressType is the type of the requested destination address
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.RequestContext.Request.SOCKS5.Connect.AddressType
  */
 export enum RequestContext_Request_SOCKS5_Connect_AddressType {
     /**
+     * ADDRESS_TYPE_UNSPECIFIED is not used
+     *
      * @generated from protobuf enum value: ADDRESS_TYPE_UNSPECIFIED = 0;
      */
     ADDRESS_TYPE_UNSPECIFIED = 0,
     /**
+     * IPV4 means that the destination is an IPv4 address
+     *
      * @generated from protobuf enum value: IPV4 = 1;
      */
     IPV4 = 1,
     /**
+     * DOMAIN means that the destination is a domain name
+     *
      * @generated from protobuf enum value: DOMAIN = 2;
      */
     DOMAIN = 2,
     /**
+     * IPV6 means that the destination is an IPv6 address
+     *
      * @generated from protobuf enum value: IPV6 = 3;
      */
     IPV6 = 3
 }
 /**
+ * MCP is the Model Context Protocol-specific request details
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.MCP
+ */
+export interface RequestContext_Request_MCP {
+    /**
+     * HTTP is the underlying HTTP request details. The entire JSON-RPC
+     * request body is available at `ctx.request.mcp.http.bodyMap` which is
+     * used to access the tool arguments (i.e.
+     * `ctx.request.mcp.http.bodyMap.params.arguments`) as well as any other
+     * field that is not normalized here.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.HTTP http = 1
+     */
+    http?: RequestContext_Request_HTTP;
+    /**
+     * ProtocolVersion is the MCP protocol version declared by the request
+     * (e.g. "2026-07-28"). It is read from the request body's
+     * `io.modelcontextprotocol/protocolVersion` metadata field or from the
+     * `MCP-Protocol-Version` request header, and it is only set once both
+     * values are validated to match whenever both of them are present. It is
+     * empty for the protocol revisions that do not declare a version.
+     *
+     * @generated from protobuf field: string protocolVersion = 2
+     */
+    protocolVersion: string;
+    /**
+     * Method is the JSON-RPC method of the request body (e.g. `tools/call`,
+     * `resources/read`, `server/discover`).
+     *
+     * @generated from protobuf field: string method = 3
+     */
+    method: string;
+    /**
+     * Name is the logical MCP target of the method whenever it has one. It
+     * is the tool name for `tools/call`, the prompt name for `prompts/get`
+     * and the resource URI for `resources/read`. It is empty for the methods
+     * that have no target such as the `*\/list` methods.
+     *
+     * @generated from protobuf field: string name = 4
+     */
+    name: string;
+    /**
+     * RequestID is the JSON-RPC request `id` normalized into a string. It is
+     * controlled by the downstream and therefore it must never be used as a
+     * security identifier.
+     *
+     * @generated from protobuf field: string requestID = 5
+     */
+    requestID: string;
+    /**
+     * IsNotification is set for JSON-RPC notifications (i.e. request bodies
+     * that carry no `id` and expect no response).
+     *
+     * @generated from protobuf field: bool isNotification = 6
+     */
+    isNotification: boolean;
+    /**
+     * Client is the client information reported by the downstream itself. It
+     * is useful for auditing and debugging and it is NOT an identity. Use
+     * the authenticated User, Session, Device and Groups for access control.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.MCP.Client client = 7
+     */
+    client?: RequestContext_Request_MCP_Client;
+    /**
+     * Capabilities is the list of the capability identifiers declared by the
+     * downstream for this request (e.g. "elicitation"). It is self-reported.
+     *
+     * @generated from protobuf field: repeated string capabilities = 8
+     */
+    capabilities: string[];
+    /**
+     * SessionID is the value of the `Mcp-Session-Id` request header used by
+     * the protocol revisions between 2025-03-26 and 2025-11-25. It is an MCP
+     * transport identifier that is unrelated to the Octelium Session.
+     *
+     * @generated from protobuf field: string sessionID = 9
+     */
+    sessionID: string;
+}
+/**
+ * Client is the client information reported by the downstream itself
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.MCP.Client
+ */
+export interface RequestContext_Request_MCP_Client {
+    /**
+     * Name is the name reported by the downstream client itself
+     *
+     * @generated from protobuf field: string name = 1
+     */
+    name: string;
+    /**
+     * Version is the version reported by the downstream client itself
+     *
+     * @generated from protobuf field: string version = 2
+     */
+    version: string;
+    /**
+     * Title is the human-readable title reported by the downstream client
+     * itself
+     *
+     * @generated from protobuf field: string title = 3
+     */
+    title: string;
+}
+/**
+ * LLM is the LLM-gateway-specific request details
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.LLM
+ */
+export interface RequestContext_Request_LLM {
+    /**
+     * HTTP is the underlying HTTP request details. The entire request body
+     * is available at `ctx.request.llm.http.bodyMap` which is used to access
+     * the messages (i.e. `ctx.request.llm.http.bodyMap.messages`) as well as
+     * any other field that is not normalized here.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.HTTP http = 1
+     */
+    http?: RequestContext_Request_HTTP;
+    /**
+     * Protocol is the inference API protocol of the request.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol = 2
+     */
+    protocol: Service_Spec_Config_LLM_Protocol;
+    /**
+     * Operation is the normalized inference operation of the request (e.g.
+     * `CHAT_COMPLETIONS`, `EMBEDDINGS`, `MESSAGES`). It is derived from the
+     * canonicalized request path and method.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.LLM.Operation operation = 3
+     */
+    operation: RequestContext_Request_LLM_Operation;
+    /**
+     * Model is the model name requested by the downstream, verbatim. It is
+     * empty for the operations that carry no model (e.g. `MODELS_LIST`).
+     *
+     * @generated from protobuf field: string model = 4
+     */
+    model: string;
+    /**
+     * Stream is set for the requests that ask for a streamed response.
+     *
+     * @generated from protobuf field: bool stream = 5
+     */
+    stream: boolean;
+    /**
+     * EstimatedInputTokens is Octelium's own byte-based pre-flight input
+     * token estimate. It is neither a provider-accurate token count nor an
+     * upper bound of one and it must never be treated as a billing truth.
+     * Read the EstimateQuality field alongside it.
+     *
+     * @generated from protobuf field: uint64 estimatedInputTokens = 6
+     */
+    estimatedInputTokens: number;
+    /**
+     * EstimateQuality shows whether the EstimatedInputTokens field accounted
+     * for the entire input of the request.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.LLM.EstimateQuality estimateQuality = 7
+     */
+    estimateQuality: RequestContext_Request_LLM_EstimateQuality;
+    /**
+     * MaxOutputTokens is the maximum output token count requested by the
+     * downstream itself. It is zero whenever the request declares none.
+     *
+     * @generated from protobuf field: uint64 maxOutputTokens = 8
+     */
+    maxOutputTokens: number;
+    /**
+     * HasTools is set for the requests that declare tools.
+     *
+     * @generated from protobuf field: bool hasTools = 9
+     */
+    hasTools: boolean;
+    /**
+     * ToolCount is the number of the tools declared by the request.
+     *
+     * @generated from protobuf field: uint32 toolCount = 10
+     */
+    toolCount: number;
+    /**
+     * ToolNames is the bounded list of the names of the tools declared by
+     * the request.
+     *
+     * @generated from protobuf field: repeated string toolNames = 11
+     */
+    toolNames: string[];
+    /**
+     * InputItemCount is the number of the input items (i.e. the messages or
+     * the embedding inputs) of the request.
+     *
+     * @generated from protobuf field: uint32 inputItemCount = 12
+     */
+    inputItemCount: number;
+    /**
+     * HasImageInput is set for the requests that carry image input.
+     *
+     * @generated from protobuf field: bool hasImageInput = 13
+     */
+    hasImageInput: boolean;
+    /**
+     * HasAudioInput is set for the requests that carry audio input.
+     *
+     * @generated from protobuf field: bool hasAudioInput = 14
+     */
+    hasAudioInput: boolean;
+}
+/**
+ * EstimateQuality is whether the EstimatedInputTokens field accounted
+ * for the entire input of the request
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.RequestContext.Request.LLM.EstimateQuality
+ */
+export enum RequestContext_Request_LLM_EstimateQuality {
+    /**
+     * ESTIMATE_QUALITY_UNSET is not used
+     *
+     * @generated from protobuf enum value: ESTIMATE_QUALITY_UNSET = 0;
+     */
+    ESTIMATE_QUALITY_UNSET = 0,
+    /**
+     * COMPLETE means that the entire input of the request was text that
+     * Octelium could account for
+     *
+     * @generated from protobuf enum value: COMPLETE = 1;
+     */
+    COMPLETE = 1,
+    /**
+     * PARTIAL means that the request carried non-text input (e.g. images
+     * or audio) that was reserved at a flat rate rather than measured
+     *
+     * @generated from protobuf enum value: PARTIAL = 2;
+     */
+    PARTIAL = 2,
+    /**
+     * UNAVAILABLE means that no estimate could be calculated at all, which
+     * is the case for the operations that carry no prompt
+     *
+     * @generated from protobuf enum value: UNAVAILABLE = 3;
+     */
+    UNAVAILABLE = 3
+}
+/**
+ * Operation is the normalized inference operation of the request
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.RequestContext.Request.LLM.Operation
+ */
+export enum RequestContext_Request_LLM_Operation {
+    /**
+     * OPERATION_UNSET is not used
+     *
+     * @generated from protobuf enum value: OPERATION_UNSET = 0;
+     */
+    OPERATION_UNSET = 0,
+    /**
+     * CHAT_COMPLETIONS is `POST /v1/chat/completions`
+     *
+     * @generated from protobuf enum value: CHAT_COMPLETIONS = 1;
+     */
+    CHAT_COMPLETIONS = 1,
+    /**
+     * RESPONSES is `POST /v1/responses`
+     *
+     * @generated from protobuf enum value: RESPONSES = 2;
+     */
+    RESPONSES = 2,
+    /**
+     * COMPLETIONS is the legacy `POST /v1/completions`
+     *
+     * @generated from protobuf enum value: COMPLETIONS = 3;
+     */
+    COMPLETIONS = 3,
+    /**
+     * EMBEDDINGS is `POST /v1/embeddings`
+     *
+     * @generated from protobuf enum value: EMBEDDINGS = 4;
+     */
+    EMBEDDINGS = 4,
+    /**
+     * MODERATIONS is `POST /v1/moderations`
+     *
+     * @generated from protobuf enum value: MODERATIONS = 5;
+     */
+    MODERATIONS = 5,
+    /**
+     * MODELS_LIST is `GET /v1/models`
+     *
+     * @generated from protobuf enum value: MODELS_LIST = 6;
+     */
+    MODELS_LIST = 6,
+    /**
+     * MODELS_GET is `GET /v1/models/{model}`
+     *
+     * @generated from protobuf enum value: MODELS_GET = 7;
+     */
+    MODELS_GET = 7,
+    /**
+     * MESSAGES is `POST /v1/messages`
+     *
+     * @generated from protobuf enum value: MESSAGES = 8;
+     */
+    MESSAGES = 8,
+    /**
+     * COUNT_TOKENS is `POST /v1/messages/count_tokens`
+     *
+     * @generated from protobuf enum value: COUNT_TOKENS = 9;
+     */
+    COUNT_TOKENS = 9
+}
+/**
+ * PolicyTrigger dynamically attaches a set of Policies to the requests that
+ * satisfy its PreCondition. It lets the Cluster apply Policies that are scoped
+ * to specific principals or resources, and bounded in time, without having to
+ * modify the resources themselves.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.PolicyTrigger
  */
 export interface PolicyTrigger {
@@ -9611,7 +13848,7 @@ export interface PolicyTrigger {
      */
     kind: string;
     /**
-     * octelium.api.main.meta.v1.Metadata is the object's metadata.
+     * Metadata is the object's metadata.
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
@@ -9630,19 +13867,28 @@ export interface PolicyTrigger {
     status?: PolicyTrigger_Status;
 }
 /**
+ * Spec is the PolicyTrigger specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.PolicyTrigger.Spec
  */
 export interface PolicyTrigger_Spec {
 }
 /**
+ * Status is the current status of the PolicyTrigger
+ *
  * @generated from protobuf message octelium.api.main.core.v1.PolicyTrigger.Status
  */
 export interface PolicyTrigger_Status {
     /**
+     * OwnerRef is the reference of the resource that owns the PolicyTrigger
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference ownerRef = 1
      */
     ownerRef?: ObjectReference;
     /**
+     * PreCondition decides whether the PolicyTrigger's Policies are attached
+     * to a request
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.PolicyTrigger.Status.PreCondition preCondition = 2
      */
     preCondition?: PolicyTrigger_Status_PreCondition;
@@ -9659,86 +13905,122 @@ export interface PolicyTrigger_Status {
      */
     inlinePolicies: InlinePolicy[];
     /**
+     * IsDisabled disables the PolicyTrigger without having to delete it
+     *
      * @generated from protobuf field: bool isDisabled = 5
      */
     isDisabled: boolean;
 }
 /**
+ * PreCondition decides whether the PolicyTrigger's Policies are attached
+ * to a request
+ *
  * @generated from protobuf message octelium.api.main.core.v1.PolicyTrigger.Status.PreCondition
  */
 export interface PolicyTrigger_Status_PreCondition {
     /**
+     * Type sets how the PreCondition is evaluated
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "notBefore";
         /**
+         * NotBefore matches the requests that happen at or after this
+         * timestamp
+         *
          * @generated from protobuf field: google.protobuf.Timestamp notBefore = 1
          */
         notBefore: Timestamp;
     } | {
         oneofKind: "notAfter";
         /**
+         * NotAfter matches the requests that happen at or before this
+         * timestamp
+         *
          * @generated from protobuf field: google.protobuf.Timestamp notAfter = 2
          */
         notAfter: Timestamp;
     } | {
         oneofKind: "sessionRef";
         /**
+         * SessionRef matches the requests of a specific Session
+         *
          * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference sessionRef = 3
          */
         sessionRef: ObjectReference;
     } | {
         oneofKind: "userRef";
         /**
+         * UserRef matches the requests of a specific User
+         *
          * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 4
          */
         userRef: ObjectReference;
     } | {
         oneofKind: "matchAny";
         /**
+         * MatchAny matches every request
+         *
          * @generated from protobuf field: bool matchAny = 5
          */
         matchAny: boolean;
     } | {
         oneofKind: "condition";
         /**
+         * Condition matches the requests that satisfy a policy-as-code
+         * Condition
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Condition condition = 6
          */
         condition: Condition;
     } | {
         oneofKind: "any";
         /**
+         * Any acts as a logical OR operator on its list of PreConditions
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.PolicyTrigger.Status.PreCondition.Any any = 7
          */
         any: PolicyTrigger_Status_PreCondition_Any;
     } | {
         oneofKind: "all";
         /**
+         * All acts as a logical AND operator on its list of PreConditions
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.PolicyTrigger.Status.PreCondition.All all = 8
          */
         all: PolicyTrigger_Status_PreCondition_All;
     } | {
         oneofKind: "serviceRef";
         /**
+         * ServiceRef matches the requests to a specific Service
+         *
          * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference serviceRef = 9
          */
         serviceRef: ObjectReference;
     } | {
         oneofKind: "namespaceRef";
         /**
+         * NamespaceRef matches the requests to the Services of a specific
+         * Namespace
+         *
          * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference namespaceRef = 10
          */
         namespaceRef: ObjectReference;
     } | {
         oneofKind: "groupRef";
         /**
+         * GroupRef matches the requests of the Users belonging to a specific
+         * Group
+         *
          * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference groupRef = 11
          */
         groupRef: ObjectReference;
     } | {
         oneofKind: "deviceRef";
         /**
+         * DeviceRef matches the requests coming from a specific Device
+         *
          * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference deviceRef = 12
          */
         deviceRef: ObjectReference;
@@ -9747,24 +14029,34 @@ export interface PolicyTrigger_Status_PreCondition {
     };
 }
 /**
+ * Any acts as a logical OR operator on its list of PreConditions
+ *
  * @generated from protobuf message octelium.api.main.core.v1.PolicyTrigger.Status.PreCondition.Any
  */
 export interface PolicyTrigger_Status_PreCondition_Any {
     /**
+     * Of is the list of the PreConditions of which at least one must match
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.PolicyTrigger.Status.PreCondition of = 1
      */
     of: PolicyTrigger_Status_PreCondition[];
 }
 /**
+ * All acts as a logical AND operator on its list of PreConditions
+ *
  * @generated from protobuf message octelium.api.main.core.v1.PolicyTrigger.Status.PreCondition.All
  */
 export interface PolicyTrigger_Status_PreCondition_All {
     /**
+     * Of is the list of the PreConditions that must all match
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.PolicyTrigger.Status.PreCondition of = 1
      */
     of: PolicyTrigger_Status_PreCondition[];
 }
 /**
+ * PolicyTriggerList is the list of PolicyTriggers.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.PolicyTriggerList
  */
 export interface PolicyTriggerList {
@@ -9794,6 +14086,10 @@ export interface PolicyTriggerList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * ComponentLog is a log entry that is emitted by one of the Cluster's own
+ * components. It is used for the operational logging of the Cluster itself as
+ * opposed to the AccessLogs which record the Users' access to the Services.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ComponentLog
  */
 export interface ComponentLog {
@@ -9823,93 +14119,139 @@ export interface ComponentLog {
     entry?: ComponentLog_Entry;
 }
 /**
+ * Entry is the ComponentLog's entry information
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ComponentLog.Entry
  */
 export interface ComponentLog_Entry {
     /**
+     * Message is the log entry's message
+     *
      * @generated from protobuf field: string message = 1
      */
     message: string;
     /**
+     * Level is the severity level of the log entry
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ComponentLog.Entry.Level level = 2
      */
     level: ComponentLog_Entry_Level;
     /**
+     * Component is the Cluster component that emitted the log entry
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.ComponentLog.Entry.Component component = 3
      */
     component?: ComponentLog_Entry_Component;
     /**
+     * Fields is a map of the log entry's additional structured fields
+     *
      * @generated from protobuf field: google.protobuf.Struct fields = 4
      */
     fields?: Struct;
     /**
+     * Function is the name of the function that emitted the log entry
+     *
      * @generated from protobuf field: string function = 5
      */
     function: string;
     /**
+     * File is the name of the source file that emitted the log entry
+     *
      * @generated from protobuf field: string file = 6
      */
     file: string;
     /**
+     * Line is the line number in the source file that emitted the log entry
+     *
      * @generated from protobuf field: int32 line = 7
      */
     line: number;
     /**
+     * Time is the timestamp at which the log entry was emitted
+     *
      * @generated from protobuf field: google.protobuf.Timestamp time = 8
      */
     time?: Timestamp;
 }
 /**
+ * Component is the Cluster component that emitted the log entry
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ComponentLog.Entry.Component
  */
 export interface ComponentLog_Entry_Component {
     /**
+     * Namespace is the namespace of the component
+     *
      * @generated from protobuf field: string namespace = 1
      */
     namespace: string;
     /**
+     * UID is the unique identifier of the component
+     *
      * @generated from protobuf field: string uid = 2
      */
     uid: string;
     /**
+     * Type is the type of the component
+     *
      * @generated from protobuf field: string type = 3
      */
     type: string;
 }
 /**
+ * Level is the severity level of the log entry
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.ComponentLog.Entry.Level
  */
 export enum ComponentLog_Entry_Level {
     /**
+     * LEVEL_UNSET is not used
+     *
      * @generated from protobuf enum value: LEVEL_UNSET = 0;
      */
     LEVEL_UNSET = 0,
     /**
+     * DEBUG is the debug level
+     *
      * @generated from protobuf enum value: DEBUG = 1;
      */
     DEBUG = 1,
     /**
+     * INFO is the informational level
+     *
      * @generated from protobuf enum value: INFO = 2;
      */
     INFO = 2,
     /**
+     * WARN is the warning level
+     *
      * @generated from protobuf enum value: WARN = 3;
      */
     WARN = 3,
     /**
+     * ERROR is the error level
+     *
      * @generated from protobuf enum value: ERROR = 4;
      */
     ERROR = 4,
     /**
+     * PANIC is the panic level
+     *
      * @generated from protobuf enum value: PANIC = 5;
      */
     PANIC = 5,
     /**
+     * FATAL is the fatal level
+     *
      * @generated from protobuf enum value: FATAL = 6;
      */
     FATAL = 6
 }
 /**
+ * Authenticator is registered by a User and used for multi-factor
+ * authentication (MFA), for the re-authentication of an existent Session, or
+ * for a direct passwordless login via a Passkey.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Authenticator
  */
 export interface Authenticator {
@@ -9920,44 +14262,52 @@ export interface Authenticator {
      */
     apiVersion: string;
     /**
-     * Kind is the resource name (i.e. `Group`).
+     * Kind is the resource name (i.e. `Authenticator`).
      *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
-     * octelium.api.main.meta.v1.Metadata is the object's metadata.
+     * Metadata is the object's metadata.
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
     metadata?: Metadata;
     /**
-     * Spec is the Group specification.
+     * Spec is the Authenticator specification.
      *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Spec spec = 4
      */
     spec?: Authenticator_Spec;
     /**
-     * Status is the current status of the Group.
+     * Status is the current status of the Authenticator.
      *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status status = 5
      */
     status?: Authenticator_Status;
 }
 /**
+ * Spec is the Authenticator specification
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Authenticator.Spec
  */
 export interface Authenticator_Spec {
     /**
+     * DisplayName is the Authenticator's display name that the User sees
+     *
      * @generated from protobuf field: string displayName = 1
      */
     displayName: string;
     /**
+     * State is the Authenticator's state
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Spec.State state = 2
      */
     state: Authenticator_Spec_State;
 }
 /**
+ * State is the state of the Authenticator
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Authenticator.Spec.State
  */
 export enum Authenticator_Spec_State {
@@ -9988,99 +14338,149 @@ export enum Authenticator_Spec_State {
     REJECTED = 3
 }
 /**
+ * Status is the current status of the Authenticator
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Authenticator.Status
  */
 export interface Authenticator_Status {
     /**
+     * UserRef is the reference of the Authenticator's User
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 1
      */
     userRef?: ObjectReference;
     /**
+     * DeviceRef is the reference of the Authenticator's Device, if any
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference deviceRef = 2
      */
     deviceRef?: ObjectReference;
     /**
+     * Type is the type of the Authenticator
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.Type type = 3
      */
     type: Authenticator_Status_Type;
     /**
+     * Info is the type-specific information of the Authenticator
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.Info info = 4
      */
     info?: Authenticator_Status_Info;
     /**
+     * AuthenticationAttempt is the currently pending authentication attempt
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.AuthenticationAttempt authenticationAttempt = 5
      */
     authenticationAttempt?: Authenticator_Status_AuthenticationAttempt;
     /**
+     * LastAuthenticationAttempts is the list of the last authentication
+     * attempts
+     *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Authenticator.Status.AuthenticationAttempt lastAuthenticationAttempts = 6
      */
     lastAuthenticationAttempts: Authenticator_Status_AuthenticationAttempt[];
     /**
+     * SuccessfulAuthentications is the total number of the successful
+     * authentications via the Authenticator
+     *
      * @generated from protobuf field: uint32 successfulAuthentications = 7
      */
     successfulAuthentications: number;
     /**
+     * FailedAuthentications is the total number of the failed authentications
+     * via the Authenticator
+     *
      * @generated from protobuf field: uint32 failedAuthentications = 8
      */
     failedAuthentications: number;
     /**
+     * TotalAuthenticationAttempts is the total number of the authentication
+     * attempts via the Authenticator
+     *
      * @generated from protobuf field: uint32 totalAuthenticationAttempts = 9
      */
     totalAuthenticationAttempts: number;
     /**
+     * Ext is a map of internal Cluster-managed extension data
+     *
      * @generated from protobuf field: map<string, google.protobuf.Struct> ext = 10
      */
     ext: {
         [key: string]: Struct;
     };
     /**
+     * IsRegistered indicates whether the Authenticator has completed its
+     * registration
+     *
      * @generated from protobuf field: bool isRegistered = 11
      */
     isRegistered: boolean;
     /**
+     * Description is a human-readable description of the Authenticator
+     *
      * @generated from protobuf field: string description = 12
      */
     description: string;
 }
 /**
+ * EncryptedData is a value that is stored encrypted by the Cluster
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Authenticator.Status.EncryptedData
  */
 export interface Authenticator_Status_EncryptedData {
     /**
+     * Ciphertext is the encrypted value
+     *
      * @generated from protobuf field: bytes ciphertext = 1
      */
     ciphertext: Uint8Array;
     /**
+     * Nonce is the nonce used for the encryption
+     *
      * @generated from protobuf field: bytes nonce = 2
      */
     nonce: Uint8Array;
     /**
+     * KeySecretRef is the reference of the Secret containing the key that
+     * encrypted the value
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference keySecretRef = 3
      */
     keySecretRef?: ObjectReference;
 }
 /**
+ * Info is the type-specific information of the Authenticator
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Authenticator.Status.Info
  */
 export interface Authenticator_Status_Info {
     /**
+     * Type sets the type-specific information of the Authenticator
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "fido";
         /**
+         * FIDO is the information of a FIDO/WebAuthn Authenticator
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.Info.FIDO fido = 1
          */
         fido: Authenticator_Status_Info_FIDO;
     } | {
         oneofKind: "totp";
         /**
+         * TOTP is the information of a TOTP Authenticator
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.Info.TOTP totp = 2
          */
         totp: Authenticator_Status_Info_TOTP;
     } | {
         oneofKind: "tpm";
         /**
+         * TPM is the information of a TPM 2.0 Authenticator
+         *
          * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.Info.TPM tpm = 3
          */
         tpm: Authenticator_Status_Info_TPM;
@@ -10089,214 +14489,339 @@ export interface Authenticator_Status_Info {
     };
 }
 /**
+ * FIDO is the information of a FIDO/WebAuthn Authenticator
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Authenticator.Status.Info.FIDO
  */
 export interface Authenticator_Status_Info_FIDO {
     /**
+     * ID is the WebAuthn credential ID
+     *
      * @generated from protobuf field: bytes id = 1
      */
     id: Uint8Array;
     /**
+     * PublicKey is the credential's public key
+     *
      * @generated from protobuf field: bytes publicKey = 2
      */
     publicKey: Uint8Array;
     /**
+     * Type is the attachment type of the FIDO Authenticator
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.Info.FIDO.Type type = 3
      */
     type: Authenticator_Status_Info_FIDO_Type;
     /**
+     * AAGUID is the Authenticator Attestation GUID that identifies the
+     * model of the Authenticator
+     *
      * @generated from protobuf field: string aaguid = 4
      */
     aaguid: string;
     /**
+     * IsPasskey means that the Authenticator is a Passkey (i.e. it uses a
+     * resident/discoverable key credential)
+     *
      * @generated from protobuf field: bool isPasskey = 5
      */
     isPasskey: boolean;
     /**
+     * IDHash is the hash of the credential ID
+     *
      * @generated from protobuf field: bytes idHash = 6
      */
     idHash: Uint8Array;
     /**
+     * BackupEligible means that the credential is eligible to be backed up
+     * and synced across the User's devices
+     *
      * @generated from protobuf field: bool backupEligible = 7
      */
     backupEligible: boolean;
     /**
+     * IsAttestationVerified means that the Authenticator's attestation was
+     * verified
+     *
      * @generated from protobuf field: bool isAttestationVerified = 8
      */
     isAttestationVerified: boolean;
     /**
+     * IsSoftware means that the Authenticator is software-based (e.g. a
+     * password manager)
+     *
      * @generated from protobuf field: bool isSoftware = 9
      */
     isSoftware: boolean;
     /**
+     * IsHardware means that the Authenticator is hardware-backed (e.g. a
+     * security key or a platform authenticator)
+     *
      * @generated from protobuf field: bool isHardware = 10
      */
     isHardware: boolean;
     /**
+     * SignCount is the credential's signature counter which is used to
+     * detect the cloned Authenticators
+     *
      * @generated from protobuf field: uint32 signCount = 11
      */
     signCount: number;
 }
 /**
+ * Type is the attachment type of the FIDO Authenticator
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Authenticator.Status.Info.FIDO.Type
  */
 export enum Authenticator_Status_Info_FIDO_Type {
     /**
+     * TYPE_UNKNOWN is not used
+     *
      * @generated from protobuf enum value: TYPE_UNKNOWN = 0;
      */
     TYPE_UNKNOWN = 0,
     /**
+     * ROAMING means that the Authenticator is a cross-platform/roaming
+     * authenticator (e.g. a security key)
+     *
      * @generated from protobuf enum value: ROAMING = 1;
      */
     ROAMING = 1,
     /**
+     * PLATFORM means that the Authenticator is bound to the platform
+     * (e.g. Windows Hello, Android)
+     *
      * @generated from protobuf enum value: PLATFORM = 2;
      */
     PLATFORM = 2
 }
 /**
+ * TOTP is the information of a time-based one-time password (TOTP)
+ * Authenticator
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Authenticator.Status.Info.TOTP
  */
 export interface Authenticator_Status_Info_TOTP {
     /**
+     * SharedSecret is the TOTP shared secret
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.EncryptedData sharedSecret = 1
      */
     sharedSecret?: Authenticator_Status_EncryptedData;
     /**
+     * PeriodSeconds is the duration in seconds of a single time step
+     *
      * @generated from protobuf field: uint32 periodSeconds = 2
      */
     periodSeconds: number;
     /**
+     * Digits is the number of digits of the generated one-time passwords
+     *
      * @generated from protobuf field: uint32 digits = 3
      */
     digits: number;
     /**
+     * Algorithm is the HMAC algorithm used to generate the one-time
+     * passwords
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.Info.TOTP.Algorithm algorithm = 4
      */
     algorithm: Authenticator_Status_Info_TOTP_Algorithm;
     /**
+     * LastAcceptedTimeStep is the last time step that was accepted. It is
+     * used to prevent replaying the same one-time password.
+     *
      * @generated from protobuf field: uint64 lastAcceptedTimeStep = 5
      */
     lastAcceptedTimeStep: number;
     /**
+     * LastAcceptedAt is the timestamp at which a one-time password was
+     * last accepted
+     *
      * @generated from protobuf field: google.protobuf.Timestamp lastAcceptedAt = 6
      */
     lastAcceptedAt?: Timestamp;
 }
 /**
+ * Algorithm is the HMAC algorithm used to generate the one-time
+ * passwords
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Authenticator.Status.Info.TOTP.Algorithm
  */
 export enum Authenticator_Status_Info_TOTP_Algorithm {
     /**
+     * ALGORITHM_UNSET is not used
+     *
      * @generated from protobuf enum value: ALGORITHM_UNSET = 0;
      */
     ALGORITHM_UNSET = 0,
     /**
+     * SHA1 uses HMAC-SHA1
+     *
      * @generated from protobuf enum value: SHA1 = 1;
      */
     SHA1 = 1,
     /**
+     * SHA256 uses HMAC-SHA256
+     *
      * @generated from protobuf enum value: SHA256 = 2;
      */
     SHA256 = 2,
     /**
+     * SHA512 uses HMAC-SHA512
+     *
      * @generated from protobuf enum value: SHA512 = 3;
      */
     SHA512 = 3
 }
 /**
+ * TPM is the information of a Trusted Platform Module (TPM) 2.0
+ * Authenticator
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Authenticator.Status.Info.TPM
  */
 export interface Authenticator_Status_Info_TPM {
     /**
+     * AKBytes is the TPM's attestation key
+     *
      * @generated from protobuf field: bytes akBytes = 1
      */
     akBytes: Uint8Array;
     /**
+     * AttestationParameters is the attestation of the TPM's attestation
+     * key
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.Info.TPM.AttestationParameters attestationParameters = 2
      */
     attestationParameters?: Authenticator_Status_Info_TPM_AttestationParameters;
     /**
+     * EKPublicKey is the public key of the TPM's endorsement key
+     *
      * @generated from protobuf field: bytes ekPublicKey = 3
      */
     ekPublicKey: Uint8Array;
 }
 /**
+ * AttestationParameters is the attestation of the TPM's attestation
+ * key
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Authenticator.Status.Info.TPM.AttestationParameters
  */
 export interface Authenticator_Status_Info_TPM_AttestationParameters {
     /**
+     * Public is the public area of the attestation key
+     *
      * @generated from protobuf field: bytes public = 1
      */
     public: Uint8Array;
     /**
+     * CreateData is the creation data of the attestation key
+     *
      * @generated from protobuf field: bytes createData = 2
      */
     createData: Uint8Array;
     /**
+     * CreateAttestation is the creation attestation of the attestation
+     * key
+     *
      * @generated from protobuf field: bytes createAttestation = 3
      */
     createAttestation: Uint8Array;
     /**
+     * CreateSignature is the creation signature of the attestation key
+     *
      * @generated from protobuf field: bytes createSignature = 4
      */
     createSignature: Uint8Array;
 }
 /**
+ * AuthenticationAttempt is a single authentication attempt via the
+ * Authenticator
+ *
  * @generated from protobuf message octelium.api.main.core.v1.Authenticator.Status.AuthenticationAttempt
  */
 export interface Authenticator_Status_AuthenticationAttempt {
     /**
+     * CreatedAt is the timestamp at which the attempt was created
+     *
      * @generated from protobuf field: google.protobuf.Timestamp createdAt = 1
      */
     createdAt?: Timestamp;
     /**
+     * EncryptedChallengeRequest is the encrypted challenge that was issued
+     * for the attempt
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.EncryptedData encryptedChallengeRequest = 2
      */
     encryptedChallengeRequest?: Authenticator_Status_EncryptedData;
     /**
+     * EncryptedDataMap is a map of the attempt's additional encrypted data
+     *
      * @generated from protobuf field: map<string, octelium.api.main.core.v1.Authenticator.Status.EncryptedData> encryptedDataMap = 3
      */
     encryptedDataMap: {
         [key: string]: Authenticator_Status_EncryptedData;
     };
     /**
+     * DataMap is a map of the attempt's additional data
+     *
      * @generated from protobuf field: map<string, bytes> dataMap = 4
      */
     dataMap: {
         [key: string]: Uint8Array;
     };
     /**
+     * SessionRef is the reference of the Session that performed the attempt
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference sessionRef = 5
      */
     sessionRef?: ObjectReference;
     /**
+     * CompletedAt is the timestamp at which the attempt was completed
+     *
      * @generated from protobuf field: google.protobuf.Timestamp completedAt = 6
      */
     completedAt?: Timestamp;
 }
 /**
+ * Type is the type of the Authenticator
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.Authenticator.Status.Type
  */
 export enum Authenticator_Status_Type {
     /**
+     * TYPE_UNKNOWN is not used
+     *
      * @generated from protobuf enum value: TYPE_UNKNOWN = 0;
      */
     TYPE_UNKNOWN = 0,
     /**
+     * FIDO means that the Authenticator is a FIDO/WebAuthn compliant
+     * authenticator (e.g. a security key, a platform authenticator or a
+     * software-based key)
+     *
      * @generated from protobuf enum value: FIDO = 1;
      */
     FIDO = 1,
     /**
+     * TOTP means that the Authenticator is a time-based one-time password
+     * authenticator (e.g. Google Authenticator)
+     *
      * @generated from protobuf enum value: TOTP = 2;
      */
     TOTP = 2,
     /**
+     * TPM means that the Authenticator uses TPM 2.0 to provide
+     * hardware-based re-authentication for CLIENT Sessions
+     *
      * @generated from protobuf enum value: TPM = 3;
      */
     TPM = 3
 }
 /**
+ * AuthenticatorList is the list of Authenticators returned by the
+ * ListAuthenticator method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.AuthenticatorList
  */
 export interface AuthenticatorList {
@@ -10307,13 +14832,13 @@ export interface AuthenticatorList {
      */
     apiVersion: string;
     /**
-     * Kind is the resource name (i.e. `GroupList`).
+     * Kind is the resource name (i.e. `AuthenticatorList`).
      *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
-     * Items is the list of Groups.
+     * Items is the list of Authenticators.
      *
      * @generated from protobuf field: repeated octelium.api.main.core.v1.Authenticator items = 3
      */
@@ -10326,175 +14851,261 @@ export interface AuthenticatorList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * ListAuthenticatorOptions is the request of the ListAuthenticator method.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.ListAuthenticatorOptions
  */
 export interface ListAuthenticatorOptions {
     /**
+     * Common sets the common listing options (e.g. pagination, ordering and
+     * filtering)
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
     /**
+     * UserRef filters the Authenticators by their User
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 2
      */
     userRef?: ObjectReference;
 }
 /**
+ * GeoIP is the geolocation information of an IP address. It is resolved by the
+ * Cluster from the MaxMind MMDB databases that are set in the ClusterConfig
+ * and it is only set if geolocation is enabled.
+ *
  * @generated from protobuf message octelium.api.main.core.v1.GeoIP
  */
 export interface GeoIP {
     /**
+     * IP is the IP address itself
+     *
      * @generated from protobuf field: string ip = 1
      */
     ip: string;
     /**
+     * IPVersion is the version of the IP address
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.GeoIP.IPVersion ipVersion = 2
      */
     ipVersion: GeoIP_IPVersion;
     /**
+     * Country is the country of the IP address
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.GeoIP.Country country = 3
      */
     country?: GeoIP_Country;
     /**
+     * Region is the subdivision/region of the IP address within its country
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.GeoIP.Region region = 4
      */
     region?: GeoIP_Region;
     /**
+     * City is the city of the IP address
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.GeoIP.City city = 5
      */
     city?: GeoIP_City;
     /**
+     * Continent is the continent of the IP address
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.GeoIP.Continent continent = 6
      */
     continent?: GeoIP_Continent;
     /**
+     * Network is the network information of the IP address
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.GeoIP.Network network = 7
      */
     network?: GeoIP_Network;
     /**
+     * Timezone is the timezone of the IP address
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.GeoIP.Timezone timezone = 8
      */
     timezone?: GeoIP_Timezone;
     /**
+     * PostalCode is the postal code of the IP address
+     *
      * @generated from protobuf field: string postalCode = 9
      */
     postalCode: string;
     /**
+     * Coordinates is the approximate geographic location of the IP address
+     *
      * @generated from protobuf field: octelium.api.main.core.v1.GeoIP.Coordinates coordinates = 10
      */
     coordinates?: GeoIP_Coordinates;
 }
 /**
+ * Country is the country of the IP address
+ *
  * @generated from protobuf message octelium.api.main.core.v1.GeoIP.Country
  */
 export interface GeoIP_Country {
     /**
+     * Code is the ISO 3166-1 country code (e.g. "US")
+     *
      * @generated from protobuf field: string code = 1
      */
     code: string;
     /**
+     * Name is the country's name (e.g. "United States")
+     *
      * @generated from protobuf field: string name = 2
      */
     name: string;
 }
 /**
+ * Continent is the continent of the IP address
+ *
  * @generated from protobuf message octelium.api.main.core.v1.GeoIP.Continent
  */
 export interface GeoIP_Continent {
     /**
+     * Code is the continent's code (e.g. "EU")
+     *
      * @generated from protobuf field: string code = 1
      */
     code: string;
     /**
+     * Name is the continent's name (e.g. "Europe")
+     *
      * @generated from protobuf field: string name = 2
      */
     name: string;
 }
 /**
+ * Region is the subdivision/region of the IP address within its country
+ *
  * @generated from protobuf message octelium.api.main.core.v1.GeoIP.Region
  */
 export interface GeoIP_Region {
     /**
+     * Code is the region's code
+     *
      * @generated from protobuf field: string code = 1
      */
     code: string;
     /**
+     * Name is the region's name
+     *
      * @generated from protobuf field: string name = 2
      */
     name: string;
 }
 /**
+ * City is the city of the IP address
+ *
  * @generated from protobuf message octelium.api.main.core.v1.GeoIP.City
  */
 export interface GeoIP_City {
     /**
+     * Name is the city's name (e.g. "New York")
+     *
      * @generated from protobuf field: string name = 1
      */
     name: string;
 }
 /**
+ * Coordinates is the approximate geographic location of the IP address
+ *
  * @generated from protobuf message octelium.api.main.core.v1.GeoIP.Coordinates
  */
 export interface GeoIP_Coordinates {
     /**
+     * Latitude is the latitude in degrees
+     *
      * @generated from protobuf field: double latitude = 1
      */
     latitude: number;
     /**
+     * Longitude is the longitude in degrees
+     *
      * @generated from protobuf field: double longitude = 2
      */
     longitude: number;
     /**
+     * AccuracyRadius is the radius in kilometers within which the IP address
+     * is likely to be located
+     *
      * @generated from protobuf field: double accuracyRadius = 3
      */
     accuracyRadius: number;
 }
 /**
+ * Network is the network information of the IP address
+ *
  * @generated from protobuf message octelium.api.main.core.v1.GeoIP.Network
  */
 export interface GeoIP_Network {
     /**
+     * ASN is the autonomous system number of the network
+     *
      * @generated from protobuf field: int64 asn = 1
      */
     asn: number;
     /**
+     * ISP is the name of the internet service provider
+     *
      * @generated from protobuf field: string isp = 2
      */
     isp: string;
     /**
+     * Organization is the name of the organization that owns the network
+     *
      * @generated from protobuf field: string organization = 3
      */
     organization: string;
     /**
+     * Domain is the second-level domain of the network
+     *
      * @generated from protobuf field: string domain = 4
      */
     domain: string;
 }
 /**
+ * Timezone is the timezone of the IP address
+ *
  * @generated from protobuf message octelium.api.main.core.v1.GeoIP.Timezone
  */
 export interface GeoIP_Timezone {
     /**
+     * ID is the IANA timezone identifier (e.g. "America/New_York")
+     *
      * @generated from protobuf field: string id = 1
      */
     id: string;
     /**
+     * Offset is the timezone's offset in hours from UTC
+     *
      * @generated from protobuf field: double offset = 2
      */
     offset: number;
 }
 /**
+ * IPVersion is the version of the IP address
+ *
  * @generated from protobuf enum octelium.api.main.core.v1.GeoIP.IPVersion
  */
 export enum GeoIP_IPVersion {
     /**
+     * IP_VERSION_UNKNOWN is not used
+     *
      * @generated from protobuf enum value: IP_VERSION_UNKNOWN = 0;
      */
     IP_VERSION_UNKNOWN = 0,
     /**
+     * V4 means that the IP address is IPv4
+     *
      * @generated from protobuf enum value: V4 = 1;
      */
     V4 = 1,
     /**
+     * V6 means that the IP address is IPv6
+     *
      * @generated from protobuf enum value: V6 = 2;
      */
     V6 = 2
@@ -11806,7 +16417,9 @@ class Service_Spec_Config$Type extends MessageType<Service_Spec_Config> {
             { no: 7, name: "mysql", kind: "message", oneof: "type", T: () => Service_Spec_Config_MySQL },
             { no: 8, name: "kubernetes", kind: "message", oneof: "type", T: () => Service_Spec_Config_Kubernetes },
             { no: 11, name: "socks5", kind: "message", oneof: "type", T: () => Service_Spec_Config_SOCKS5 },
-            { no: 12, name: "rdp", kind: "message", oneof: "type", T: () => Service_Spec_Config_RDP }
+            { no: 12, name: "rdp", kind: "message", oneof: "type", T: () => Service_Spec_Config_RDP },
+            { no: 13, name: "mcp", kind: "message", oneof: "type", T: () => Service_Spec_Config_MCP },
+            { no: 14, name: "llm", kind: "message", oneof: "type", T: () => Service_Spec_Config_LLM }
         ]);
     }
     create(value?: PartialMessage<Service_Spec_Config>): Service_Spec_Config {
@@ -11880,6 +16493,18 @@ class Service_Spec_Config$Type extends MessageType<Service_Spec_Config> {
                         rdp: Service_Spec_Config_RDP.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).rdp)
                     };
                     break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.MCP mcp */ 13:
+                    message.type = {
+                        oneofKind: "mcp",
+                        mcp: Service_Spec_Config_MCP.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).mcp)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM llm */ 14:
+                    message.type = {
+                        oneofKind: "llm",
+                        llm: Service_Spec_Config_LLM.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).llm)
+                    };
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -11928,6 +16553,12 @@ class Service_Spec_Config$Type extends MessageType<Service_Spec_Config> {
         /* octelium.api.main.core.v1.Service.Spec.Config.RDP rdp = 12; */
         if (message.type.oneofKind === "rdp")
             Service_Spec_Config_RDP.internalBinaryWrite(message.type.rdp, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.MCP mcp = 13; */
+        if (message.type.oneofKind === "mcp")
+            Service_Spec_Config_MCP.internalBinaryWrite(message.type.mcp, writer.tag(13, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM llm = 14; */
+        if (message.type.oneofKind === "llm")
+            Service_Spec_Config_LLM.internalBinaryWrite(message.type.llm, writer.tag(14, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -12074,7 +16705,8 @@ class Service_Spec_Config_HTTP_CORS$Type extends MessageType<Service_Spec_Config
             { no: 3, name: "allowHeaders", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "exposeHeaders", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "maxAge", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "allowCredentials", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 6, name: "allowCredentials", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 7, name: "allowClusterServices", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
     create(value?: PartialMessage<Service_Spec_Config_HTTP_CORS>): Service_Spec_Config_HTTP_CORS {
@@ -12085,6 +16717,7 @@ class Service_Spec_Config_HTTP_CORS$Type extends MessageType<Service_Spec_Config
         message.exposeHeaders = "";
         message.maxAge = "";
         message.allowCredentials = false;
+        message.allowClusterServices = false;
         if (value !== undefined)
             reflectionMergePartial<Service_Spec_Config_HTTP_CORS>(this, message, value);
         return message;
@@ -12111,6 +16744,9 @@ class Service_Spec_Config_HTTP_CORS$Type extends MessageType<Service_Spec_Config
                     break;
                 case /* bool allowCredentials */ 6:
                     message.allowCredentials = reader.bool();
+                    break;
+                case /* bool allowClusterServices */ 7:
+                    message.allowClusterServices = reader.bool();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -12142,6 +16778,9 @@ class Service_Spec_Config_HTTP_CORS$Type extends MessageType<Service_Spec_Config
         /* bool allowCredentials = 6; */
         if (message.allowCredentials !== false)
             writer.tag(6, WireType.Varint).bool(message.allowCredentials);
+        /* bool allowClusterServices = 7; */
+        if (message.allowClusterServices !== false)
+            writer.tag(7, WireType.Varint).bool(message.allowClusterServices);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -14749,6 +19388,733 @@ class Service_Spec_Config_HTTP_Visibility$Type extends MessageType<Service_Spec_
  * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.HTTP.Visibility
  */
 export const Service_Spec_Config_HTTP_Visibility = new Service_Spec_Config_HTTP_Visibility$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_MCP$Type extends MessageType<Service_Spec_Config_MCP> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.MCP", [
+            { no: 1, name: "endpoint", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "protocol", kind: "message", T: () => Service_Spec_Config_MCP_Protocol },
+            { no: 3, name: "limits", kind: "message", T: () => Service_Spec_Config_MCP_Limits },
+            { no: 4, name: "auth", kind: "message", T: () => Service_Spec_Config_HTTP_Auth },
+            { no: 5, name: "header", kind: "message", T: () => Service_Spec_Config_HTTP_Header },
+            { no: 6, name: "path", kind: "message", T: () => Service_Spec_Config_HTTP_Path },
+            { no: 7, name: "plugins", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_HTTP_Plugin },
+            { no: 8, name: "isUpstreamHTTP2", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 9, name: "listenHTTP2", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 10, name: "visibility", kind: "message", T: () => Service_Spec_Config_MCP_Visibility },
+            { no: 11, name: "cors", kind: "message", T: () => Service_Spec_Config_HTTP_CORS },
+            { no: 12, name: "disableOriginCheck", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_MCP>): Service_Spec_Config_MCP {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.endpoint = "";
+        message.plugins = [];
+        message.isUpstreamHTTP2 = false;
+        message.listenHTTP2 = false;
+        message.disableOriginCheck = false;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_MCP>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_MCP): Service_Spec_Config_MCP {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string endpoint */ 1:
+                    message.endpoint = reader.string();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.MCP.Protocol protocol */ 2:
+                    message.protocol = Service_Spec_Config_MCP_Protocol.internalBinaryRead(reader, reader.uint32(), options, message.protocol);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.MCP.Limits limits */ 3:
+                    message.limits = Service_Spec_Config_MCP_Limits.internalBinaryRead(reader, reader.uint32(), options, message.limits);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth auth */ 4:
+                    message.auth = Service_Spec_Config_HTTP_Auth.internalBinaryRead(reader, reader.uint32(), options, message.auth);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header header */ 5:
+                    message.header = Service_Spec_Config_HTTP_Header.internalBinaryRead(reader, reader.uint32(), options, message.header);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Path path */ 6:
+                    message.path = Service_Spec_Config_HTTP_Path.internalBinaryRead(reader, reader.uint32(), options, message.path);
+                    break;
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin plugins */ 7:
+                    message.plugins.push(Service_Spec_Config_HTTP_Plugin.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* bool isUpstreamHTTP2 */ 8:
+                    message.isUpstreamHTTP2 = reader.bool();
+                    break;
+                case /* bool listenHTTP2 */ 9:
+                    message.listenHTTP2 = reader.bool();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.MCP.Visibility visibility */ 10:
+                    message.visibility = Service_Spec_Config_MCP_Visibility.internalBinaryRead(reader, reader.uint32(), options, message.visibility);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.CORS cors */ 11:
+                    message.cors = Service_Spec_Config_HTTP_CORS.internalBinaryRead(reader, reader.uint32(), options, message.cors);
+                    break;
+                case /* bool disableOriginCheck */ 12:
+                    message.disableOriginCheck = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_MCP, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string endpoint = 1; */
+        if (message.endpoint !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.endpoint);
+        /* octelium.api.main.core.v1.Service.Spec.Config.MCP.Protocol protocol = 2; */
+        if (message.protocol)
+            Service_Spec_Config_MCP_Protocol.internalBinaryWrite(message.protocol, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.MCP.Limits limits = 3; */
+        if (message.limits)
+            Service_Spec_Config_MCP_Limits.internalBinaryWrite(message.limits, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth auth = 4; */
+        if (message.auth)
+            Service_Spec_Config_HTTP_Auth.internalBinaryWrite(message.auth, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header header = 5; */
+        if (message.header)
+            Service_Spec_Config_HTTP_Header.internalBinaryWrite(message.header, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Path path = 6; */
+        if (message.path)
+            Service_Spec_Config_HTTP_Path.internalBinaryWrite(message.path, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin plugins = 7; */
+        for (let i = 0; i < message.plugins.length; i++)
+            Service_Spec_Config_HTTP_Plugin.internalBinaryWrite(message.plugins[i], writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        /* bool isUpstreamHTTP2 = 8; */
+        if (message.isUpstreamHTTP2 !== false)
+            writer.tag(8, WireType.Varint).bool(message.isUpstreamHTTP2);
+        /* bool listenHTTP2 = 9; */
+        if (message.listenHTTP2 !== false)
+            writer.tag(9, WireType.Varint).bool(message.listenHTTP2);
+        /* octelium.api.main.core.v1.Service.Spec.Config.MCP.Visibility visibility = 10; */
+        if (message.visibility)
+            Service_Spec_Config_MCP_Visibility.internalBinaryWrite(message.visibility, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.CORS cors = 11; */
+        if (message.cors)
+            Service_Spec_Config_HTTP_CORS.internalBinaryWrite(message.cors, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
+        /* bool disableOriginCheck = 12; */
+        if (message.disableOriginCheck !== false)
+            writer.tag(12, WireType.Varint).bool(message.disableOriginCheck);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.MCP
+ */
+export const Service_Spec_Config_MCP = new Service_Spec_Config_MCP$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_MCP_Protocol$Type extends MessageType<Service_Spec_Config_MCP_Protocol> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.MCP.Protocol", [
+            { no: 1, name: "versions", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "requireVersion", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "rejectUnknownMethods", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_MCP_Protocol>): Service_Spec_Config_MCP_Protocol {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.versions = [];
+        message.requireVersion = false;
+        message.rejectUnknownMethods = false;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_MCP_Protocol>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_MCP_Protocol): Service_Spec_Config_MCP_Protocol {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated string versions */ 1:
+                    message.versions.push(reader.string());
+                    break;
+                case /* bool requireVersion */ 2:
+                    message.requireVersion = reader.bool();
+                    break;
+                case /* bool rejectUnknownMethods */ 3:
+                    message.rejectUnknownMethods = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_MCP_Protocol, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated string versions = 1; */
+        for (let i = 0; i < message.versions.length; i++)
+            writer.tag(1, WireType.LengthDelimited).string(message.versions[i]);
+        /* bool requireVersion = 2; */
+        if (message.requireVersion !== false)
+            writer.tag(2, WireType.Varint).bool(message.requireVersion);
+        /* bool rejectUnknownMethods = 3; */
+        if (message.rejectUnknownMethods !== false)
+            writer.tag(3, WireType.Varint).bool(message.rejectUnknownMethods);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.MCP.Protocol
+ */
+export const Service_Spec_Config_MCP_Protocol = new Service_Spec_Config_MCP_Protocol$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_MCP_Limits$Type extends MessageType<Service_Spec_Config_MCP_Limits> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.MCP.Limits", [
+            { no: 1, name: "maxRequestBytes", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 2, name: "maxStreamEventBytes", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_MCP_Limits>): Service_Spec_Config_MCP_Limits {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.maxRequestBytes = 0;
+        message.maxStreamEventBytes = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_MCP_Limits>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_MCP_Limits): Service_Spec_Config_MCP_Limits {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* uint32 maxRequestBytes */ 1:
+                    message.maxRequestBytes = reader.uint32();
+                    break;
+                case /* uint32 maxStreamEventBytes */ 2:
+                    message.maxStreamEventBytes = reader.uint32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_MCP_Limits, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* uint32 maxRequestBytes = 1; */
+        if (message.maxRequestBytes !== 0)
+            writer.tag(1, WireType.Varint).uint32(message.maxRequestBytes);
+        /* uint32 maxStreamEventBytes = 2; */
+        if (message.maxStreamEventBytes !== 0)
+            writer.tag(2, WireType.Varint).uint32(message.maxStreamEventBytes);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.MCP.Limits
+ */
+export const Service_Spec_Config_MCP_Limits = new Service_Spec_Config_MCP_Limits$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_MCP_Visibility$Type extends MessageType<Service_Spec_Config_MCP_Visibility> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.MCP.Visibility", [
+            { no: 1, name: "disableRequestBody", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "disableResponseBody", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "includeRequestHeaders", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "includeResponseHeaders", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "includeAllRequestHeaders", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 6, name: "includeAllResponseHeaders", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 7, name: "excludeRequestHeaders", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "excludeResponseHeaders", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_MCP_Visibility>): Service_Spec_Config_MCP_Visibility {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.disableRequestBody = false;
+        message.disableResponseBody = false;
+        message.includeRequestHeaders = [];
+        message.includeResponseHeaders = [];
+        message.includeAllRequestHeaders = false;
+        message.includeAllResponseHeaders = false;
+        message.excludeRequestHeaders = [];
+        message.excludeResponseHeaders = [];
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_MCP_Visibility>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_MCP_Visibility): Service_Spec_Config_MCP_Visibility {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool disableRequestBody */ 1:
+                    message.disableRequestBody = reader.bool();
+                    break;
+                case /* bool disableResponseBody */ 2:
+                    message.disableResponseBody = reader.bool();
+                    break;
+                case /* repeated string includeRequestHeaders */ 3:
+                    message.includeRequestHeaders.push(reader.string());
+                    break;
+                case /* repeated string includeResponseHeaders */ 4:
+                    message.includeResponseHeaders.push(reader.string());
+                    break;
+                case /* bool includeAllRequestHeaders */ 5:
+                    message.includeAllRequestHeaders = reader.bool();
+                    break;
+                case /* bool includeAllResponseHeaders */ 6:
+                    message.includeAllResponseHeaders = reader.bool();
+                    break;
+                case /* repeated string excludeRequestHeaders */ 7:
+                    message.excludeRequestHeaders.push(reader.string());
+                    break;
+                case /* repeated string excludeResponseHeaders */ 8:
+                    message.excludeResponseHeaders.push(reader.string());
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_MCP_Visibility, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool disableRequestBody = 1; */
+        if (message.disableRequestBody !== false)
+            writer.tag(1, WireType.Varint).bool(message.disableRequestBody);
+        /* bool disableResponseBody = 2; */
+        if (message.disableResponseBody !== false)
+            writer.tag(2, WireType.Varint).bool(message.disableResponseBody);
+        /* repeated string includeRequestHeaders = 3; */
+        for (let i = 0; i < message.includeRequestHeaders.length; i++)
+            writer.tag(3, WireType.LengthDelimited).string(message.includeRequestHeaders[i]);
+        /* repeated string includeResponseHeaders = 4; */
+        for (let i = 0; i < message.includeResponseHeaders.length; i++)
+            writer.tag(4, WireType.LengthDelimited).string(message.includeResponseHeaders[i]);
+        /* bool includeAllRequestHeaders = 5; */
+        if (message.includeAllRequestHeaders !== false)
+            writer.tag(5, WireType.Varint).bool(message.includeAllRequestHeaders);
+        /* bool includeAllResponseHeaders = 6; */
+        if (message.includeAllResponseHeaders !== false)
+            writer.tag(6, WireType.Varint).bool(message.includeAllResponseHeaders);
+        /* repeated string excludeRequestHeaders = 7; */
+        for (let i = 0; i < message.excludeRequestHeaders.length; i++)
+            writer.tag(7, WireType.LengthDelimited).string(message.excludeRequestHeaders[i]);
+        /* repeated string excludeResponseHeaders = 8; */
+        for (let i = 0; i < message.excludeResponseHeaders.length; i++)
+            writer.tag(8, WireType.LengthDelimited).string(message.excludeResponseHeaders[i]);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.MCP.Visibility
+ */
+export const Service_Spec_Config_MCP_Visibility = new Service_Spec_Config_MCP_Visibility$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM$Type extends MessageType<Service_Spec_Config_LLM> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM", [
+            { no: 1, name: "protocol", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol", Service_Spec_Config_LLM_Protocol] },
+            { no: 2, name: "model", kind: "message", T: () => Service_Spec_Config_LLM_Model },
+            { no: 3, name: "limits", kind: "message", T: () => Service_Spec_Config_LLM_Limits },
+            { no: 4, name: "auth", kind: "message", T: () => Service_Spec_Config_HTTP_Auth },
+            { no: 5, name: "header", kind: "message", T: () => Service_Spec_Config_HTTP_Header },
+            { no: 6, name: "path", kind: "message", T: () => Service_Spec_Config_HTTP_Path },
+            { no: 7, name: "plugins", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_HTTP_Plugin },
+            { no: 8, name: "isUpstreamHTTP2", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 9, name: "listenHTTP2", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 10, name: "visibility", kind: "message", T: () => Service_Spec_Config_LLM_Visibility },
+            { no: 11, name: "cors", kind: "message", T: () => Service_Spec_Config_HTTP_CORS }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM>): Service_Spec_Config_LLM {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.protocol = 0;
+        message.plugins = [];
+        message.isUpstreamHTTP2 = false;
+        message.listenHTTP2 = false;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM): Service_Spec_Config_LLM {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol */ 1:
+                    message.protocol = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Model model */ 2:
+                    message.model = Service_Spec_Config_LLM_Model.internalBinaryRead(reader, reader.uint32(), options, message.model);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Limits limits */ 3:
+                    message.limits = Service_Spec_Config_LLM_Limits.internalBinaryRead(reader, reader.uint32(), options, message.limits);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth auth */ 4:
+                    message.auth = Service_Spec_Config_HTTP_Auth.internalBinaryRead(reader, reader.uint32(), options, message.auth);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header header */ 5:
+                    message.header = Service_Spec_Config_HTTP_Header.internalBinaryRead(reader, reader.uint32(), options, message.header);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Path path */ 6:
+                    message.path = Service_Spec_Config_HTTP_Path.internalBinaryRead(reader, reader.uint32(), options, message.path);
+                    break;
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin plugins */ 7:
+                    message.plugins.push(Service_Spec_Config_HTTP_Plugin.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* bool isUpstreamHTTP2 */ 8:
+                    message.isUpstreamHTTP2 = reader.bool();
+                    break;
+                case /* bool listenHTTP2 */ 9:
+                    message.listenHTTP2 = reader.bool();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Visibility visibility */ 10:
+                    message.visibility = Service_Spec_Config_LLM_Visibility.internalBinaryRead(reader, reader.uint32(), options, message.visibility);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.CORS cors */ 11:
+                    message.cors = Service_Spec_Config_HTTP_CORS.internalBinaryRead(reader, reader.uint32(), options, message.cors);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol = 1; */
+        if (message.protocol !== 0)
+            writer.tag(1, WireType.Varint).int32(message.protocol);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Model model = 2; */
+        if (message.model)
+            Service_Spec_Config_LLM_Model.internalBinaryWrite(message.model, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Limits limits = 3; */
+        if (message.limits)
+            Service_Spec_Config_LLM_Limits.internalBinaryWrite(message.limits, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth auth = 4; */
+        if (message.auth)
+            Service_Spec_Config_HTTP_Auth.internalBinaryWrite(message.auth, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Header header = 5; */
+        if (message.header)
+            Service_Spec_Config_HTTP_Header.internalBinaryWrite(message.header, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Path path = 6; */
+        if (message.path)
+            Service_Spec_Config_HTTP_Path.internalBinaryWrite(message.path, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin plugins = 7; */
+        for (let i = 0; i < message.plugins.length; i++)
+            Service_Spec_Config_HTTP_Plugin.internalBinaryWrite(message.plugins[i], writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        /* bool isUpstreamHTTP2 = 8; */
+        if (message.isUpstreamHTTP2 !== false)
+            writer.tag(8, WireType.Varint).bool(message.isUpstreamHTTP2);
+        /* bool listenHTTP2 = 9; */
+        if (message.listenHTTP2 !== false)
+            writer.tag(9, WireType.Varint).bool(message.listenHTTP2);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Visibility visibility = 10; */
+        if (message.visibility)
+            Service_Spec_Config_LLM_Visibility.internalBinaryWrite(message.visibility, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.CORS cors = 11; */
+        if (message.cors)
+            Service_Spec_Config_HTTP_CORS.internalBinaryWrite(message.cors, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM
+ */
+export const Service_Spec_Config_LLM = new Service_Spec_Config_LLM$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Model$Type extends MessageType<Service_Spec_Config_LLM_Model> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Model", [
+            { no: 1, name: "value", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "eval", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Model>): Service_Spec_Config_LLM_Model {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Model>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Model): Service_Spec_Config_LLM_Model {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string value */ 1:
+                    message.type = {
+                        oneofKind: "value",
+                        value: reader.string()
+                    };
+                    break;
+                case /* string eval */ 2:
+                    message.type = {
+                        oneofKind: "eval",
+                        eval: reader.string()
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Model, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string value = 1; */
+        if (message.type.oneofKind === "value")
+            writer.tag(1, WireType.LengthDelimited).string(message.type.value);
+        /* string eval = 2; */
+        if (message.type.oneofKind === "eval")
+            writer.tag(2, WireType.LengthDelimited).string(message.type.eval);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Model
+ */
+export const Service_Spec_Config_LLM_Model = new Service_Spec_Config_LLM_Model$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Limits$Type extends MessageType<Service_Spec_Config_LLM_Limits> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Limits", [
+            { no: 1, name: "maxRequestBytes", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 2, name: "maxStreamEventBytes", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 3, name: "maxEstimatedInputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 4, name: "maxOutputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 5, name: "maxTools", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Limits>): Service_Spec_Config_LLM_Limits {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.maxRequestBytes = 0;
+        message.maxStreamEventBytes = 0;
+        message.maxEstimatedInputTokens = 0;
+        message.maxOutputTokens = 0;
+        message.maxTools = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Limits>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Limits): Service_Spec_Config_LLM_Limits {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* uint32 maxRequestBytes */ 1:
+                    message.maxRequestBytes = reader.uint32();
+                    break;
+                case /* uint32 maxStreamEventBytes */ 2:
+                    message.maxStreamEventBytes = reader.uint32();
+                    break;
+                case /* uint64 maxEstimatedInputTokens */ 3:
+                    message.maxEstimatedInputTokens = reader.uint64().toNumber();
+                    break;
+                case /* uint64 maxOutputTokens */ 4:
+                    message.maxOutputTokens = reader.uint64().toNumber();
+                    break;
+                case /* uint32 maxTools */ 5:
+                    message.maxTools = reader.uint32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Limits, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* uint32 maxRequestBytes = 1; */
+        if (message.maxRequestBytes !== 0)
+            writer.tag(1, WireType.Varint).uint32(message.maxRequestBytes);
+        /* uint32 maxStreamEventBytes = 2; */
+        if (message.maxStreamEventBytes !== 0)
+            writer.tag(2, WireType.Varint).uint32(message.maxStreamEventBytes);
+        /* uint64 maxEstimatedInputTokens = 3; */
+        if (message.maxEstimatedInputTokens !== 0)
+            writer.tag(3, WireType.Varint).uint64(message.maxEstimatedInputTokens);
+        /* uint64 maxOutputTokens = 4; */
+        if (message.maxOutputTokens !== 0)
+            writer.tag(4, WireType.Varint).uint64(message.maxOutputTokens);
+        /* uint32 maxTools = 5; */
+        if (message.maxTools !== 0)
+            writer.tag(5, WireType.Varint).uint32(message.maxTools);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Limits
+ */
+export const Service_Spec_Config_LLM_Limits = new Service_Spec_Config_LLM_Limits$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Visibility$Type extends MessageType<Service_Spec_Config_LLM_Visibility> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Visibility", [
+            { no: 1, name: "enableRequestBody", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "enableRequestBodyMap", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "enableResponseBody", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 4, name: "enableResponseBodyMap", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 5, name: "includeRequestHeaders", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "includeResponseHeaders", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "includeAllRequestHeaders", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 8, name: "includeAllResponseHeaders", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 9, name: "excludeRequestHeaders", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 10, name: "excludeResponseHeaders", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Visibility>): Service_Spec_Config_LLM_Visibility {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.enableRequestBody = false;
+        message.enableRequestBodyMap = false;
+        message.enableResponseBody = false;
+        message.enableResponseBodyMap = false;
+        message.includeRequestHeaders = [];
+        message.includeResponseHeaders = [];
+        message.includeAllRequestHeaders = false;
+        message.includeAllResponseHeaders = false;
+        message.excludeRequestHeaders = [];
+        message.excludeResponseHeaders = [];
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Visibility>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Visibility): Service_Spec_Config_LLM_Visibility {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool enableRequestBody */ 1:
+                    message.enableRequestBody = reader.bool();
+                    break;
+                case /* bool enableRequestBodyMap */ 2:
+                    message.enableRequestBodyMap = reader.bool();
+                    break;
+                case /* bool enableResponseBody */ 3:
+                    message.enableResponseBody = reader.bool();
+                    break;
+                case /* bool enableResponseBodyMap */ 4:
+                    message.enableResponseBodyMap = reader.bool();
+                    break;
+                case /* repeated string includeRequestHeaders */ 5:
+                    message.includeRequestHeaders.push(reader.string());
+                    break;
+                case /* repeated string includeResponseHeaders */ 6:
+                    message.includeResponseHeaders.push(reader.string());
+                    break;
+                case /* bool includeAllRequestHeaders */ 7:
+                    message.includeAllRequestHeaders = reader.bool();
+                    break;
+                case /* bool includeAllResponseHeaders */ 8:
+                    message.includeAllResponseHeaders = reader.bool();
+                    break;
+                case /* repeated string excludeRequestHeaders */ 9:
+                    message.excludeRequestHeaders.push(reader.string());
+                    break;
+                case /* repeated string excludeResponseHeaders */ 10:
+                    message.excludeResponseHeaders.push(reader.string());
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Visibility, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool enableRequestBody = 1; */
+        if (message.enableRequestBody !== false)
+            writer.tag(1, WireType.Varint).bool(message.enableRequestBody);
+        /* bool enableRequestBodyMap = 2; */
+        if (message.enableRequestBodyMap !== false)
+            writer.tag(2, WireType.Varint).bool(message.enableRequestBodyMap);
+        /* bool enableResponseBody = 3; */
+        if (message.enableResponseBody !== false)
+            writer.tag(3, WireType.Varint).bool(message.enableResponseBody);
+        /* bool enableResponseBodyMap = 4; */
+        if (message.enableResponseBodyMap !== false)
+            writer.tag(4, WireType.Varint).bool(message.enableResponseBodyMap);
+        /* repeated string includeRequestHeaders = 5; */
+        for (let i = 0; i < message.includeRequestHeaders.length; i++)
+            writer.tag(5, WireType.LengthDelimited).string(message.includeRequestHeaders[i]);
+        /* repeated string includeResponseHeaders = 6; */
+        for (let i = 0; i < message.includeResponseHeaders.length; i++)
+            writer.tag(6, WireType.LengthDelimited).string(message.includeResponseHeaders[i]);
+        /* bool includeAllRequestHeaders = 7; */
+        if (message.includeAllRequestHeaders !== false)
+            writer.tag(7, WireType.Varint).bool(message.includeAllRequestHeaders);
+        /* bool includeAllResponseHeaders = 8; */
+        if (message.includeAllResponseHeaders !== false)
+            writer.tag(8, WireType.Varint).bool(message.includeAllResponseHeaders);
+        /* repeated string excludeRequestHeaders = 9; */
+        for (let i = 0; i < message.excludeRequestHeaders.length; i++)
+            writer.tag(9, WireType.LengthDelimited).string(message.excludeRequestHeaders[i]);
+        /* repeated string excludeResponseHeaders = 10; */
+        for (let i = 0; i < message.excludeResponseHeaders.length; i++)
+            writer.tag(10, WireType.LengthDelimited).string(message.excludeResponseHeaders[i]);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Visibility
+ */
+export const Service_Spec_Config_LLM_Visibility = new Service_Spec_Config_LLM_Visibility$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Service_Spec_Config_SSH$Type extends MessageType<Service_Spec_Config_SSH> {
     constructor() {
@@ -21024,7 +26390,8 @@ class Credential_Status$Type extends MessageType<Credential_Status> {
             { no: 4, name: "lastRotationAt", kind: "message", T: () => Timestamp },
             { no: 5, name: "totalRotations", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 6, name: "totalAuthentications", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 7, name: "isLocked", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 7, name: "isLocked", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 8, name: "pkce", kind: "message", T: () => Credential_Status_PKCE }
         ]);
     }
     create(value?: PartialMessage<Credential_Status>): Credential_Status {
@@ -21064,6 +26431,9 @@ class Credential_Status$Type extends MessageType<Credential_Status> {
                 case /* bool isLocked */ 7:
                     message.isLocked = reader.bool();
                     break;
+                case /* octelium.api.main.core.v1.Credential.Status.PKCE pkce */ 8:
+                    message.pkce = Credential_Status_PKCE.internalBinaryRead(reader, reader.uint32(), options, message.pkce);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -21097,6 +26467,9 @@ class Credential_Status$Type extends MessageType<Credential_Status> {
         /* bool isLocked = 7; */
         if (message.isLocked !== false)
             writer.tag(7, WireType.Varint).bool(message.isLocked);
+        /* octelium.api.main.core.v1.Credential.Status.PKCE pkce = 8; */
+        if (message.pkce)
+            Credential_Status_PKCE.internalBinaryWrite(message.pkce, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -21107,6 +26480,53 @@ class Credential_Status$Type extends MessageType<Credential_Status> {
  * @generated MessageType for protobuf message octelium.api.main.core.v1.Credential.Status
  */
 export const Credential_Status = new Credential_Status$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Credential_Status_PKCE$Type extends MessageType<Credential_Status_PKCE> {
+    constructor() {
+        super("octelium.api.main.core.v1.Credential.Status.PKCE", [
+            { no: 1, name: "codeChallenge", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Credential_Status_PKCE>): Credential_Status_PKCE {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.codeChallenge = new Uint8Array(0);
+        if (value !== undefined)
+            reflectionMergePartial<Credential_Status_PKCE>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Credential_Status_PKCE): Credential_Status_PKCE {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bytes codeChallenge */ 1:
+                    message.codeChallenge = reader.bytes();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Credential_Status_PKCE, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bytes codeChallenge = 1; */
+        if (message.codeChallenge.length)
+            writer.tag(1, WireType.LengthDelimited).bytes(message.codeChallenge);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Credential.Status.PKCE
+ */
+export const Credential_Status_PKCE = new Credential_Status_PKCE$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class CredentialList$Type extends MessageType<CredentialList> {
     constructor() {
@@ -24026,7 +29446,9 @@ class AccessLog_Entry_Info$Type extends MessageType<AccessLog_Entry_Info> {
             { no: 7, name: "grpc", kind: "message", oneof: "type", T: () => AccessLog_Entry_Info_GRPC },
             { no: 8, name: "mysql", kind: "message", oneof: "type", T: () => AccessLog_Entry_Info_MySQL },
             { no: 9, name: "dns", kind: "message", oneof: "type", T: () => AccessLog_Entry_Info_DNS },
-            { no: 10, name: "socks5", kind: "message", oneof: "type", T: () => AccessLog_Entry_Info_SOCKS5 }
+            { no: 10, name: "socks5", kind: "message", oneof: "type", T: () => AccessLog_Entry_Info_SOCKS5 },
+            { no: 11, name: "mcp", kind: "message", oneof: "type", T: () => AccessLog_Entry_Info_MCP },
+            { no: 12, name: "llm", kind: "message", oneof: "type", T: () => AccessLog_Entry_Info_LLM }
         ]);
     }
     create(value?: PartialMessage<AccessLog_Entry_Info>): AccessLog_Entry_Info {
@@ -24101,6 +29523,18 @@ class AccessLog_Entry_Info$Type extends MessageType<AccessLog_Entry_Info> {
                         socks5: AccessLog_Entry_Info_SOCKS5.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).socks5)
                     };
                     break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.MCP mcp */ 11:
+                    message.type = {
+                        oneofKind: "mcp",
+                        mcp: AccessLog_Entry_Info_MCP.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).mcp)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM llm */ 12:
+                    message.type = {
+                        oneofKind: "llm",
+                        llm: AccessLog_Entry_Info_LLM.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).llm)
+                    };
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -24143,6 +29577,12 @@ class AccessLog_Entry_Info$Type extends MessageType<AccessLog_Entry_Info> {
         /* octelium.api.main.core.v1.AccessLog.Entry.Info.SOCKS5 socks5 = 10; */
         if (message.type.oneofKind === "socks5")
             AccessLog_Entry_Info_SOCKS5.internalBinaryWrite(message.type.socks5, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.MCP mcp = 11; */
+        if (message.type.oneofKind === "mcp")
+            AccessLog_Entry_Info_MCP.internalBinaryWrite(message.type.mcp, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM llm = 12; */
+        if (message.type.oneofKind === "llm")
+            AccessLog_Entry_Info_LLM.internalBinaryWrite(message.type.llm, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -25911,6 +31351,485 @@ class AccessLog_Entry_Info_SOCKS5$Type extends MessageType<AccessLog_Entry_Info_
  * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.SOCKS5
  */
 export const AccessLog_Entry_Info_SOCKS5 = new AccessLog_Entry_Info_SOCKS5$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AccessLog_Entry_Info_MCP$Type extends MessageType<AccessLog_Entry_Info_MCP> {
+    constructor() {
+        super("octelium.api.main.core.v1.AccessLog.Entry.Info.MCP", [
+            { no: 1, name: "http", kind: "message", T: () => AccessLog_Entry_Info_HTTP },
+            { no: 2, name: "type", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.MCP.Type", AccessLog_Entry_Info_MCP_Type] },
+            { no: 3, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "method", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "requestID", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "isNotification", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 8, name: "resultType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 9, name: "isProtocolError", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 10, name: "errorCode", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 11, name: "errorMessage", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 12, name: "isToolError", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 13, name: "eventCount", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 14, name: "notificationCount", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 15, name: "ttlMs", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 16, name: "cacheScope", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 17, name: "client", kind: "message", T: () => AccessLog_Entry_Info_MCP_Client },
+            { no: 18, name: "sessionID", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<AccessLog_Entry_Info_MCP>): AccessLog_Entry_Info_MCP {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = 0;
+        message.protocolVersion = "";
+        message.method = "";
+        message.name = "";
+        message.requestID = "";
+        message.isNotification = false;
+        message.resultType = "";
+        message.isProtocolError = false;
+        message.errorCode = 0;
+        message.errorMessage = "";
+        message.isToolError = false;
+        message.eventCount = 0;
+        message.notificationCount = 0;
+        message.ttlMs = 0;
+        message.cacheScope = "";
+        message.sessionID = "";
+        if (value !== undefined)
+            reflectionMergePartial<AccessLog_Entry_Info_MCP>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AccessLog_Entry_Info_MCP): AccessLog_Entry_Info_MCP {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.HTTP http */ 1:
+                    message.http = AccessLog_Entry_Info_HTTP.internalBinaryRead(reader, reader.uint32(), options, message.http);
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.MCP.Type type */ 2:
+                    message.type = reader.int32();
+                    break;
+                case /* string protocolVersion */ 3:
+                    message.protocolVersion = reader.string();
+                    break;
+                case /* string method */ 4:
+                    message.method = reader.string();
+                    break;
+                case /* string name */ 5:
+                    message.name = reader.string();
+                    break;
+                case /* string requestID */ 6:
+                    message.requestID = reader.string();
+                    break;
+                case /* bool isNotification */ 7:
+                    message.isNotification = reader.bool();
+                    break;
+                case /* string resultType */ 8:
+                    message.resultType = reader.string();
+                    break;
+                case /* bool isProtocolError */ 9:
+                    message.isProtocolError = reader.bool();
+                    break;
+                case /* int32 errorCode */ 10:
+                    message.errorCode = reader.int32();
+                    break;
+                case /* string errorMessage */ 11:
+                    message.errorMessage = reader.string();
+                    break;
+                case /* bool isToolError */ 12:
+                    message.isToolError = reader.bool();
+                    break;
+                case /* uint64 eventCount */ 13:
+                    message.eventCount = reader.uint64().toNumber();
+                    break;
+                case /* uint64 notificationCount */ 14:
+                    message.notificationCount = reader.uint64().toNumber();
+                    break;
+                case /* uint64 ttlMs */ 15:
+                    message.ttlMs = reader.uint64().toNumber();
+                    break;
+                case /* string cacheScope */ 16:
+                    message.cacheScope = reader.string();
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.MCP.Client client */ 17:
+                    message.client = AccessLog_Entry_Info_MCP_Client.internalBinaryRead(reader, reader.uint32(), options, message.client);
+                    break;
+                case /* string sessionID */ 18:
+                    message.sessionID = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AccessLog_Entry_Info_MCP, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.HTTP http = 1; */
+        if (message.http)
+            AccessLog_Entry_Info_HTTP.internalBinaryWrite(message.http, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.MCP.Type type = 2; */
+        if (message.type !== 0)
+            writer.tag(2, WireType.Varint).int32(message.type);
+        /* string protocolVersion = 3; */
+        if (message.protocolVersion !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.protocolVersion);
+        /* string method = 4; */
+        if (message.method !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.method);
+        /* string name = 5; */
+        if (message.name !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.name);
+        /* string requestID = 6; */
+        if (message.requestID !== "")
+            writer.tag(6, WireType.LengthDelimited).string(message.requestID);
+        /* bool isNotification = 7; */
+        if (message.isNotification !== false)
+            writer.tag(7, WireType.Varint).bool(message.isNotification);
+        /* string resultType = 8; */
+        if (message.resultType !== "")
+            writer.tag(8, WireType.LengthDelimited).string(message.resultType);
+        /* bool isProtocolError = 9; */
+        if (message.isProtocolError !== false)
+            writer.tag(9, WireType.Varint).bool(message.isProtocolError);
+        /* int32 errorCode = 10; */
+        if (message.errorCode !== 0)
+            writer.tag(10, WireType.Varint).int32(message.errorCode);
+        /* string errorMessage = 11; */
+        if (message.errorMessage !== "")
+            writer.tag(11, WireType.LengthDelimited).string(message.errorMessage);
+        /* bool isToolError = 12; */
+        if (message.isToolError !== false)
+            writer.tag(12, WireType.Varint).bool(message.isToolError);
+        /* uint64 eventCount = 13; */
+        if (message.eventCount !== 0)
+            writer.tag(13, WireType.Varint).uint64(message.eventCount);
+        /* uint64 notificationCount = 14; */
+        if (message.notificationCount !== 0)
+            writer.tag(14, WireType.Varint).uint64(message.notificationCount);
+        /* uint64 ttlMs = 15; */
+        if (message.ttlMs !== 0)
+            writer.tag(15, WireType.Varint).uint64(message.ttlMs);
+        /* string cacheScope = 16; */
+        if (message.cacheScope !== "")
+            writer.tag(16, WireType.LengthDelimited).string(message.cacheScope);
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.MCP.Client client = 17; */
+        if (message.client)
+            AccessLog_Entry_Info_MCP_Client.internalBinaryWrite(message.client, writer.tag(17, WireType.LengthDelimited).fork(), options).join();
+        /* string sessionID = 18; */
+        if (message.sessionID !== "")
+            writer.tag(18, WireType.LengthDelimited).string(message.sessionID);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.MCP
+ */
+export const AccessLog_Entry_Info_MCP = new AccessLog_Entry_Info_MCP$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AccessLog_Entry_Info_MCP_Client$Type extends MessageType<AccessLog_Entry_Info_MCP_Client> {
+    constructor() {
+        super("octelium.api.main.core.v1.AccessLog.Entry.Info.MCP.Client", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "title", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<AccessLog_Entry_Info_MCP_Client>): AccessLog_Entry_Info_MCP_Client {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.name = "";
+        message.version = "";
+        message.title = "";
+        if (value !== undefined)
+            reflectionMergePartial<AccessLog_Entry_Info_MCP_Client>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AccessLog_Entry_Info_MCP_Client): AccessLog_Entry_Info_MCP_Client {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* string version */ 2:
+                    message.version = reader.string();
+                    break;
+                case /* string title */ 3:
+                    message.title = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AccessLog_Entry_Info_MCP_Client, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* string version = 2; */
+        if (message.version !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.version);
+        /* string title = 3; */
+        if (message.title !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.title);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.MCP.Client
+ */
+export const AccessLog_Entry_Info_MCP_Client = new AccessLog_Entry_Info_MCP_Client$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AccessLog_Entry_Info_LLM$Type extends MessageType<AccessLog_Entry_Info_LLM> {
+    constructor() {
+        super("octelium.api.main.core.v1.AccessLog.Entry.Info.LLM", [
+            { no: 1, name: "http", kind: "message", T: () => AccessLog_Entry_Info_HTTP },
+            { no: 2, name: "type", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Type", AccessLog_Entry_Info_LLM_Type] },
+            { no: 3, name: "protocol", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol", Service_Spec_Config_LLM_Protocol] },
+            { no: 4, name: "operation", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Operation", AccessLog_Entry_Info_LLM_Operation] },
+            { no: 5, name: "requestedModel", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "model", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "stream", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 8, name: "usage", kind: "message", T: () => AccessLog_Entry_Info_LLM_Usage },
+            { no: 9, name: "estimatedInputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 10, name: "responseID", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 11, name: "finishReason", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 12, name: "timeToFirstToken", kind: "message", T: () => Duration },
+            { no: 13, name: "eventCount", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ }
+        ]);
+    }
+    create(value?: PartialMessage<AccessLog_Entry_Info_LLM>): AccessLog_Entry_Info_LLM {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = 0;
+        message.protocol = 0;
+        message.operation = 0;
+        message.requestedModel = "";
+        message.model = "";
+        message.stream = false;
+        message.estimatedInputTokens = 0;
+        message.responseID = "";
+        message.finishReason = "";
+        message.eventCount = 0;
+        if (value !== undefined)
+            reflectionMergePartial<AccessLog_Entry_Info_LLM>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AccessLog_Entry_Info_LLM): AccessLog_Entry_Info_LLM {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.HTTP http */ 1:
+                    message.http = AccessLog_Entry_Info_HTTP.internalBinaryRead(reader, reader.uint32(), options, message.http);
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Type type */ 2:
+                    message.type = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol */ 3:
+                    message.protocol = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Operation operation */ 4:
+                    message.operation = reader.int32();
+                    break;
+                case /* string requestedModel */ 5:
+                    message.requestedModel = reader.string();
+                    break;
+                case /* string model */ 6:
+                    message.model = reader.string();
+                    break;
+                case /* bool stream */ 7:
+                    message.stream = reader.bool();
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage usage */ 8:
+                    message.usage = AccessLog_Entry_Info_LLM_Usage.internalBinaryRead(reader, reader.uint32(), options, message.usage);
+                    break;
+                case /* uint64 estimatedInputTokens */ 9:
+                    message.estimatedInputTokens = reader.uint64().toNumber();
+                    break;
+                case /* string responseID */ 10:
+                    message.responseID = reader.string();
+                    break;
+                case /* string finishReason */ 11:
+                    message.finishReason = reader.string();
+                    break;
+                case /* octelium.api.main.meta.v1.Duration timeToFirstToken */ 12:
+                    message.timeToFirstToken = Duration.internalBinaryRead(reader, reader.uint32(), options, message.timeToFirstToken);
+                    break;
+                case /* uint64 eventCount */ 13:
+                    message.eventCount = reader.uint64().toNumber();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AccessLog_Entry_Info_LLM, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.HTTP http = 1; */
+        if (message.http)
+            AccessLog_Entry_Info_HTTP.internalBinaryWrite(message.http, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Type type = 2; */
+        if (message.type !== 0)
+            writer.tag(2, WireType.Varint).int32(message.type);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol = 3; */
+        if (message.protocol !== 0)
+            writer.tag(3, WireType.Varint).int32(message.protocol);
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Operation operation = 4; */
+        if (message.operation !== 0)
+            writer.tag(4, WireType.Varint).int32(message.operation);
+        /* string requestedModel = 5; */
+        if (message.requestedModel !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.requestedModel);
+        /* string model = 6; */
+        if (message.model !== "")
+            writer.tag(6, WireType.LengthDelimited).string(message.model);
+        /* bool stream = 7; */
+        if (message.stream !== false)
+            writer.tag(7, WireType.Varint).bool(message.stream);
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage usage = 8; */
+        if (message.usage)
+            AccessLog_Entry_Info_LLM_Usage.internalBinaryWrite(message.usage, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* uint64 estimatedInputTokens = 9; */
+        if (message.estimatedInputTokens !== 0)
+            writer.tag(9, WireType.Varint).uint64(message.estimatedInputTokens);
+        /* string responseID = 10; */
+        if (message.responseID !== "")
+            writer.tag(10, WireType.LengthDelimited).string(message.responseID);
+        /* string finishReason = 11; */
+        if (message.finishReason !== "")
+            writer.tag(11, WireType.LengthDelimited).string(message.finishReason);
+        /* octelium.api.main.meta.v1.Duration timeToFirstToken = 12; */
+        if (message.timeToFirstToken)
+            Duration.internalBinaryWrite(message.timeToFirstToken, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
+        /* uint64 eventCount = 13; */
+        if (message.eventCount !== 0)
+            writer.tag(13, WireType.Varint).uint64(message.eventCount);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM
+ */
+export const AccessLog_Entry_Info_LLM = new AccessLog_Entry_Info_LLM$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AccessLog_Entry_Info_LLM_Usage$Type extends MessageType<AccessLog_Entry_Info_LLM_Usage> {
+    constructor() {
+        super("octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage", [
+            { no: 1, name: "source", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.Source", AccessLog_Entry_Info_LLM_Usage_Source] },
+            { no: 2, name: "inputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 3, name: "outputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 4, name: "totalTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 5, name: "cacheReadInputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 6, name: "cacheCreationInputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 7, name: "reasoningTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ }
+        ]);
+    }
+    create(value?: PartialMessage<AccessLog_Entry_Info_LLM_Usage>): AccessLog_Entry_Info_LLM_Usage {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.source = 0;
+        message.inputTokens = 0;
+        message.outputTokens = 0;
+        message.totalTokens = 0;
+        message.cacheReadInputTokens = 0;
+        message.cacheCreationInputTokens = 0;
+        message.reasoningTokens = 0;
+        if (value !== undefined)
+            reflectionMergePartial<AccessLog_Entry_Info_LLM_Usage>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AccessLog_Entry_Info_LLM_Usage): AccessLog_Entry_Info_LLM_Usage {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.Source source */ 1:
+                    message.source = reader.int32();
+                    break;
+                case /* uint64 inputTokens */ 2:
+                    message.inputTokens = reader.uint64().toNumber();
+                    break;
+                case /* uint64 outputTokens */ 3:
+                    message.outputTokens = reader.uint64().toNumber();
+                    break;
+                case /* uint64 totalTokens */ 4:
+                    message.totalTokens = reader.uint64().toNumber();
+                    break;
+                case /* uint64 cacheReadInputTokens */ 5:
+                    message.cacheReadInputTokens = reader.uint64().toNumber();
+                    break;
+                case /* uint64 cacheCreationInputTokens */ 6:
+                    message.cacheCreationInputTokens = reader.uint64().toNumber();
+                    break;
+                case /* uint64 reasoningTokens */ 7:
+                    message.reasoningTokens = reader.uint64().toNumber();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AccessLog_Entry_Info_LLM_Usage, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.Source source = 1; */
+        if (message.source !== 0)
+            writer.tag(1, WireType.Varint).int32(message.source);
+        /* uint64 inputTokens = 2; */
+        if (message.inputTokens !== 0)
+            writer.tag(2, WireType.Varint).uint64(message.inputTokens);
+        /* uint64 outputTokens = 3; */
+        if (message.outputTokens !== 0)
+            writer.tag(3, WireType.Varint).uint64(message.outputTokens);
+        /* uint64 totalTokens = 4; */
+        if (message.totalTokens !== 0)
+            writer.tag(4, WireType.Varint).uint64(message.totalTokens);
+        /* uint64 cacheReadInputTokens = 5; */
+        if (message.cacheReadInputTokens !== 0)
+            writer.tag(5, WireType.Varint).uint64(message.cacheReadInputTokens);
+        /* uint64 cacheCreationInputTokens = 6; */
+        if (message.cacheCreationInputTokens !== 0)
+            writer.tag(6, WireType.Varint).uint64(message.cacheCreationInputTokens);
+        /* uint64 reasoningTokens = 7; */
+        if (message.reasoningTokens !== 0)
+            writer.tag(7, WireType.Varint).uint64(message.reasoningTokens);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage
+ */
+export const AccessLog_Entry_Info_LLM_Usage = new AccessLog_Entry_Info_LLM_Usage$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class AccessLog_Entry_Common$Type extends MessageType<AccessLog_Entry_Common> {
     constructor() {
@@ -30262,7 +36181,8 @@ class ClusterConfig_Status$Type extends MessageType<ClusterConfig_Status> {
             { no: 2, name: "network", kind: "message", T: () => ClusterConfig_Status_Network },
             { no: 3, name: "networkConfig", kind: "message", T: () => ClusterConfig_Status_NetworkConfig },
             { no: 4, name: "secretManager", kind: "message", T: () => ClusterConfig_Status_SecretManager },
-            { no: 5, name: "device", kind: "message", T: () => ClusterConfig_Status_Device }
+            { no: 5, name: "device", kind: "message", T: () => ClusterConfig_Status_Device },
+            { no: 6, name: "installation", kind: "message", T: () => ClusterConfig_Status_Installation }
         ]);
     }
     create(value?: PartialMessage<ClusterConfig_Status>): ClusterConfig_Status {
@@ -30292,6 +36212,9 @@ class ClusterConfig_Status$Type extends MessageType<ClusterConfig_Status> {
                 case /* octelium.api.main.core.v1.ClusterConfig.Status.Device device */ 5:
                     message.device = ClusterConfig_Status_Device.internalBinaryRead(reader, reader.uint32(), options, message.device);
                     break;
+                case /* octelium.api.main.core.v1.ClusterConfig.Status.Installation installation */ 6:
+                    message.installation = ClusterConfig_Status_Installation.internalBinaryRead(reader, reader.uint32(), options, message.installation);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -30319,6 +36242,9 @@ class ClusterConfig_Status$Type extends MessageType<ClusterConfig_Status> {
         /* octelium.api.main.core.v1.ClusterConfig.Status.Device device = 5; */
         if (message.device)
             ClusterConfig_Status_Device.internalBinaryWrite(message.device, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.ClusterConfig.Status.Installation installation = 6; */
+        if (message.installation)
+            ClusterConfig_Status_Installation.internalBinaryWrite(message.installation, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -31128,6 +37054,328 @@ class ClusterConfig_Status_Device_Probe_ReadRegistry$Type extends MessageType<Cl
  */
 export const ClusterConfig_Status_Device_Probe_ReadRegistry = new ClusterConfig_Status_Device_Probe_ReadRegistry$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Status_Installation$Type extends MessageType<ClusterConfig_Status_Installation> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Status.Installation", [
+            { no: 1, name: "spiffe", kind: "message", T: () => ClusterConfig_Status_Installation_SPIFFE },
+            { no: 2, name: "cni", kind: "message", T: () => ClusterConfig_Status_Installation_CNI },
+            { no: 3, name: "ingress", kind: "message", T: () => ClusterConfig_Status_Installation_Ingress }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Status_Installation>): ClusterConfig_Status_Installation {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Status_Installation>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Status_Installation): ClusterConfig_Status_Installation {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.ClusterConfig.Status.Installation.SPIFFE spiffe */ 1:
+                    message.spiffe = ClusterConfig_Status_Installation_SPIFFE.internalBinaryRead(reader, reader.uint32(), options, message.spiffe);
+                    break;
+                case /* octelium.api.main.core.v1.ClusterConfig.Status.Installation.CNI cni */ 2:
+                    message.cni = ClusterConfig_Status_Installation_CNI.internalBinaryRead(reader, reader.uint32(), options, message.cni);
+                    break;
+                case /* octelium.api.main.core.v1.ClusterConfig.Status.Installation.Ingress ingress */ 3:
+                    message.ingress = ClusterConfig_Status_Installation_Ingress.internalBinaryRead(reader, reader.uint32(), options, message.ingress);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Status_Installation, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.ClusterConfig.Status.Installation.SPIFFE spiffe = 1; */
+        if (message.spiffe)
+            ClusterConfig_Status_Installation_SPIFFE.internalBinaryWrite(message.spiffe, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.ClusterConfig.Status.Installation.CNI cni = 2; */
+        if (message.cni)
+            ClusterConfig_Status_Installation_CNI.internalBinaryWrite(message.cni, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.ClusterConfig.Status.Installation.Ingress ingress = 3; */
+        if (message.ingress)
+            ClusterConfig_Status_Installation_Ingress.internalBinaryWrite(message.ingress, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Installation
+ */
+export const ClusterConfig_Status_Installation = new ClusterConfig_Status_Installation$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Status_Installation_SPIFFE$Type extends MessageType<ClusterConfig_Status_Installation_SPIFFE> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Status.Installation.SPIFFE", [
+            { no: 1, name: "enable", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "trustDomain", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "csiDriver", kind: "message", T: () => ClusterConfig_Status_Installation_SPIFFE_CSIDriver }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Status_Installation_SPIFFE>): ClusterConfig_Status_Installation_SPIFFE {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.enable = false;
+        message.trustDomain = "";
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Status_Installation_SPIFFE>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Status_Installation_SPIFFE): ClusterConfig_Status_Installation_SPIFFE {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool enable */ 1:
+                    message.enable = reader.bool();
+                    break;
+                case /* string trustDomain */ 2:
+                    message.trustDomain = reader.string();
+                    break;
+                case /* octelium.api.main.core.v1.ClusterConfig.Status.Installation.SPIFFE.CSIDriver csiDriver */ 3:
+                    message.csiDriver = ClusterConfig_Status_Installation_SPIFFE_CSIDriver.internalBinaryRead(reader, reader.uint32(), options, message.csiDriver);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Status_Installation_SPIFFE, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool enable = 1; */
+        if (message.enable !== false)
+            writer.tag(1, WireType.Varint).bool(message.enable);
+        /* string trustDomain = 2; */
+        if (message.trustDomain !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.trustDomain);
+        /* octelium.api.main.core.v1.ClusterConfig.Status.Installation.SPIFFE.CSIDriver csiDriver = 3; */
+        if (message.csiDriver)
+            ClusterConfig_Status_Installation_SPIFFE_CSIDriver.internalBinaryWrite(message.csiDriver, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Installation.SPIFFE
+ */
+export const ClusterConfig_Status_Installation_SPIFFE = new ClusterConfig_Status_Installation_SPIFFE$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Status_Installation_SPIFFE_CSIDriver$Type extends MessageType<ClusterConfig_Status_Installation_SPIFFE_CSIDriver> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Status.Installation.SPIFFE.CSIDriver", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Status_Installation_SPIFFE_CSIDriver>): ClusterConfig_Status_Installation_SPIFFE_CSIDriver {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.name = "";
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Status_Installation_SPIFFE_CSIDriver>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Status_Installation_SPIFFE_CSIDriver): ClusterConfig_Status_Installation_SPIFFE_CSIDriver {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Status_Installation_SPIFFE_CSIDriver, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Installation.SPIFFE.CSIDriver
+ */
+export const ClusterConfig_Status_Installation_SPIFFE_CSIDriver = new ClusterConfig_Status_Installation_SPIFFE_CSIDriver$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Status_Installation_CNI$Type extends MessageType<ClusterConfig_Status_Installation_CNI> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Status.Installation.CNI", [
+            { no: 1, name: "confDir", kind: "scalar", oneof: "confDirType", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "multusConfDir", kind: "scalar", oneof: "confDirType", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Status_Installation_CNI>): ClusterConfig_Status_Installation_CNI {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.confDirType = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Status_Installation_CNI>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Status_Installation_CNI): ClusterConfig_Status_Installation_CNI {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string confDir */ 1:
+                    message.confDirType = {
+                        oneofKind: "confDir",
+                        confDir: reader.string()
+                    };
+                    break;
+                case /* string multusConfDir */ 2:
+                    message.confDirType = {
+                        oneofKind: "multusConfDir",
+                        multusConfDir: reader.string()
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Status_Installation_CNI, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string confDir = 1; */
+        if (message.confDirType.oneofKind === "confDir")
+            writer.tag(1, WireType.LengthDelimited).string(message.confDirType.confDir);
+        /* string multusConfDir = 2; */
+        if (message.confDirType.oneofKind === "multusConfDir")
+            writer.tag(2, WireType.LengthDelimited).string(message.confDirType.multusConfDir);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Installation.CNI
+ */
+export const ClusterConfig_Status_Installation_CNI = new ClusterConfig_Status_Installation_CNI$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Status_Installation_Ingress$Type extends MessageType<ClusterConfig_Status_Installation_Ingress> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Status.Installation.Ingress", [
+            { no: 1, name: "frontProxy", kind: "message", T: () => ClusterConfig_Status_Installation_Ingress_FrontProxy }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Status_Installation_Ingress>): ClusterConfig_Status_Installation_Ingress {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Status_Installation_Ingress>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Status_Installation_Ingress): ClusterConfig_Status_Installation_Ingress {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.ClusterConfig.Status.Installation.Ingress.FrontProxy frontProxy */ 1:
+                    message.frontProxy = ClusterConfig_Status_Installation_Ingress_FrontProxy.internalBinaryRead(reader, reader.uint32(), options, message.frontProxy);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Status_Installation_Ingress, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.ClusterConfig.Status.Installation.Ingress.FrontProxy frontProxy = 1; */
+        if (message.frontProxy)
+            ClusterConfig_Status_Installation_Ingress_FrontProxy.internalBinaryWrite(message.frontProxy, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Installation.Ingress
+ */
+export const ClusterConfig_Status_Installation_Ingress = new ClusterConfig_Status_Installation_Ingress$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Status_Installation_Ingress_FrontProxy$Type extends MessageType<ClusterConfig_Status_Installation_Ingress_FrontProxy> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Status.Installation.Ingress.FrontProxy", [
+            { no: 1, name: "enable", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Status_Installation_Ingress_FrontProxy>): ClusterConfig_Status_Installation_Ingress_FrontProxy {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.enable = false;
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Status_Installation_Ingress_FrontProxy>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Status_Installation_Ingress_FrontProxy): ClusterConfig_Status_Installation_Ingress_FrontProxy {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool enable */ 1:
+                    message.enable = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Status_Installation_Ingress_FrontProxy, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool enable = 1; */
+        if (message.enable !== false)
+            writer.tag(1, WireType.Varint).bool(message.enable);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Status.Installation.Ingress.FrontProxy
+ */
+export const ClusterConfig_Status_Installation_Ingress_FrontProxy = new ClusterConfig_Status_Installation_Ingress_FrontProxy$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class RequestContext$Type extends MessageType<RequestContext> {
     constructor() {
         super("octelium.api.main.core.v1.RequestContext", [
@@ -31227,6 +37475,8 @@ class RequestContext_Request$Type extends MessageType<RequestContext_Request> {
             { no: 5, name: "postgres", kind: "message", oneof: "type", T: () => RequestContext_Request_Postgres },
             { no: 6, name: "dns", kind: "message", oneof: "type", T: () => RequestContext_Request_DNS },
             { no: 8, name: "socks5", kind: "message", oneof: "type", T: () => RequestContext_Request_SOCKS5 },
+            { no: 9, name: "mcp", kind: "message", oneof: "type", T: () => RequestContext_Request_MCP },
+            { no: 10, name: "llm", kind: "message", oneof: "type", T: () => RequestContext_Request_LLM },
             { no: 7, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
@@ -31285,6 +37535,18 @@ class RequestContext_Request$Type extends MessageType<RequestContext_Request> {
                         socks5: RequestContext_Request_SOCKS5.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).socks5)
                     };
                     break;
+                case /* octelium.api.main.core.v1.RequestContext.Request.MCP mcp */ 9:
+                    message.type = {
+                        oneofKind: "mcp",
+                        mcp: RequestContext_Request_MCP.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).mcp)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.RequestContext.Request.LLM llm */ 10:
+                    message.type = {
+                        oneofKind: "llm",
+                        llm: RequestContext_Request_LLM.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).llm)
+                    };
+                    break;
                 case /* string ip */ 7:
                     message.ip = reader.string();
                     break;
@@ -31324,6 +37586,12 @@ class RequestContext_Request$Type extends MessageType<RequestContext_Request> {
         /* octelium.api.main.core.v1.RequestContext.Request.SOCKS5 socks5 = 8; */
         if (message.type.oneofKind === "socks5")
             RequestContext_Request_SOCKS5.internalBinaryWrite(message.type.socks5, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.RequestContext.Request.MCP mcp = 9; */
+        if (message.type.oneofKind === "mcp")
+            RequestContext_Request_MCP.internalBinaryWrite(message.type.mcp, writer.tag(9, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.RequestContext.Request.LLM llm = 10; */
+        if (message.type.oneofKind === "llm")
+            RequestContext_Request_LLM.internalBinaryWrite(message.type.llm, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -32180,6 +38448,328 @@ class RequestContext_Request_SOCKS5_Connect$Type extends MessageType<RequestCont
  * @generated MessageType for protobuf message octelium.api.main.core.v1.RequestContext.Request.SOCKS5.Connect
  */
 export const RequestContext_Request_SOCKS5_Connect = new RequestContext_Request_SOCKS5_Connect$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RequestContext_Request_MCP$Type extends MessageType<RequestContext_Request_MCP> {
+    constructor() {
+        super("octelium.api.main.core.v1.RequestContext.Request.MCP", [
+            { no: 1, name: "http", kind: "message", T: () => RequestContext_Request_HTTP },
+            { no: 2, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "method", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "requestID", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "isNotification", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 7, name: "client", kind: "message", T: () => RequestContext_Request_MCP_Client },
+            { no: 8, name: "capabilities", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 9, name: "sessionID", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<RequestContext_Request_MCP>): RequestContext_Request_MCP {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.protocolVersion = "";
+        message.method = "";
+        message.name = "";
+        message.requestID = "";
+        message.isNotification = false;
+        message.capabilities = [];
+        message.sessionID = "";
+        if (value !== undefined)
+            reflectionMergePartial<RequestContext_Request_MCP>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RequestContext_Request_MCP): RequestContext_Request_MCP {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.RequestContext.Request.HTTP http */ 1:
+                    message.http = RequestContext_Request_HTTP.internalBinaryRead(reader, reader.uint32(), options, message.http);
+                    break;
+                case /* string protocolVersion */ 2:
+                    message.protocolVersion = reader.string();
+                    break;
+                case /* string method */ 3:
+                    message.method = reader.string();
+                    break;
+                case /* string name */ 4:
+                    message.name = reader.string();
+                    break;
+                case /* string requestID */ 5:
+                    message.requestID = reader.string();
+                    break;
+                case /* bool isNotification */ 6:
+                    message.isNotification = reader.bool();
+                    break;
+                case /* octelium.api.main.core.v1.RequestContext.Request.MCP.Client client */ 7:
+                    message.client = RequestContext_Request_MCP_Client.internalBinaryRead(reader, reader.uint32(), options, message.client);
+                    break;
+                case /* repeated string capabilities */ 8:
+                    message.capabilities.push(reader.string());
+                    break;
+                case /* string sessionID */ 9:
+                    message.sessionID = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: RequestContext_Request_MCP, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.RequestContext.Request.HTTP http = 1; */
+        if (message.http)
+            RequestContext_Request_HTTP.internalBinaryWrite(message.http, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string protocolVersion = 2; */
+        if (message.protocolVersion !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.protocolVersion);
+        /* string method = 3; */
+        if (message.method !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.method);
+        /* string name = 4; */
+        if (message.name !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.name);
+        /* string requestID = 5; */
+        if (message.requestID !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.requestID);
+        /* bool isNotification = 6; */
+        if (message.isNotification !== false)
+            writer.tag(6, WireType.Varint).bool(message.isNotification);
+        /* octelium.api.main.core.v1.RequestContext.Request.MCP.Client client = 7; */
+        if (message.client)
+            RequestContext_Request_MCP_Client.internalBinaryWrite(message.client, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        /* repeated string capabilities = 8; */
+        for (let i = 0; i < message.capabilities.length; i++)
+            writer.tag(8, WireType.LengthDelimited).string(message.capabilities[i]);
+        /* string sessionID = 9; */
+        if (message.sessionID !== "")
+            writer.tag(9, WireType.LengthDelimited).string(message.sessionID);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.RequestContext.Request.MCP
+ */
+export const RequestContext_Request_MCP = new RequestContext_Request_MCP$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RequestContext_Request_MCP_Client$Type extends MessageType<RequestContext_Request_MCP_Client> {
+    constructor() {
+        super("octelium.api.main.core.v1.RequestContext.Request.MCP.Client", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "title", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<RequestContext_Request_MCP_Client>): RequestContext_Request_MCP_Client {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.name = "";
+        message.version = "";
+        message.title = "";
+        if (value !== undefined)
+            reflectionMergePartial<RequestContext_Request_MCP_Client>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RequestContext_Request_MCP_Client): RequestContext_Request_MCP_Client {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* string version */ 2:
+                    message.version = reader.string();
+                    break;
+                case /* string title */ 3:
+                    message.title = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: RequestContext_Request_MCP_Client, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* string version = 2; */
+        if (message.version !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.version);
+        /* string title = 3; */
+        if (message.title !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.title);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.RequestContext.Request.MCP.Client
+ */
+export const RequestContext_Request_MCP_Client = new RequestContext_Request_MCP_Client$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RequestContext_Request_LLM$Type extends MessageType<RequestContext_Request_LLM> {
+    constructor() {
+        super("octelium.api.main.core.v1.RequestContext.Request.LLM", [
+            { no: 1, name: "http", kind: "message", T: () => RequestContext_Request_HTTP },
+            { no: 2, name: "protocol", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol", Service_Spec_Config_LLM_Protocol] },
+            { no: 3, name: "operation", kind: "enum", T: () => ["octelium.api.main.core.v1.RequestContext.Request.LLM.Operation", RequestContext_Request_LLM_Operation] },
+            { no: 4, name: "model", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "stream", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 6, name: "estimatedInputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 7, name: "estimateQuality", kind: "enum", T: () => ["octelium.api.main.core.v1.RequestContext.Request.LLM.EstimateQuality", RequestContext_Request_LLM_EstimateQuality] },
+            { no: 8, name: "maxOutputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 9, name: "hasTools", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 10, name: "toolCount", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 11, name: "toolNames", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 12, name: "inputItemCount", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 13, name: "hasImageInput", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 14, name: "hasAudioInput", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<RequestContext_Request_LLM>): RequestContext_Request_LLM {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.protocol = 0;
+        message.operation = 0;
+        message.model = "";
+        message.stream = false;
+        message.estimatedInputTokens = 0;
+        message.estimateQuality = 0;
+        message.maxOutputTokens = 0;
+        message.hasTools = false;
+        message.toolCount = 0;
+        message.toolNames = [];
+        message.inputItemCount = 0;
+        message.hasImageInput = false;
+        message.hasAudioInput = false;
+        if (value !== undefined)
+            reflectionMergePartial<RequestContext_Request_LLM>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RequestContext_Request_LLM): RequestContext_Request_LLM {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.RequestContext.Request.HTTP http */ 1:
+                    message.http = RequestContext_Request_HTTP.internalBinaryRead(reader, reader.uint32(), options, message.http);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol */ 2:
+                    message.protocol = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.RequestContext.Request.LLM.Operation operation */ 3:
+                    message.operation = reader.int32();
+                    break;
+                case /* string model */ 4:
+                    message.model = reader.string();
+                    break;
+                case /* bool stream */ 5:
+                    message.stream = reader.bool();
+                    break;
+                case /* uint64 estimatedInputTokens */ 6:
+                    message.estimatedInputTokens = reader.uint64().toNumber();
+                    break;
+                case /* octelium.api.main.core.v1.RequestContext.Request.LLM.EstimateQuality estimateQuality */ 7:
+                    message.estimateQuality = reader.int32();
+                    break;
+                case /* uint64 maxOutputTokens */ 8:
+                    message.maxOutputTokens = reader.uint64().toNumber();
+                    break;
+                case /* bool hasTools */ 9:
+                    message.hasTools = reader.bool();
+                    break;
+                case /* uint32 toolCount */ 10:
+                    message.toolCount = reader.uint32();
+                    break;
+                case /* repeated string toolNames */ 11:
+                    message.toolNames.push(reader.string());
+                    break;
+                case /* uint32 inputItemCount */ 12:
+                    message.inputItemCount = reader.uint32();
+                    break;
+                case /* bool hasImageInput */ 13:
+                    message.hasImageInput = reader.bool();
+                    break;
+                case /* bool hasAudioInput */ 14:
+                    message.hasAudioInput = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: RequestContext_Request_LLM, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.RequestContext.Request.HTTP http = 1; */
+        if (message.http)
+            RequestContext_Request_HTTP.internalBinaryWrite(message.http, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol = 2; */
+        if (message.protocol !== 0)
+            writer.tag(2, WireType.Varint).int32(message.protocol);
+        /* octelium.api.main.core.v1.RequestContext.Request.LLM.Operation operation = 3; */
+        if (message.operation !== 0)
+            writer.tag(3, WireType.Varint).int32(message.operation);
+        /* string model = 4; */
+        if (message.model !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.model);
+        /* bool stream = 5; */
+        if (message.stream !== false)
+            writer.tag(5, WireType.Varint).bool(message.stream);
+        /* uint64 estimatedInputTokens = 6; */
+        if (message.estimatedInputTokens !== 0)
+            writer.tag(6, WireType.Varint).uint64(message.estimatedInputTokens);
+        /* octelium.api.main.core.v1.RequestContext.Request.LLM.EstimateQuality estimateQuality = 7; */
+        if (message.estimateQuality !== 0)
+            writer.tag(7, WireType.Varint).int32(message.estimateQuality);
+        /* uint64 maxOutputTokens = 8; */
+        if (message.maxOutputTokens !== 0)
+            writer.tag(8, WireType.Varint).uint64(message.maxOutputTokens);
+        /* bool hasTools = 9; */
+        if (message.hasTools !== false)
+            writer.tag(9, WireType.Varint).bool(message.hasTools);
+        /* uint32 toolCount = 10; */
+        if (message.toolCount !== 0)
+            writer.tag(10, WireType.Varint).uint32(message.toolCount);
+        /* repeated string toolNames = 11; */
+        for (let i = 0; i < message.toolNames.length; i++)
+            writer.tag(11, WireType.LengthDelimited).string(message.toolNames[i]);
+        /* uint32 inputItemCount = 12; */
+        if (message.inputItemCount !== 0)
+            writer.tag(12, WireType.Varint).uint32(message.inputItemCount);
+        /* bool hasImageInput = 13; */
+        if (message.hasImageInput !== false)
+            writer.tag(13, WireType.Varint).bool(message.hasImageInput);
+        /* bool hasAudioInput = 14; */
+        if (message.hasAudioInput !== false)
+            writer.tag(14, WireType.Varint).bool(message.hasAudioInput);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.RequestContext.Request.LLM
+ */
+export const RequestContext_Request_LLM = new RequestContext_Request_LLM$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class PolicyTrigger$Type extends MessageType<PolicyTrigger> {
     constructor() {

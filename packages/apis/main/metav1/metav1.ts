@@ -27,6 +27,11 @@ import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Timestamp } from "../../google/protobuf/timestamp.js";
 /**
+ * Metadata is the metadata that is common to every Cluster resource. It
+ * carries the resource's identity (i.e. its UID and name), its
+ * human-readable information as well as the Cluster-managed bookkeeping of the
+ * resource's versioning and provenance.
+ *
  * @generated from protobuf message octelium.api.main.meta.v1.Metadata
  */
 export interface Metadata {
@@ -86,8 +91,8 @@ export interface Metadata {
      */
     tags: string[];
     /**
-     * Labels is a map of string keys and values that can be used to store
-     * metadata about the object.
+     * Annotations is a map of string keys and values that can be used to store
+     * arbitrary metadata about the object.
      *
      * @generated from protobuf field: map<string, string> annotations = 9
      */
@@ -169,6 +174,9 @@ export interface Metadata {
     };
 }
 /**
+ * ObjectReference is a reference to another Cluster resource. It identifies
+ * the referenced resource by its kind and either its UID or its name.
+ *
  * @generated from protobuf message octelium.api.main.meta.v1.ObjectReference
  */
 export interface ObjectReference {
@@ -204,10 +212,15 @@ export interface ObjectReference {
     resourceVersion: string;
 }
 /**
+ * Duration is a length of time that is expressed in a single unit of choice.
+ * Exactly one of the units is set (e.g. `seconds: 30`).
+ *
  * @generated from protobuf message octelium.api.main.meta.v1.Duration
  */
 export interface Duration {
     /**
+     * Type sets the unit in which the Duration is expressed
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -271,11 +284,14 @@ export interface Duration {
     };
 }
 /**
+ * DeleteOptions is the request of the Delete methods. The object to be deleted
+ * is identified by either its UID or its name.
+ *
  * @generated from protobuf message octelium.api.main.meta.v1.DeleteOptions
  */
 export interface DeleteOptions {
     /**
-     * UID is the objet's UID.
+     * UID is the object's UID.
      *
      * @generated from protobuf field: string uid = 1
      */
@@ -289,6 +305,9 @@ export interface DeleteOptions {
     name: string;
 }
 /**
+ * GetOptions is the request of the Get methods. The object to be retrieved is
+ * identified by either its UID or its name.
+ *
  * @generated from protobuf message octelium.api.main.meta.v1.GetOptions
  */
 export interface GetOptions {
@@ -306,11 +325,16 @@ export interface GetOptions {
     name: string;
 }
 /**
+ * OperationResult is the response of the methods that return no resource (e.g.
+ * the Delete methods). It is intentionally empty.
+ *
  * @generated from protobuf message octelium.api.main.meta.v1.OperationResult
  */
 export interface OperationResult {
 }
 /**
+ * DualStackIP is a pair of an IPv4 and an IPv6 address.
+ *
  * @generated from protobuf message octelium.api.main.meta.v1.DualStackIP
  */
 export interface DualStackIP {
@@ -328,6 +352,8 @@ export interface DualStackIP {
     ipv6: string;
 }
 /**
+ * DualStackNetwork is a pair of an IPv4 and an IPv6 network range.
+ *
  * @generated from protobuf message octelium.api.main.meta.v1.DualStackNetwork
  */
 export interface DualStackNetwork {
@@ -347,6 +373,9 @@ export interface DualStackNetwork {
     v6: string;
 }
 /**
+ * ListResponseMeta is the pagination information that is common to every List
+ * response.
+ *
  * @generated from protobuf message octelium.api.main.meta.v1.ListResponseMeta
  */
 export interface ListResponseMeta {
@@ -357,7 +386,7 @@ export interface ListResponseMeta {
      */
     page: number;
     /**
-     * ItemsPerPage is number of items per page.
+     * ItemsPerPage is the number of items per page.
      *
      * @generated from protobuf field: uint32 itemsPerPage = 2
      */
@@ -369,13 +398,17 @@ export interface ListResponseMeta {
      */
     totalCount: number;
     /**
-     * HasMore shows whether there a next page is available
+     * HasMore shows whether a next page is available
      *
      * @generated from protobuf field: bool hasMore = 4
      */
     hasMore: boolean;
 }
 /**
+ * LogMetadata is the metadata that is common to every log entry (i.e. the
+ * AccessLogs and the ComponentLogs). It is the log-entry counterpart of the
+ * Metadata of the Cluster resources.
+ *
  * @generated from protobuf message octelium.api.main.meta.v1.LogMetadata
  */
 export interface LogMetadata {
@@ -392,21 +425,25 @@ export interface LogMetadata {
      */
     createdAt?: Timestamp;
     /**
-     * Actor is the actor whose action triggered the log entry (i.e. the User,
-     * their Session and Device if available)
+     * ActorRef is the reference of the actor whose action triggered the log
+     * entry (i.e. the User, their Session and Device if available)
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference actorRef = 3
      */
     actorRef?: ObjectReference;
     /**
-     * Target is the target of the action that triggered the log entry (e.g. the
-     * Service and its Namespace in the case of a SERVICE log entry)
+     * TargetRef is the reference of the target of the action that triggered the
+     * log entry (e.g. the Service and its Namespace in the case of a SERVICE log
+     * entry)
      *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference targetRef = 4
      */
     targetRef?: ObjectReference;
 }
 /**
+ * CommonListOptions is the listing options that are common to every List
+ * request.
+ *
  * @generated from protobuf message octelium.api.main.meta.v1.CommonListOptions
  */
 export interface CommonListOptions {
@@ -430,48 +467,71 @@ export interface CommonListOptions {
     orderBy?: CommonListOptions_OrderBy;
 }
 /**
+ * OrderBy sets the ordering of the returned list
+ *
  * @generated from protobuf message octelium.api.main.meta.v1.CommonListOptions.OrderBy
  */
 export interface CommonListOptions_OrderBy {
     /**
+     * Type is the field by which the list is ordered
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions.OrderBy.Type type = 1
      */
     type: CommonListOptions_OrderBy_Type;
     /**
+     * Mode is the direction in which the list is ordered
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions.OrderBy.Mode mode = 2
      */
     mode: CommonListOptions_OrderBy_Mode;
 }
 /**
+ * Type is the field by which the list is ordered
+ *
  * @generated from protobuf enum octelium.api.main.meta.v1.CommonListOptions.OrderBy.Type
  */
 export enum CommonListOptions_OrderBy_Type {
     /**
+     * TYPE_UNSET falls back to the default behavior which is to order the
+     * list by the creation date.
+     *
      * @generated from protobuf enum value: TYPE_UNSET = 0;
      */
     TYPE_UNSET = 0,
     /**
+     * NAME orders the list by the objects' names
+     *
      * @generated from protobuf enum value: NAME = 1;
      */
     NAME = 1,
     /**
+     * CREATED_AT orders the list by the objects' creation dates
+     *
      * @generated from protobuf enum value: CREATED_AT = 2;
      */
     CREATED_AT = 2
 }
 /**
+ * Mode is the direction in which the list is ordered
+ *
  * @generated from protobuf enum octelium.api.main.meta.v1.CommonListOptions.OrderBy.Mode
  */
 export enum CommonListOptions_OrderBy_Mode {
     /**
+     * MODE_UNSET falls back to the default direction
+     *
      * @generated from protobuf enum value: MODE_UNSET = 0;
      */
     MODE_UNSET = 0,
     /**
+     * ASC orders the list in an ascending order
+     *
      * @generated from protobuf enum value: ASC = 1;
      */
     ASC = 1,
     /**
+     * DESC orders the list in a descending order
+     *
      * @generated from protobuf enum value: DESC = 2;
      */
     DESC = 2

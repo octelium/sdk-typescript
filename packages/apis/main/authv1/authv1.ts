@@ -70,6 +70,14 @@ export interface ClientLoginRequest {
      * @generated from protobuf field: string callbackSuffix = 3
      */
     callbackSuffix: string;
+    /**
+     * CodeChallenge is the SHA256 digest of the 32 random bytes of the code
+     * verifier. This is S256 over the raw verifier bytes, NOT over the base64url
+     * encoding used by RFC 7636.
+     *
+     * @generated from protobuf field: bytes codeChallenge = 4
+     */
+    codeChallenge: Uint8Array;
 }
 /**
  * @generated from protobuf enum octelium.api.main.auth.v1.ClientLoginRequest.APIVersion
@@ -82,7 +90,15 @@ export enum ClientLoginRequest_APIVersion {
     /**
      * @generated from protobuf enum value: V1 = 1;
      */
-    V1 = 1
+    V1 = 1,
+    /**
+     * Clients keep sending V1 until Clusters that reject unknown API versions
+     * have aged out. A V1 request carrying a codeChallenge is normalized to V2
+     * by the Cluster.
+     *
+     * @generated from protobuf enum value: V2 = 2;
+     */
+    V2 = 2
 }
 /**
  * @generated from protobuf message octelium.api.main.auth.v1.ClientLoginResponse
@@ -92,6 +108,10 @@ export interface ClientLoginResponse {
      * @generated from protobuf field: string authenticationToken = 1
      */
     authenticationToken: string;
+    /**
+     * @generated from protobuf field: bytes codeChallenge = 2
+     */
+    codeChallenge: Uint8Array;
 }
 /**
  * @generated from protobuf message octelium.api.main.auth.v1.LogoutRequest
@@ -303,6 +323,13 @@ export interface AuthenticateWithAuthenticationTokenRequest {
      * @generated from protobuf field: repeated string scopes = 2
      */
     scopes: string[];
+    /**
+     * CodeVerifier is required if and only if the Credential is bound to a code
+     * challenge. Supplying it for a Credential that is not bound is rejected.
+     *
+     * @generated from protobuf field: bytes codeVerifier = 3
+     */
+    codeVerifier: Uint8Array;
 }
 /**
  * @generated from protobuf message octelium.api.main.auth.v1.AuthenticateWithAssertionRequest
@@ -1133,7 +1160,8 @@ class ClientLoginRequest$Type extends MessageType<ClientLoginRequest> {
         super("octelium.api.main.auth.v1.ClientLoginRequest", [
             { no: 1, name: "apiVersion", kind: "enum", T: () => ["octelium.api.main.auth.v1.ClientLoginRequest.APIVersion", ClientLoginRequest_APIVersion] },
             { no: 2, name: "callbackPort", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 3, name: "callbackSuffix", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 3, name: "callbackSuffix", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "codeChallenge", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
     create(value?: PartialMessage<ClientLoginRequest>): ClientLoginRequest {
@@ -1141,6 +1169,7 @@ class ClientLoginRequest$Type extends MessageType<ClientLoginRequest> {
         message.apiVersion = 0;
         message.callbackPort = 0;
         message.callbackSuffix = "";
+        message.codeChallenge = new Uint8Array(0);
         if (value !== undefined)
             reflectionMergePartial<ClientLoginRequest>(this, message, value);
         return message;
@@ -1158,6 +1187,9 @@ class ClientLoginRequest$Type extends MessageType<ClientLoginRequest> {
                     break;
                 case /* string callbackSuffix */ 3:
                     message.callbackSuffix = reader.string();
+                    break;
+                case /* bytes codeChallenge */ 4:
+                    message.codeChallenge = reader.bytes();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1180,6 +1212,9 @@ class ClientLoginRequest$Type extends MessageType<ClientLoginRequest> {
         /* string callbackSuffix = 3; */
         if (message.callbackSuffix !== "")
             writer.tag(3, WireType.LengthDelimited).string(message.callbackSuffix);
+        /* bytes codeChallenge = 4; */
+        if (message.codeChallenge.length)
+            writer.tag(4, WireType.LengthDelimited).bytes(message.codeChallenge);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1194,12 +1229,14 @@ export const ClientLoginRequest = new ClientLoginRequest$Type();
 class ClientLoginResponse$Type extends MessageType<ClientLoginResponse> {
     constructor() {
         super("octelium.api.main.auth.v1.ClientLoginResponse", [
-            { no: 1, name: "authenticationToken", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "authenticationToken", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "codeChallenge", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
     create(value?: PartialMessage<ClientLoginResponse>): ClientLoginResponse {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.authenticationToken = "";
+        message.codeChallenge = new Uint8Array(0);
         if (value !== undefined)
             reflectionMergePartial<ClientLoginResponse>(this, message, value);
         return message;
@@ -1211,6 +1248,9 @@ class ClientLoginResponse$Type extends MessageType<ClientLoginResponse> {
             switch (fieldNo) {
                 case /* string authenticationToken */ 1:
                     message.authenticationToken = reader.string();
+                    break;
+                case /* bytes codeChallenge */ 2:
+                    message.codeChallenge = reader.bytes();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1227,6 +1267,9 @@ class ClientLoginResponse$Type extends MessageType<ClientLoginResponse> {
         /* string authenticationToken = 1; */
         if (message.authenticationToken !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.authenticationToken);
+        /* bytes codeChallenge = 2; */
+        if (message.codeChallenge.length)
+            writer.tag(2, WireType.LengthDelimited).bytes(message.codeChallenge);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1923,13 +1966,15 @@ class AuthenticateWithAuthenticationTokenRequest$Type extends MessageType<Authen
     constructor() {
         super("octelium.api.main.auth.v1.AuthenticateWithAuthenticationTokenRequest", [
             { no: 1, name: "authenticationToken", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "scopes", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "scopes", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "codeVerifier", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
     create(value?: PartialMessage<AuthenticateWithAuthenticationTokenRequest>): AuthenticateWithAuthenticationTokenRequest {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.authenticationToken = "";
         message.scopes = [];
+        message.codeVerifier = new Uint8Array(0);
         if (value !== undefined)
             reflectionMergePartial<AuthenticateWithAuthenticationTokenRequest>(this, message, value);
         return message;
@@ -1944,6 +1989,9 @@ class AuthenticateWithAuthenticationTokenRequest$Type extends MessageType<Authen
                     break;
                 case /* repeated string scopes */ 2:
                     message.scopes.push(reader.string());
+                    break;
+                case /* bytes codeVerifier */ 3:
+                    message.codeVerifier = reader.bytes();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1963,6 +2011,9 @@ class AuthenticateWithAuthenticationTokenRequest$Type extends MessageType<Authen
         /* repeated string scopes = 2; */
         for (let i = 0; i < message.scopes.length; i++)
             writer.tag(2, WireType.LengthDelimited).string(message.scopes[i]);
+        /* bytes codeVerifier = 3; */
+        if (message.codeVerifier.length)
+            writer.tag(3, WireType.LengthDelimited).bytes(message.codeVerifier);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
