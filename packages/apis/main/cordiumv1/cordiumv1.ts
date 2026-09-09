@@ -38,95 +38,157 @@ import { Timestamp } from "../../google/protobuf/timestamp.js";
 import { ObjectReference } from "../metav1/metav1.js";
 import { Metadata } from "../metav1/metav1.js";
 /**
+ * Workspace, which is synonymous with a sandbox, is the fundamental execution
+ * unit of Cordium. It is an isolated, rootless, container-based development
+ * environment that can be used interactively or programmatically via the
+ * web-based console, the `cordium` CLI, standard SSH and the gRPC-based APIs.
+ * Every Workspace belongs to exactly one Template and one Space and it is
+ * owned by an Octelium User. A Workspace is assigned a short randomly
+ * generated name (i.e. 3 to 6 lowercase alphanumeric characters) by the
+ * Cluster. The effective configuration of a Workspace run is the result of
+ * merging the Workspace spec with the spec of its Template, the runtime
+ * configuration of its Space, the User's UserConfig as well as the Cluster
+ * defaults.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace
  */
 export interface Workspace {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `Workspace`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Metadata is the object's metadata.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
     metadata?: Metadata;
     /**
+     * Spec is the Workspace specification.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec spec = 4
      */
     spec?: Workspace_Spec;
     /**
+     * Status is the current status of the Workspace.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status status = 5
      */
     status?: Workspace_Status;
 }
 /**
+ * Spec is the Workspace specification
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec
  */
 export interface Workspace_Spec {
     /**
+     * Image defines how the Workspace's container image is obtained.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Image image = 1
      */
     image?: Workspace_Spec_Image;
     /**
+     * Runtime controls the behavior of the Workspace's container.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime runtime = 2
      */
     runtime?: Workspace_Spec_Runtime;
     /**
+     * Repository is the primary git repository which is cloned into
+     * `/workspace/repo`.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Repository repository = 3
      */
     repository?: Workspace_Spec_Repository;
     /**
+     * AdditionalRepositories is the list of the secondary repositories that
+     * are cloned alongside the primary one.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.AdditionalRepository additionalRepositories = 4
      */
     additionalRepositories: Workspace_Spec_AdditionalRepository[];
     /**
+     * Applications is the list of the named ports that are exposed via the
+     * Cordium portal.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Application applications = 5
      */
     applications: Workspace_Spec_Application[];
     /**
+     * Limit is the compute resources that are allocated for the Workspace.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Limit limit = 6
      */
     limit?: Workspace_Spec_Limit;
     /**
+     * Vars is the list of the variables that are substituted inside the spec.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Var vars = 7
      */
     vars: Workspace_Spec_Var[];
     /**
+     * IsEphemeral deletes the Workspace's storage once it is stopped so that
+     * every start provisions a fresh volume and runs the full initialization
+     * from scratch. A persistent (i.e. non-ephemeral) Workspace instead
+     * preserves its filesystem across stops and restarts.
+     *
      * @generated from protobuf field: bool isEphemeral = 8
      */
     isEphemeral: boolean;
 }
 /**
+ * Image defines how the container image that is used as the Workspace's
+ * root filesystem is obtained. If it is unset, the Cluster's default base
+ * image is used.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Image
  */
 export interface Workspace_Spec_Image {
     /**
+     * Type is the source of the Workspace's container image
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "dockerfile";
         /**
+         * Dockerfile builds the image from an inline or a downloaded
+         * Dockerfile.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Image.Dockerfile dockerfile = 1
          */
         dockerfile: Workspace_Spec_Image_Dockerfile;
     } | {
         oneofKind: "registry";
         /**
+         * Registry pulls a pre-built image from a container registry.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Image.Registry registry = 2
          */
         registry: Workspace_Spec_Image_Registry;
     } | {
         oneofKind: "git";
         /**
+         * Git builds the image from a dedicated git repository.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Image.Git git = 3
          */
         git: Workspace_Spec_Image_Git;
     } | {
         oneofKind: "repository";
         /**
+         * Repository builds the image from the Workspace's own primary
+         * repository.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Image.Repository repository = 4
          */
         repository: Workspace_Spec_Image_Repository;
@@ -135,21 +197,30 @@ export interface Workspace_Spec_Image {
     };
 }
 /**
+ * Dockerfile builds the image from a Dockerfile that is provided
+ * directly instead of being read from a repository.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Image.Dockerfile
  */
 export interface Workspace_Spec_Image_Dockerfile {
     /**
+     * Type is the source of the Dockerfile
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "inline";
         /**
+         * Inline is the content of the Dockerfile provided as a string.
+         *
          * @generated from protobuf field: string inline = 1
          */
         inline: string;
     } | {
         oneofKind: "url";
         /**
+         * URL is a URL from which the Dockerfile content is downloaded.
+         *
          * @generated from protobuf field: string url = 2
          */
         url: string;
@@ -158,62 +229,102 @@ export interface Workspace_Spec_Image_Dockerfile {
     };
 }
 /**
+ * Git builds the image from a dedicated git repository which is separate
+ * from the Workspace's own repository.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Image.Git
  */
 export interface Workspace_Spec_Image_Git {
     /**
+     * URL is the HTTPS URL of the git repository (e.g.
+     * `https://github.com/myorg/dev-images`).
+     *
      * @generated from protobuf field: string url = 1
      */
     url: string;
     /**
+     * Checkout is an optional branch, tag or commit to check out after
+     * cloning the repository.
+     *
      * @generated from protobuf field: string checkout = 2
      */
     checkout: string;
     /**
+     * Dockerfile is the path of the Dockerfile inside the repository. If
+     * it is unset, Cordium looks for a devcontainer spec (i.e.
+     * `.devcontainer/devcontainer.json` or `.devcontainer.json`) in the
+     * repository instead.
+     *
      * @generated from protobuf field: string dockerfile = 3
      */
     dockerfile: string;
     /**
+     * Context is the build context directory inside the repository. It
+     * defaults to the repository root.
+     *
      * @generated from protobuf field: string context = 4
      */
     context: string;
 }
 /**
+ * Registry pulls a pre-built image from a container registry.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Image.Registry
  */
 export interface Workspace_Spec_Image_Registry {
     /**
+     * URL is the image reference (e.g. `ubuntu:24.04` or
+     * `registry.example.com/dev/base:latest`).
+     *
      * @generated from protobuf field: string url = 1
      */
     url: string;
     /**
+     * Authentication is set for the private registries that require
+     * authentication.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Image.Registry.Authentication authentication = 2
      */
     authentication?: Workspace_Spec_Image_Registry_Authentication;
 }
 /**
+ * Authentication is the credentials that are used to pull the image
+ * from a private registry.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Image.Registry.Authentication
  */
 export interface Workspace_Spec_Image_Registry_Authentication {
     /**
+     * Username is the registry username.
+     *
      * @generated from protobuf field: string username = 1
      */
     username: string;
     /**
+     * Password is the registry password.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Image.Registry.Authentication.Password password = 2
      */
     password?: Workspace_Spec_Image_Registry_Authentication_Password;
 }
 /**
+ * Password is the registry password or token.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Image.Registry.Authentication.Password
  */
 export interface Workspace_Spec_Image_Registry_Authentication_Password {
     /**
+     * Type is the source of the password
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret is the name of a Secret in the same Space whose
+         * content is used as the password. It is resolved by the Cluster
+         * at initialization time.
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -222,21 +333,32 @@ export interface Workspace_Spec_Image_Registry_Authentication_Password {
     };
 }
 /**
+ * Repository builds the image out of the Workspace's own primary
+ * repository (i.e. the `repository` field of the spec).
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Image.Repository
  */
 export interface Workspace_Spec_Image_Repository {
     /**
+     * Type is the source of the image inside the repository
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "devcontainer";
         /**
+         * Devcontainer builds the image from the repository's devcontainer
+         * spec.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Image.Repository.Devcontainer devcontainer = 1
          */
         devcontainer: Workspace_Spec_Image_Repository_Devcontainer;
     } | {
         oneofKind: "dockerfile";
         /**
+         * Dockerfile builds the image from a Dockerfile inside the
+         * repository.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Image.Repository.Dockerfile dockerfile = 2
          */
         dockerfile: Workspace_Spec_Image_Repository_Dockerfile;
@@ -245,54 +367,90 @@ export interface Workspace_Spec_Image_Repository {
     };
 }
 /**
+ * Devcontainer builds the image from the Development Container spec
+ * that is contained in the repository.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Image.Repository.Devcontainer
  */
 export interface Workspace_Spec_Image_Repository_Devcontainer {
     /**
+     * DirPath is the directory of the devcontainer spec inside the
+     * repository (e.g. `.devcontainer`).
+     *
      * @generated from protobuf field: string dirPath = 1
      */
     dirPath: string;
 }
 /**
+ * Dockerfile builds the image from a Dockerfile that is contained in
+ * the repository.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Image.Repository.Dockerfile
  */
 export interface Workspace_Spec_Image_Repository_Dockerfile {
     /**
+     * Path is the path of the Dockerfile inside the repository (e.g.
+     * `docker/Dockerfile.dev`).
+     *
      * @generated from protobuf field: string path = 1
      */
     path: string;
     /**
+     * Context is the build context directory inside the repository. It
+     * defaults to the repository root.
+     *
      * @generated from protobuf field: string context = 2
      */
     context: string;
 }
 /**
+ * Repository is a git repository that is cloned into the Workspace at
+ * initialization time.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Repository
  */
 export interface Workspace_Spec_Repository {
     /**
+     * URL is the HTTPS URL of the git repository (e.g.
+     * `https://github.com/myorg/my-project`). Only the `https` scheme is
+     * supported.
+     *
      * @generated from protobuf field: string url = 1
      */
     url: string;
     /**
+     * CloneOptions controls how the repository is cloned.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Repository.CloneOptions cloneOptions = 2
      */
     cloneOptions?: Workspace_Spec_Repository_CloneOptions;
     /**
+     * Authentication is set for the private repositories that require
+     * authentication.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Repository.Authentication authentication = 3
      */
     authentication?: Workspace_Spec_Repository_Authentication;
 }
 /**
+ * Authentication is the credentials that are used to clone private
+ * repositories. It is not needed when a GitProvider is associated with
+ * the Template since, in that case, the User's OAuth2 token is
+ * automatically injected instead.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Repository.Authentication
  */
 export interface Workspace_Spec_Repository_Authentication {
     /**
+     * Type is the authentication method
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "http";
         /**
+         * HTTP is the HTTP basic authentication.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Repository.Authentication.HTTP http = 1
          */
         http: Workspace_Spec_Repository_Authentication_HTTP;
@@ -301,28 +459,42 @@ export interface Workspace_Spec_Repository_Authentication {
     };
 }
 /**
+ * HTTP is the HTTP basic authentication credentials.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Repository.Authentication.HTTP
  */
 export interface Workspace_Spec_Repository_Authentication_HTTP {
     /**
+     * Username is the basic authentication username (e.g. `oauth2`).
+     *
      * @generated from protobuf field: string username = 1
      */
     username: string;
     /**
+     * Password is the basic authentication password.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Repository.Authentication.HTTP.Password password = 2
      */
     password?: Workspace_Spec_Repository_Authentication_HTTP_Password;
 }
 /**
+ * Password is the password, token or personal access token.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Repository.Authentication.HTTP.Password
  */
 export interface Workspace_Spec_Repository_Authentication_HTTP_Password {
     /**
+     * Type is the source of the password
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret is the name of a Secret in the same Space whose
+         * content is used as the password. It is resolved by the Cluster
+         * at initialization time.
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -331,124 +503,201 @@ export interface Workspace_Spec_Repository_Authentication_HTTP_Password {
     };
 }
 /**
+ * CloneOptions controls how the repository is cloned.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Repository.CloneOptions
  */
 export interface Workspace_Spec_Repository_CloneOptions {
     /**
+     * Branch is the branch to be cloned. It defaults to the repository's
+     * default branch.
+     *
      * @generated from protobuf field: string branch = 1
      */
     branch: string;
     /**
+     * Depth is the number of commits to be fetched. It is only effective
+     * when disableLazyUnshallow is set.
+     *
      * @generated from protobuf field: uint32 depth = 2
      */
     depth: number;
     /**
+     * SingleBranch fetches only the chosen branch instead of every branch.
+     *
      * @generated from protobuf field: bool singleBranch = 3
      */
     singleBranch: boolean;
     /**
+     * ShallowSubmodules clones the repository's submodules with a depth of
+     * 1.
+     *
      * @generated from protobuf field: bool shallowSubmodules = 4
      */
     shallowSubmodules: boolean;
     /**
+     * Checkout is an optional commit or tag to check out after cloning.
+     *
      * @generated from protobuf field: string checkout = 5
      */
     checkout: string;
     /**
+     * DisableLazyUnshallow disables Cordium's default behavior of
+     * performing a shallow clone for a faster startup and then fetching
+     * the full history asynchronously in the background.
+     *
      * @generated from protobuf field: bool disableLazyUnshallow = 6
      */
     disableLazyUnshallow: boolean;
 }
 /**
+ * AdditionalRepository is a secondary repository that is cloned alongside
+ * the Workspace's primary repository.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.AdditionalRepository
  */
 export interface Workspace_Spec_AdditionalRepository {
     /**
+     * Name is the name of the additional repository. It must be unique
+     * within the spec.
+     *
      * @generated from protobuf field: string name = 1
      */
     name: string;
     /**
+     * ClonePath is the absolute path inside the Workspace where the
+     * repository is cloned (e.g.
+     * `/workspace/additional-repos/shared-libs`).
+     *
      * @generated from protobuf field: string clonePath = 2
      */
     clonePath: string;
     /**
+     * Repository is the repository's URL, clone options and authentication.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Repository repository = 3
      */
     repository?: Workspace_Spec_Repository;
 }
 /**
+ * Runtime controls the behavior of the Workspace's container (i.e. its
+ * environment variables, lifecycle tasks, capabilities, timeout, etc...).
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime
  */
 export interface Workspace_Spec_Runtime {
     /**
+     * EnvVars is the list of the environment variables that are injected
+     * into the Workspace container.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.EnvVar envVars = 1
      */
     envVars: Workspace_Spec_Runtime_EnvVar[];
     /**
+     * Tasks is the list of the lifecycle tasks of the Workspace.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Task tasks = 2
      */
     tasks: Workspace_Spec_Runtime_Task[];
     /**
+     * DisableInit disables the minimal init process that Cordium runs as PID
+     * 1 in order to reap the zombie processes. It should only be set when
+     * the image already contains its own init system.
+     *
      * @generated from protobuf field: bool disableInit = 3
      */
     disableInit: boolean;
     /**
+     * Cmd overrides the container image's default command.
+     *
      * @generated from protobuf field: string cmd = 4
      */
     cmd: string;
     /**
+     * Entrypoint overrides the container image's default entrypoint.
+     *
      * @generated from protobuf field: string entrypoint = 5
      */
     entrypoint: string;
     /**
+     * Devcontainers is the Development Container-related configuration.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Devcontainers devcontainers = 6
      */
     devcontainers?: Workspace_Spec_Runtime_Devcontainers;
     /**
+     * Octelium controls the Octelium Services that are served inside the
+     * Workspace.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Octelium octelium = 7
      */
     octelium?: Workspace_Spec_Runtime_Octelium;
     /**
+     * Network is the network-related configuration of the Workspace.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network network = 8
      */
     network?: Workspace_Spec_Runtime_Network;
     /**
+     * Filesystem is the container filesystem configuration.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Filesystem filesystem = 9
      */
     filesystem?: Workspace_Spec_Runtime_Filesystem;
     /**
+     * Capabilities is the Linux capabilities of the Workspace's container.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Capabilities capabilities = 10
      */
     capabilities?: Workspace_Spec_Runtime_Capabilities;
     /**
+     * Timeout controls the inactivity timeout of the Workspace.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Timeout timeout = 11
      */
     timeout?: Workspace_Spec_Runtime_Timeout;
     /**
+     * AutoStop automatically stops the Workspace once all of its
+     * non-background lifecycle tasks complete. It is mostly useful for CI/CD
+     * and automated workloads where no human interaction is expected.
+     *
      * @generated from protobuf field: bool autoStop = 12
      */
     autoStop: boolean;
 }
 /**
+ * EnvVar is an environment variable that is injected into the Workspace
+ * container as well as into all of its lifecycle tasks.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.EnvVar
  */
 export interface Workspace_Spec_Runtime_EnvVar {
     /**
+     * Key is the environment variable's name.
+     *
      * @generated from protobuf field: string key = 1
      */
     key: string;
     /**
+     * Type is the source of the environment variable's value
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "value";
         /**
+         * Value is the value provided directly as a string.
+         *
          * @generated from protobuf field: string value = 2
          */
         value: string;
     } | {
         oneofKind: "fromSecret";
         /**
+         * FromSecret is the name of a Secret in the same Space whose content
+         * is used as the value. It is resolved by the Cluster at
+         * initialization time.
+         *
          * @generated from protobuf field: string fromSecret = 3
          */
         fromSecret: string;
@@ -457,508 +706,807 @@ export interface Workspace_Spec_Runtime_EnvVar {
     };
 }
 /**
+ * Task is a command that is run at a defined point of the Workspace's
+ * lifecycle.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Task
  */
 export interface Workspace_Spec_Runtime_Task {
     /**
+     * Name is a unique name for the Task. It is used in the logs and in
+     * the failure reporting.
+     *
      * @generated from protobuf field: string name = 1
      */
     name: string;
     /**
+     * Run is the shell command that is executed by the Task.
+     *
      * @generated from protobuf field: string run = 2
      */
     run: string;
     /**
+     * Type is the point of the lifecycle at which the Task is run. It must
+     * be set.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Task.Type type = 3
      */
     type: Workspace_Spec_Runtime_Task_Type;
     /**
+     * EnvVars is the list of per-task environment variables.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Task.EnvVar envVars = 4
      */
     envVars: Workspace_Spec_Runtime_Task_EnvVar[];
     /**
+     * WorkingDir is the working directory of the Task. It defaults to the
+     * Workspace User's home directory.
+     *
      * @generated from protobuf field: string workingDir = 5
      */
     workingDir: string;
     /**
+     * IsBackground starts the Task and lets the Workspace's initialization
+     * proceed without waiting for the Task to complete.
+     *
      * @generated from protobuf field: bool isBackground = 6
      */
     isBackground: boolean;
     /**
+     * OnFailure controls whether a failure of the Task aborts the
+     * initialization of the Workspace.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Task.OnFailure onFailure = 7
      */
     onFailure: Workspace_Spec_Runtime_Task_OnFailure;
     /**
+     * RunAsRoot runs the Task as `root` instead of as the Workspace User.
+     *
      * @generated from protobuf field: bool runAsRoot = 8
      */
     runAsRoot: boolean;
 }
 /**
+ * EnvVar is a per-task environment variable which is merged with the
+ * Workspace-level environment variables.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Task.EnvVar
  */
 export interface Workspace_Spec_Runtime_Task_EnvVar {
     /**
+     * Key is the environment variable's name.
+     *
      * @generated from protobuf field: string key = 1
      */
     key: string;
     /**
+     * Value is the environment variable's value.
+     *
      * @generated from protobuf field: string value = 2
      */
     value: string;
 }
 /**
+ * Type is the point of the Workspace's lifecycle at which the Task is
+ * run
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Task.Type
  */
 export enum Workspace_Spec_Runtime_Task_Type {
     /**
+     * UNKNOWN is not used. The type of a Task must be explicitly set.
+     *
      * @generated from protobuf enum value: UNKNOWN = 0;
      */
     UNKNOWN = 0,
     /**
+     * ON_CREATE runs the Task only on a fresh run (i.e. the first start
+     * of a persistent Workspace and every start of an ephemeral one). It
+     * is typically used for one-time setup such as installing
+     * dependencies or running migrations.
+     *
      * @generated from protobuf enum value: ON_CREATE = 1;
      */
     ON_CREATE = 1,
     /**
+     * POST_START runs the Task on every start of the Workspace. It is
+     * typically used to start background services and dev servers.
+     *
      * @generated from protobuf enum value: POST_START = 2;
      */
     POST_START = 2,
     /**
+     * PRE_STOP runs the Task right before the Workspace's container is
+     * stopped. It is typically used for graceful shutdown and cleanup.
+     *
      * @generated from protobuf enum value: PRE_STOP = 3;
      */
     PRE_STOP = 3
 }
 /**
+ * OnFailure is the behavior of the Cluster when the Task fails
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Task.OnFailure
  */
 export enum Workspace_Spec_Runtime_Task_OnFailure {
     /**
+     * ON_FAILURE_UNSET falls back to the default behavior.
+     *
      * @generated from protobuf enum value: ON_FAILURE_UNSET = 0;
      */
     UNSET = 0,
     /**
+     * ON_FAILURE_ABORT aborts the initialization of the Workspace once
+     * the Task fails.
+     *
      * @generated from protobuf enum value: ON_FAILURE_ABORT = 1;
      */
     ABORT = 1,
     /**
+     * ON_FAILURE_CONTINUE logs the Task's failure and continues the
+     * initialization of the Workspace.
+     *
      * @generated from protobuf enum value: ON_FAILURE_CONTINUE = 2;
      */
     CONTINUE = 2
 }
 /**
+ * Devcontainers is the Development Container-related configuration.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Devcontainers
  */
 export interface Workspace_Spec_Runtime_Devcontainers {
     /**
+     * Features is the list of the Development Container Features that are
+     * installed inside the Workspace. They are merged with the Features
+     * that are declared by the repository's own devcontainer spec, if any.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Devcontainers.Feature features = 1
      */
     features: Workspace_Spec_Runtime_Devcontainers_Feature[];
 }
 /**
+ * Feature is a Development Container Feature that is installed inside
+ * the Workspace.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Devcontainers.Feature
  */
 export interface Workspace_Spec_Runtime_Devcontainers_Feature {
     /**
+     * Reference is the OCI reference of the Feature (e.g.
+     * `ghcr.io/devcontainers/features/docker-in-docker:2`).
+     *
      * @generated from protobuf field: string reference = 1
      */
     reference: string;
     /**
+     * Options is the list of the Feature's installation options.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Devcontainers.Feature.Option options = 2
      */
     options: Workspace_Spec_Runtime_Devcontainers_Feature_Option[];
 }
 /**
+ * Option is a Feature-specific installation option.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Devcontainers.Feature.Option
  */
 export interface Workspace_Spec_Runtime_Devcontainers_Feature_Option {
     /**
+     * Key is the option's name.
+     *
      * @generated from protobuf field: string key = 1
      */
     key: string;
     /**
+     * Value is the option's value.
+     *
      * @generated from protobuf field: string value = 2
      */
     value: string;
 }
 /**
+ * Octelium controls the `octelium connect` process that runs inside the
+ * Workspace using the Workspace's own dedicated Octelium Session. It is
+ * what enables secretless access from inside the Workspace to the
+ * Octelium Services that its owner User is authorized to access.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Octelium
  */
 export interface Workspace_Spec_Runtime_Octelium {
     /**
+     * ServeServices is the list of the names of the Octelium Services,
+     * among the ones assigned to the owner User, that are served inside
+     * the Workspace.
+     *
      * @generated from protobuf field: repeated string serveServices = 1
      */
     serveServices: string[];
     /**
+     * ServeAll serves every Octelium Service that is assigned to the owner
+     * User inside the Workspace.
+     *
      * @generated from protobuf field: bool serveAll = 2
      */
     serveAll: boolean;
 }
 /**
+ * Network is the network-related configuration of the Workspace.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network
  */
 export interface Workspace_Spec_Runtime_Network {
 }
 /**
+ * Rule is a network rule that matches a set of network ranges.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule
  */
 export interface Workspace_Spec_Runtime_Network_Rule {
     /**
+     * CIDRs is the list of the network ranges, in CIDR notation, that
+     * are matched by the Rule.
+     *
      * @generated from protobuf field: repeated string cidrs = 1
      */
     cidrs: string[];
 }
 /**
+ * Action is the effect of the Rule when it matches
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule.Action
  */
 export enum Workspace_Spec_Runtime_Network_Rule_Action {
     /**
+     * ACTION_UNSET falls back to the default action.
+     *
      * @generated from protobuf enum value: ACTION_UNSET = 0;
      */
     ACTION_UNSET = 0,
     /**
+     * ALLOW allows the matched traffic.
+     *
      * @generated from protobuf enum value: ALLOW = 1;
      */
     ALLOW = 1,
     /**
+     * DENY denies the matched traffic.
+     *
      * @generated from protobuf enum value: DENY = 2;
      */
     DENY = 2
 }
 /**
+ * Egress is the egress (i.e. outbound) traffic configuration.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Egress
  */
 export interface Workspace_Spec_Runtime_Network_Egress {
     /**
+     * Rules is the list of the egress rules that are evaluated in order.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule rules = 1
      */
     rules: Workspace_Spec_Runtime_Network_Rule[];
     /**
+     * DefaultAction is the action that is applied when no Rule matches.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule.Action defaultAction = 2
      */
     defaultAction: Workspace_Spec_Runtime_Network_Rule_Action;
 }
 /**
+ * Filesystem is the container filesystem configuration.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Filesystem
  */
 export interface Workspace_Spec_Runtime_Filesystem {
     /**
+     * ReadOnly makes the container's root filesystem read-only.
+     *
      * @generated from protobuf field: bool readOnly = 1
      */
     readOnly: boolean;
 }
 /**
+ * Capabilities is the Linux capabilities of the Workspace's container.
+ * It is merged with the Space-level and the ClusterConfig-level
+ * capabilities.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Capabilities
  */
 export interface Workspace_Spec_Runtime_Capabilities {
     /**
+     * Add is the list of the Linux capabilities that are added (e.g.
+     * `NET_ADMIN`).
+     *
      * @generated from protobuf field: repeated string add = 1
      */
     add: string[];
     /**
+     * Drop is the list of the Linux capabilities that are dropped (e.g.
+     * `NET_RAW`).
+     *
      * @generated from protobuf field: repeated string drop = 2
      */
     drop: string[];
 }
 /**
+ * Timeout controls the inactivity timeout after which a running
+ * Workspace is automatically stopped by the Cluster.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Timeout
  */
 export interface Workspace_Spec_Runtime_Timeout {
     /**
+     * Mode is the inactivity timeout mode.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Timeout.Mode mode = 1
      */
     mode: Workspace_Spec_Runtime_Timeout_Mode;
 }
 /**
+ * Mode is the inactivity timeout mode
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Timeout.Mode
  */
 export enum Workspace_Spec_Runtime_Timeout_Mode {
     /**
+     * MODE_UNSET falls back to the default behavior which is to apply
+     * the Cluster's inactivity timeout.
+     *
      * @generated from protobuf enum value: MODE_UNSET = 0;
      */
     MODE_UNSET = 0,
     /**
+     * DEFAULT applies the Cluster's inactivity timeout.
+     *
      * @generated from protobuf enum value: DEFAULT = 1;
      */
     DEFAULT = 1,
     /**
+     * DISABLED disables the inactivity timeout entirely. It is only
+     * honored when the ClusterConfig allows Workspaces to have no
+     * timeout.
+     *
      * @generated from protobuf enum value: DISABLED = 2;
      */
     DISABLED = 2
 }
 /**
+ * Application is a named port inside the Workspace that is exposed via the
+ * Cordium portal's reverse proxy.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Application
  */
 export interface Workspace_Spec_Application {
     /**
+     * Name is the name of the Application. It must be unique within the spec
+     * and it is used as a subdomain prefix of the Workspace's hostname.
+     *
      * @generated from protobuf field: string name = 1
      */
     name: string;
     /**
+     * DisplayName is a human-readable name for the Application.
+     *
      * @generated from protobuf field: string displayName = 2
      */
     displayName: string;
     /**
+     * Port is the TCP port that the Application listens on inside the
+     * Workspace.
+     *
      * @generated from protobuf field: int32 port = 3
      */
     port: number;
     /**
+     * IsDefault serves the Application at the Workspace's root hostname.
+     * At most one Application can be the default one.
+     *
      * @generated from protobuf field: bool isDefault = 4
      */
     isDefault: boolean;
 }
 /**
+ * Limit is the compute resources that are allocated for the Workspace. The
+ * effective limits are resolved by precedence (i.e. Workspace, Template,
+ * Space default and then the Cluster default) and are then capped by the
+ * Space and the Cluster maximums.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Limit
  */
 export interface Workspace_Spec_Limit {
     /**
+     * CPU is the CPU allocation.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Limit.CPU cpu = 1
      */
     cpu?: Workspace_Spec_Limit_CPU;
     /**
+     * Memory is the memory allocation.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Limit.Memory memory = 2
      */
     memory?: Workspace_Spec_Limit_Memory;
     /**
+     * Storage is the storage allocation.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Limit.Storage storage = 3
      */
     storage?: Workspace_Spec_Limit_Storage;
 }
 /**
+ * CPU is the CPU allocation.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Limit.CPU
  */
 export interface Workspace_Spec_Limit_CPU {
     /**
+     * Millicores is the number of CPU millicores (i.e. 1 core equals 1000
+     * millicores).
+     *
      * @generated from protobuf field: uint32 millicores = 1
      */
     millicores: number;
 }
 /**
+ * Memory is the memory allocation.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Limit.Memory
  */
 export interface Workspace_Spec_Limit_Memory {
     /**
+     * Megabytes is the amount of memory in megabytes.
+     *
      * @generated from protobuf field: uint32 megabytes = 1
      */
     megabytes: number;
 }
 /**
+ * Storage is the storage allocation.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Limit.Storage
  */
 export interface Workspace_Spec_Limit_Storage {
     /**
+     * Megabytes is the amount of disk storage in megabytes.
+     *
      * @generated from protobuf field: uint32 megabytes = 2
      */
     megabytes: number;
 }
 /**
+ * Var is a variable that can be referenced from within the spec's string
+ * fields using the `${{ vars.NAME }}` syntax. The substitution is
+ * performed after all the configuration levels are merged.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Var
  */
 export interface Workspace_Spec_Var {
     /**
+     * Name is the variable's name.
+     *
      * @generated from protobuf field: string name = 1
      */
     name: string;
     /**
+     * Value is the variable's value.
+     *
      * @generated from protobuf field: string value = 2
      */
     value: string;
 }
 /**
+ * Status is the current status of the Workspace. It is entirely managed by
+ * the Cluster and it is read-only.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status
  */
 export interface Workspace_Status {
     /**
+     * State is the current state of the Workspace's lifecycle.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.State state = 1
      */
     state: Workspace_Status_State;
     /**
+     * UserRef is the reference of the Octelium User who owns the Workspace.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 2
      */
     userRef?: ObjectReference;
     /**
+     * SessionRef is the reference of the dedicated Octelium Session that is
+     * created for the current run. It is the Workspace's identity for
+     * secretless access to the Cluster's Services and it is deleted once the
+     * Workspace is stopped.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference sessionRef = 3
      */
     sessionRef?: ObjectReference;
     /**
+     * RegionRef is the reference of the Octelium Region that currently hosts
+     * the Workspace.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference regionRef = 4
      */
     regionRef?: ObjectReference;
     /**
+     * Hostname is the publicly resolvable hostname of the running Workspace
+     * (e.g. `abc.cordium.example.com`). It is unset while the Workspace is
+     * stopped.
+     *
      * @generated from protobuf field: string hostname = 5
      */
     hostname: string;
     /**
+     * LastInitializedAt is the timestamp of the last start request of the
+     * Workspace.
+     *
      * @generated from protobuf field: google.protobuf.Timestamp lastInitializedAt = 6
      */
     lastInitializedAt?: Timestamp;
     /**
+     * LastActivityAt is the timestamp of the last recorded activity of the
+     * Workspace. It is what the inactivity timeout is calculated against.
+     *
      * @generated from protobuf field: google.protobuf.Timestamp lastActivityAt = 7
      */
     lastActivityAt?: Timestamp;
     /**
+     * LastStoppedAt is the timestamp at which the Workspace was last stopped.
+     *
      * @generated from protobuf field: google.protobuf.Timestamp lastStoppedAt = 8
      */
     lastStoppedAt?: Timestamp;
     /**
+     * SuccessfulRuns is the total number of the runs that successfully reached
+     * the RUNNING state.
+     *
      * @generated from protobuf field: uint32 successfulRuns = 9
      */
     successfulRuns: number;
     /**
+     * IsBuild means that the Workspace is an internal Workspace that is
+     * created by the Cluster in order to carry out a Template pre-build. Such
+     * Workspaces are hidden from the Users and they are deleted once the
+     * pre-build completes.
+     *
      * @generated from protobuf field: bool isBuild = 10
      */
     isBuild: boolean;
     /**
+     * TemplateRef is the reference of the Template that the Workspace was
+     * created from.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference templateRef = 11
      */
     templateRef?: ObjectReference;
     /**
+     * SpaceRef is the reference of the Space that the Workspace belongs to.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 12
      */
     spaceRef?: ObjectReference;
     /**
+     * TotalLastRunsDuration is the accumulated running duration of all of the
+     * Workspace's runs.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration totalLastRunsDuration = 13
      */
     totalLastRunsDuration?: Duration;
     /**
+     * LastState is the state that the Workspace was in right before the
+     * current one.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.State lastState = 14
      */
     lastState: Workspace_Status_State;
     /**
+     * CurrentStateSetAt is the timestamp at which the current state was set.
+     *
      * @generated from protobuf field: google.protobuf.Timestamp currentStateSetAt = 15
      */
     currentStateSetAt?: Timestamp;
     /**
+     * LastStateSetAt is the timestamp at which the previous state was set.
+     *
      * @generated from protobuf field: google.protobuf.Timestamp lastStateSetAt = 16
      */
     lastStateSetAt?: Timestamp;
     /**
+     * LastRunningAt is the timestamp at which the Workspace last reached the
+     * RUNNING state.
+     *
      * @generated from protobuf field: google.protobuf.Timestamp lastRunningAt = 17
      */
     lastRunningAt?: Timestamp;
     /**
+     * Failure is the failure of the Workspace, if any.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure failure = 18
      */
     failure?: Workspace_Status_Failure;
     /**
+     * Limit is the effective compute resource limits that the Cluster resolved
+     * for the Workspace after merging and capping all the configuration
+     * levels.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Limit limit = 19
      */
     limit?: Workspace_Spec_Limit;
     /**
+     * SharedPorts is the list of the Workspace's Applications that are
+     * currently shared with other Users.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Status.SharedPort sharedPorts = 20
      */
     sharedPorts: Workspace_Status_SharedPort[];
     /**
+     * SpaceType is the type of the Space that the Workspace belongs to.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Space.Status.Type spaceType = 21
      */
     spaceType: Space_Status_Type;
     /**
+     * StoppingReason is the reason of the current or the latest stoppage.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.StoppingReason stoppingReason = 22
      */
     stoppingReason: Workspace_Status_StoppingReason;
     /**
+     * LastStoppingReason is the reason of the stoppage that preceded the
+     * current run.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.StoppingReason lastStoppingReason = 23
      */
     lastStoppingReason: Workspace_Status_StoppingReason;
     /**
+     * Run is the current or the latest run of the Workspace.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Run run = 24
      */
     run?: Workspace_Status_Run;
     /**
+     * LastRuns is the history of the Workspace's previous runs ordered from
+     * the most to the least recent one.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Status.Run lastRuns = 25
      */
     lastRuns: Workspace_Status_Run[];
 }
 /**
+ * Failure describes the reason of the failure of a Workspace run.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure
  */
 export interface Workspace_Status_Failure {
     /**
+     * Message is a human-readable description of the failure.
+     *
      * @generated from protobuf field: string message = 1
      */
     message: string;
     /**
+     * Type is the specific reason of the failure
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "imageBuild";
         /**
+         * ImageBuild means that building the container image failed.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.ImageBuild imageBuild = 2
          */
         imageBuild: Workspace_Status_Failure_ImageBuild;
     } | {
         oneofKind: "imagePull";
         /**
+         * ImagePull means that pulling the container image failed.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.ImagePull imagePull = 3
          */
         imagePull: Workspace_Status_Failure_ImagePull;
     } | {
         oneofKind: "repoClone";
         /**
+         * RepoClone means that cloning the primary repository failed.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.RepoClone repoClone = 4
          */
         repoClone: Workspace_Status_Failure_RepoClone;
     } | {
         oneofKind: "buildTimeoutExceeded";
         /**
+         * BuildTimeoutExceeded means that the image build did not complete
+         * within the allowed duration.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.BuildTimeoutExceeded buildTimeoutExceeded = 5
          */
         buildTimeoutExceeded: Workspace_Status_Failure_BuildTimeoutExceeded;
     } | {
         oneofKind: "task";
         /**
+         * Task means that a lifecycle task failed.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.Task task = 6
          */
         task: Workspace_Status_Failure_Task;
     } | {
         oneofKind: "startupUnknown";
         /**
+         * StartupUnknown means that the Workspace failed to start for an
+         * undetermined reason.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.StartupUnknown startupUnknown = 7
          */
         startupUnknown: Workspace_Status_Failure_StartupUnknown;
     } | {
         oneofKind: "startupTimeoutExceeded";
         /**
+         * StartupTimeoutExceeded means that the Workspace did not become ready
+         * within the allowed duration.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.StartupTimeoutExceeded startupTimeoutExceeded = 8
          */
         startupTimeoutExceeded: Workspace_Status_Failure_StartupTimeoutExceeded;
     } | {
         oneofKind: "loadStorage";
         /**
+         * LoadStorage means that loading the persistent storage failed.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.LoadStorage loadStorage = 9
          */
         loadStorage: Workspace_Status_Failure_LoadStorage;
     } | {
         oneofKind: "saveStorage";
         /**
+         * SaveStorage means that saving the persistent storage failed.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.SaveStorage saveStorage = 10
          */
         saveStorage: Workspace_Status_Failure_SaveStorage;
     } | {
         oneofKind: "stoppageTimeoutExceeded";
         /**
+         * StoppageTimeoutExceeded means that the Workspace did not stop
+         * gracefully within the allowed duration.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.StoppageTimeoutExceeded stoppageTimeoutExceeded = 11
          */
         stoppageTimeoutExceeded: Workspace_Status_Failure_StoppageTimeoutExceeded;
     } | {
         oneofKind: "runContainer";
         /**
+         * RunContainer means that running the Workspace's container failed.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.RunContainer runContainer = 12
          */
         runContainer: Workspace_Status_Failure_RunContainer;
     } | {
         oneofKind: "healthCheck";
         /**
+         * HealthCheck means that the Workspace failed its health checks.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.HealthCheck healthCheck = 13
          */
         healthCheck: Workspace_Status_Failure_HealthCheck;
     } | {
         oneofKind: "unknown";
         /**
+         * Unknown means that the run failed for an unclassified reason.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.Unknown unknown = 14
          */
         unknown: Workspace_Status_Failure_Unknown;
     } | {
         oneofKind: "additionalRepoClone";
         /**
+         * AdditionalRepoClone means that cloning one of the additional
+         * repositories failed.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.AdditionalRepoClone additionalRepoClone = 15
          */
         additionalRepoClone: Workspace_Status_Failure_AdditionalRepoClone;
@@ -967,230 +1515,363 @@ export interface Workspace_Status_Failure {
     };
 }
 /**
+ * ImageBuild means that building the container image failed.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.ImageBuild
  */
 export interface Workspace_Status_Failure_ImageBuild {
 }
 /**
+ * ImagePull means that pulling the container image failed.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.ImagePull
  */
 export interface Workspace_Status_Failure_ImagePull {
 }
 /**
+ * RepoClone means that cloning the primary repository failed.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.RepoClone
  */
 export interface Workspace_Status_Failure_RepoClone {
 }
 /**
+ * RepoCheckout means that checking out the requested branch, tag or
+ * commit of the primary repository failed.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.RepoCheckout
  */
 export interface Workspace_Status_Failure_RepoCheckout {
 }
 /**
+ * BuildTimeoutExceeded means that the image build did not complete
+ * within the allowed duration.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.BuildTimeoutExceeded
  */
 export interface Workspace_Status_Failure_BuildTimeoutExceeded {
 }
 /**
+ * Task means that a lifecycle task failed while its onFailure was set to
+ * abort the initialization.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.Task
  */
 export interface Workspace_Status_Failure_Task {
     /**
+     * Name is the name of the failed Task.
+     *
      * @generated from protobuf field: string name = 1
      */
     name: string;
     /**
+     * ExitCode is the exit code with which the Task's command exited.
+     *
      * @generated from protobuf field: int32 exitCode = 2
      */
     exitCode: number;
 }
 /**
+ * StartupUnknown means that the Workspace failed to start for an
+ * undetermined reason.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.StartupUnknown
  */
 export interface Workspace_Status_Failure_StartupUnknown {
 }
 /**
+ * StartupTimeoutExceeded means that the Workspace did not become ready
+ * within the allowed duration.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.StartupTimeoutExceeded
  */
 export interface Workspace_Status_Failure_StartupTimeoutExceeded {
 }
 /**
+ * LoadStorage means that loading the Workspace's persistent storage
+ * failed.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.LoadStorage
  */
 export interface Workspace_Status_Failure_LoadStorage {
 }
 /**
+ * SaveStorage means that saving the Workspace's persistent storage
+ * failed.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.SaveStorage
  */
 export interface Workspace_Status_Failure_SaveStorage {
 }
 /**
+ * StoppageTimeoutExceeded means that the Workspace did not stop
+ * gracefully within the allowed duration.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.StoppageTimeoutExceeded
  */
 export interface Workspace_Status_Failure_StoppageTimeoutExceeded {
 }
 /**
+ * RunContainer means that running the Workspace's container failed.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.RunContainer
  */
 export interface Workspace_Status_Failure_RunContainer {
 }
 /**
+ * HealthCheck means that the Workspace failed its health checks.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.HealthCheck
  */
 export interface Workspace_Status_Failure_HealthCheck {
 }
 /**
+ * Unknown means that the run failed for an unclassified reason.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.Unknown
  */
 export interface Workspace_Status_Failure_Unknown {
 }
 /**
+ * AdditionalRepoClone means that cloning one of the additional
+ * repositories failed.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.AdditionalRepoClone
  */
 export interface Workspace_Status_Failure_AdditionalRepoClone {
     /**
+     * Name is the name of the additional repository that failed to be
+     * cloned.
+     *
      * @generated from protobuf field: string name = 1
      */
     name: string;
 }
 /**
+ * SharedPort is a named Application of the Workspace that is shared with
+ * other Users. It is set via the ShareWorkspacePort method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.SharedPort
  */
 export interface Workspace_Status_SharedPort {
     /**
+     * Mode is the audience with which the Application is shared.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.SharedPort.Mode mode = 1
      */
     mode: Workspace_Status_SharedPort_Mode;
     /**
+     * ApplicationName is the name of the shared Application as it is defined
+     * in the Workspace's spec.
+     *
      * @generated from protobuf field: string applicationName = 2
      */
     applicationName: string;
 }
 /**
+ * Mode is the audience with which the Application is shared
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.Workspace.Status.SharedPort.Mode
  */
 export enum Workspace_Status_SharedPort_Mode {
     /**
+     * UNSET is not used. A shared Application must have an explicit mode.
+     *
      * @generated from protobuf enum value: UNSET = 0;
      */
     UNSET = 0,
     /**
+     * MEMBERS shares the Application with the Members of the Workspace's
+     * Space.
+     *
      * @generated from protobuf enum value: MEMBERS = 1;
      */
     MEMBERS = 1,
     /**
+     * ALL shares the Application with all the Cluster's Users.
+     *
      * @generated from protobuf enum value: ALL = 2;
      */
     ALL = 2
 }
 /**
+ * Run is a single run of the Workspace (i.e. the period spanning from a
+ * start request until the Workspace is stopped).
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Run
  */
 export interface Workspace_Status_Run {
     /**
+     * ID is a randomly generated identifier of the run.
+     *
      * @generated from protobuf field: string id = 1
      */
     id: string;
     /**
+     * InitializedAt is the timestamp at which the run was initialized.
+     *
      * @generated from protobuf field: google.protobuf.Timestamp initializedAt = 2
      */
     initializedAt?: Timestamp;
     /**
+     * StoppedAt is the timestamp at which the run was stopped.
+     *
      * @generated from protobuf field: google.protobuf.Timestamp stoppedAt = 3
      */
     stoppedAt?: Timestamp;
     /**
+     * Failure is set when the run failed.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure failure = 4
      */
     failure?: Workspace_Status_Failure;
     /**
+     * Config is the run-specific configuration that was supplied with the
+     * start request.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.StartWorkspaceRequest.Config config = 5
      */
     config?: StartWorkspaceRequest_Config;
 }
 /**
+ * State is the current state of the Workspace's lifecycle
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.Workspace.Status.State
  */
 export enum Workspace_Status_State {
     /**
+     * UNKNOWN is not used.
+     *
      * @generated from protobuf enum value: UNKNOWN = 0;
      */
     UNKNOWN = 0,
     /**
+     * INIT_REQUEST means that a start request has been accepted by the API
+     * server.
+     *
      * @generated from protobuf enum value: INIT_REQUEST = 1;
      */
     INIT_REQUEST = 1,
     /**
+     * INITIALIZING means that the Cluster is provisioning the Workspace's
+     * underlying resources and waiting for its supervisor to become ready.
+     *
      * @generated from protobuf enum value: INITIALIZING = 2;
      */
     INITIALIZING = 2,
     /**
+     * PULLING_IMAGE means that the container image is being pulled from the
+     * registry.
+     *
      * @generated from protobuf enum value: PULLING_IMAGE = 3;
      */
     PULLING_IMAGE = 3,
     /**
+     * BUILDING_IMAGE means that the container image is being built from a
+     * Dockerfile or a devcontainer spec.
+     *
      * @generated from protobuf enum value: BUILDING_IMAGE = 4;
      */
     BUILDING_IMAGE = 4,
     /**
+     * STARTING_RUNTIME means that the Workspace's container has started and
+     * that the agent is initializing.
+     *
      * @generated from protobuf enum value: STARTING_RUNTIME = 5;
      */
     STARTING_RUNTIME = 5,
     /**
+     * PREPARING means that the agent is running the lifecycle setup (i.e.
+     * the repository cloning, the ON_CREATE tasks, the dotfiles and the
+     * devcontainer Features).
+     *
      * @generated from protobuf enum value: PREPARING = 6;
      */
     PREPARING = 6,
     /**
+     * RUNNING means that the Workspace is fully initialized and ready to be
+     * used.
+     *
      * @generated from protobuf enum value: RUNNING = 7;
      */
     RUNNING = 7,
     /**
+     * STOPPING_REQUEST means that a stop request has been received.
+     *
      * @generated from protobuf enum value: STOPPING_REQUEST = 9;
      */
     STOPPING_REQUEST = 9,
     /**
+     * STOPPING means that the Workspace is shutting down gracefully and
+     * running its PRE_STOP tasks.
+     *
      * @generated from protobuf enum value: STOPPING = 10;
      */
     STOPPING = 10,
     /**
+     * STOPPED means that the Workspace is not running. Its storage is
+     * preserved unless the Workspace is ephemeral.
+     *
      * @generated from protobuf enum value: STOPPED = 11;
      */
     STOPPED = 11
 }
 /**
+ * StoppingReason is the reason for which a Workspace was stopped
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.Workspace.Status.StoppingReason
  */
 export enum Workspace_Status_StoppingReason {
     /**
+     * STOPPING_REASON_UNSET means that no stoppage reason is set (e.g. the
+     * Workspace has never been stopped yet).
+     *
      * @generated from protobuf enum value: STOPPING_REASON_UNSET = 0;
      */
     UNSET = 0,
     /**
+     * STOPPING_REASON_API means that the Workspace was stopped upon an
+     * explicit API request (e.g. via the StopWorkspace method).
+     *
      * @generated from protobuf enum value: STOPPING_REASON_API = 1;
      */
     API = 1,
     /**
+     * STOPPING_REASON_ERROR means that the Workspace was stopped because of
+     * a failure of the run.
+     *
      * @generated from protobuf enum value: STOPPING_REASON_ERROR = 2;
      */
     ERROR = 2,
     /**
+     * STOPPING_REASON_CLUSTER means that the Workspace was stopped by the
+     * Cluster itself (e.g. once its inactivity timeout was exceeded).
+     *
      * @generated from protobuf enum value: STOPPING_REASON_CLUSTER = 3;
      */
     CLUSTER = 3
 }
 /**
+ * WorkspaceList is the response of the ListWorkspace method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.WorkspaceList
  */
 export interface WorkspaceList {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `WorkspaceList`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Items is the list of Workspaces.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace items = 3
      */
     items: Workspace[];
@@ -1202,25 +1883,38 @@ export interface WorkspaceList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * ListWorkspaceOptions is the request of the ListWorkspace method. The
+ * returned Workspaces are always restricted to the ones that are owned by the
+ * calling User.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListWorkspaceOptions
  */
 export interface ListWorkspaceOptions {
     /**
+     * Common is the pagination and ordering options that are common to all the
+     * List methods.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
     /**
+     * Filter optionally narrows down the returned Workspaces
+     *
      * @generated from protobuf oneof: filter
      */
     filter: {
         oneofKind: "spaceRef";
         /**
+         * SpaceRef returns only the Workspaces that belong to this Space.
+         *
          * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 2
          */
         spaceRef: ObjectReference;
     } | {
         oneofKind: "templateRef";
         /**
+         * TemplateRef returns only the Workspaces that belong to this Template.
+         *
          * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference templateRef = 3
          */
         templateRef: ObjectReference;
@@ -1229,6 +1923,13 @@ export interface ListWorkspaceOptions {
     };
 }
 /**
+ * Secret is a sensitive value (e.g. an API key, a token, a password or a
+ * certificate) that is stored inside a Space. Secrets are referenced by name
+ * from the Workspace and Template specs (e.g. as the source of an environment
+ * variable, of a registry password or of a repository password). Their content
+ * is resolved by the Cluster at initialization time and it is never returned
+ * back by the API once the Secret is created.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Secret
  */
 export interface Secret {
@@ -1270,45 +1971,65 @@ export interface Secret {
     data?: Secret_Data;
 }
 /**
+ * Spec is the Secret specification. It is intentionally empty.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Secret.Spec
  */
 export interface Secret_Spec {
 }
 /**
+ * Status is the current status of the Secret. It is managed by the Cluster
+ * and it is read-only.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Secret.Status
  */
 export interface Secret_Status {
     /**
+     * SpaceRef is the reference of the Space that owns the Secret.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 1
      */
     spaceRef?: ObjectReference;
     /**
+     * UserRef is the reference of the Octelium User who created the Secret.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 2
      */
     userRef?: ObjectReference;
 }
 /**
+ * Data is the Secret's sensitive content. It is write-only (i.e. it can only
+ * be set at creation time and it is never returned back by the API).
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Secret.Data
  */
 export interface Secret_Data {
     /**
+     * Type is the format of the Secret's content
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "value";
         /**
+         * Value is the content provided as a string.
+         *
          * @generated from protobuf field: string value = 1
          */
         value: string;
     } | {
         oneofKind: "valueBytes";
         /**
+         * ValueBytes is the content provided as raw bytes.
+         *
          * @generated from protobuf field: bytes valueBytes = 2
          */
         valueBytes: Uint8Array;
     } | {
         oneofKind: "attrs";
         /**
+         * Attrs is the content provided as a structured map of attributes.
+         *
          * @generated from protobuf field: google.protobuf.Struct attrs = 3
          */
         attrs: Struct;
@@ -1317,31 +2038,47 @@ export interface Secret_Data {
     };
 }
 /**
+ * ListSecretOptions is the request of the ListSecret method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListSecretOptions
  */
 export interface ListSecretOptions {
     /**
+     * Common is the pagination and ordering options that are common to all the
+     * List methods.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
     /**
+     * SpaceRef is the reference of the Space whose Secrets are listed.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 2
      */
     spaceRef?: ObjectReference;
 }
 /**
+ * SecretList is the response of the ListSecret method. The Secrets' data is
+ * not included.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.SecretList
  */
 export interface SecretList {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `SecretList`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Items is the list of Secrets.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Secret items = 3
      */
     items: Secret[];
@@ -1353,33 +2090,47 @@ export interface SecretList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * ClientMessage is the envelope of the messages that are sent by the client
+ * over the Cordium portal's bidirectional WebSocket connection. It multiplexes
+ * the terminal operations of several Workspaces over a single connection.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClientMessage
  */
 export interface ClientMessage {
     /**
+     * Type is the client message's type
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "writeTerminalDataRequest";
         /**
+         * WriteTerminalDataRequest writes data (i.e. stdin) to a terminal.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.WriteTerminalDataRequest writeTerminalDataRequest = 1
          */
         writeTerminalDataRequest: WriteTerminalDataRequest;
     } | {
         oneofKind: "setTerminalWindowSizeRequest";
         /**
+         * SetTerminalWindowSizeRequest resizes a terminal's window.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.SetTerminalWindowSizeRequest setTerminalWindowSizeRequest = 2
          */
         setTerminalWindowSizeRequest: SetTerminalWindowSizeRequest;
     } | {
         oneofKind: "listenTerminalRequest";
         /**
+         * ListenTerminalRequest starts listening to a terminal's output.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.ListenTerminalRequest listenTerminalRequest = 3
          */
         listenTerminalRequest: ListenTerminalRequest;
     } | {
         oneofKind: "listenTerminalEndRequest";
         /**
+         * ListenTerminalEndRequest stops listening to a terminal's output.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.ClientMessage.ListenTerminalEndRequest listenTerminalEndRequest = 4
          */
         listenTerminalEndRequest: ClientMessage_ListenTerminalEndRequest;
@@ -1388,30 +2139,44 @@ export interface ClientMessage {
     };
 }
 /**
+ * ListenTerminalEndRequest stops listening to a terminal's output without
+ * terminating the terminal itself.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClientMessage.ListenTerminalEndRequest
  */
 export interface ClientMessage_ListenTerminalEndRequest {
     /**
+     * ID is the ID of the terminal to stop listening to.
+     *
      * @generated from protobuf field: string id = 1
      */
     id: string;
 }
 /**
+ * ServerMessage is the envelope of the messages that are sent by the server
+ * over the Cordium portal's bidirectional WebSocket connection.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ServerMessage
  */
 export interface ServerMessage {
     /**
+     * Type is the server message's type
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "workspaceUpdate";
         /**
+         * WorkspaceUpdate publishes the current state of a Workspace.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.ServerMessage.WorkspaceUpdate workspaceUpdate = 1
          */
         workspaceUpdate: ServerMessage_WorkspaceUpdate;
     } | {
         oneofKind: "listenTerminalEvent";
         /**
+         * ListenTerminalEvent publishes an output event of a terminal.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.ServerMessage.ListenTerminalEvent listenTerminalEvent = 2
          */
         listenTerminalEvent: ServerMessage_ListenTerminalEvent;
@@ -1420,235 +2185,375 @@ export interface ServerMessage {
     };
 }
 /**
+ * WorkspaceUpdate publishes the current state of one of the User's
+ * Workspaces.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ServerMessage.WorkspaceUpdate
  */
 export interface ServerMessage_WorkspaceUpdate {
     /**
+     * Workspace is the updated Workspace.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace workspace = 1
      */
     workspace?: Workspace;
 }
 /**
+ * ListenTerminalEvent publishes an output event of a terminal that the
+ * client is listening to.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ServerMessage.ListenTerminalEvent
  */
 export interface ServerMessage_ListenTerminalEvent {
     /**
+     * ID is the ID of the terminal that the event belongs to.
+     *
      * @generated from protobuf field: string id = 1
      */
     id: string;
     /**
+     * ListenTerminalResponse is the terminal's output event.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ListenTerminalResponse listenTerminalResponse = 2
      */
     listenTerminalResponse?: ListenTerminalResponse;
 }
 /**
+ * StartWorkspaceRequest is the request of the StartWorkspace method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.StartWorkspaceRequest
  */
 export interface StartWorkspaceRequest {
     /**
+     * WorkspaceRef is the reference of the Workspace to be started.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceRef = 1
      */
     workspaceRef?: ObjectReference;
     /**
+     * Config is the run-specific configuration of the run being started.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.StartWorkspaceRequest.Config config = 3
      */
     config?: StartWorkspaceRequest_Config;
 }
 /**
+ * Config is the run-specific configuration that only applies to the run
+ * being started.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.StartWorkspaceRequest.Config
  */
 export interface StartWorkspaceRequest_Config {
     /**
+     * Vars is the list of the variables that override the Workspace's own
+     * variables for this run.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Var vars = 1
      */
     vars: Workspace_Spec_Var[];
     /**
+     * RegionRef is the reference of the Region that is chosen to host the run.
+     * If it is unset, the Cluster picks a Region on its own, preferring the
+     * User's preferred Region if it is set in their UserConfig.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference regionRef = 2
      */
     regionRef?: ObjectReference;
 }
 /**
+ * StartWorkspaceResponse is the response of the StartWorkspace method. It is
+ * intentionally empty since the start itself is asynchronous.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.StartWorkspaceResponse
  */
 export interface StartWorkspaceResponse {
 }
 /**
+ * StopWorkspaceRequest is the request of the StopWorkspace method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.StopWorkspaceRequest
  */
 export interface StopWorkspaceRequest {
     /**
+     * WorkspaceRef is the reference of the Workspace to be stopped.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceRef = 1
      */
     workspaceRef?: ObjectReference;
 }
 /**
+ * StopWorkspaceResponse is the response of the StopWorkspace method. It is
+ * intentionally empty since the stoppage itself is asynchronous.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.StopWorkspaceResponse
  */
 export interface StopWorkspaceResponse {
 }
 /**
+ * Template is a reusable Workspace configuration inside a Space. Every
+ * Workspace is created from a Template and it inherits its spec. Every Space
+ * has a `default` Template that is automatically created along with it. A
+ * Template can additionally be associated with a GitProvider and it can be
+ * pre-built so that its Workspaces start from a ready-made storage snapshot.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Template
  */
 export interface Template {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `Template`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Metadata is the object's metadata.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
     metadata?: Metadata;
     /**
+     * Spec is the Template specification.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Template.Spec spec = 4
      */
     spec?: Template_Spec;
     /**
+     * Status is the current status of the Template.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Template.Status status = 5
      */
     status?: Template_Status;
 }
 /**
+ * Spec is the Template specification. It shares most of the Workspace spec.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Template.Spec
  */
 export interface Template_Spec {
     /**
+     * Image defines how the container image of the Template's Workspaces is
+     * obtained.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Image image = 1
      */
     image?: Workspace_Spec_Image;
     /**
+     * Runtime controls the behavior of the container of the Template's
+     * Workspaces.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime runtime = 2
      */
     runtime?: Workspace_Spec_Runtime;
     /**
+     * Repository is the primary git repository which is cloned into the
+     * Template's Workspaces.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Repository repository = 3
      */
     repository?: Workspace_Spec_Repository;
     /**
+     * AdditionalRepositories is the list of the secondary repositories that
+     * are cloned alongside the primary one.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.AdditionalRepository additionalRepositories = 4
      */
     additionalRepositories: Workspace_Spec_AdditionalRepository[];
     /**
+     * Limit is the default compute resources that are allocated for the
+     * Template's Workspaces.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Limit limit = 5
      */
     limit?: Workspace_Spec_Limit;
     /**
+     * GitProvider is the name of a GitProvider in the same Space. Once it is
+     * set, the User's stored OAuth2 token is automatically injected into the
+     * Template's Workspaces which enables authenticated git operations without
+     * any manual credential configuration.
+     *
      * @generated from protobuf field: string gitProvider = 6
      */
     gitProvider: string;
     /**
+     * Vars is the list of the variables that are substituted inside the spec.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Var vars = 7
      */
     vars: Workspace_Spec_Var[];
 }
 /**
+ * Status is the current status of the Template. It is managed by the Cluster
+ * and it is read-only.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Template.Status
  */
 export interface Template_Status {
     /**
+     * SpaceRef is the reference of the Space that owns the Template.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 1
      */
     spaceRef?: ObjectReference;
     /**
+     * UserRef is the reference of the Octelium User who created the Template.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 2
      */
     userRef?: ObjectReference;
     /**
+     * GitProviderRef is the reference of the GitProvider that is associated
+     * with the Template via the spec's gitProvider field.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference gitProviderRef = 3
      */
     gitProviderRef?: ObjectReference;
     /**
+     * BuildInfo is the state of the Template's pre-builds.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Template.Status.BuildInfo buildInfo = 4
      */
     buildInfo?: Template_Status_BuildInfo;
 }
 /**
+ * BuildInfo is the state of the Template's pre-builds.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Template.Status.BuildInfo
  */
 export interface Template_Status_BuildInfo {
     /**
+     * Builds is the history of the Template's pre-builds ordered from the
+     * most to the least recent one.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Template.Status.BuildInfo.Build builds = 1
      */
     builds: Template_Status_BuildInfo_Build[];
     /**
+     * CurrentReadyBuildID is the ID of the pre-build whose storage snapshot
+     * the new Workspaces of the Template are currently restored from.
+     *
      * @generated from protobuf field: string currentReadyBuildID = 2
      */
     currentReadyBuildID: string;
     /**
+     * CurrentRunningBuildID is the ID of the pre-build that is currently
+     * running, if any.
+     *
      * @generated from protobuf field: string currentRunningBuildID = 3
      */
     currentRunningBuildID: string;
 }
 /**
+ * Build is a single pre-build of the Template.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Template.Status.BuildInfo.Build
  */
 export interface Template_Status_BuildInfo_Build {
     /**
+     * ID is a randomly generated identifier of the pre-build.
+     *
      * @generated from protobuf field: string id = 1
      */
     id: string;
     /**
+     * Tags is the list of the tags that the pre-build was started with. It
+     * defaults to `latest`.
+     *
      * @generated from protobuf field: repeated string tags = 2
      */
     tags: string[];
     /**
+     * StartedAt is the timestamp at which the pre-build started.
+     *
      * @generated from protobuf field: google.protobuf.Timestamp startedAt = 3
      */
     startedAt?: Timestamp;
     /**
+     * DoneAt is the timestamp at which the pre-build completed, failed or
+     * was canceled.
+     *
      * @generated from protobuf field: google.protobuf.Timestamp doneAt = 4
      */
     doneAt?: Timestamp;
     /**
+     * IsCanceled means that the pre-build was explicitly canceled (e.g.
+     * via the CancelBuildTemplate method or by starting a new pre-build).
+     *
      * @generated from protobuf field: bool isCanceled = 5
      */
     isCanceled: boolean;
     /**
+     * Failure is the reason of the failure of the pre-build, if any.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure failure = 6
      */
     failure?: Workspace_Status_Failure;
     /**
+     * State is the current state of the pre-build.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Template.Status.BuildInfo.Build.State state = 7
      */
     state: Template_Status_BuildInfo_Build_State;
 }
 /**
+ * State is the current state of the pre-build
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.Template.Status.BuildInfo.Build.State
  */
 export enum Template_Status_BuildInfo_Build_State {
     /**
+     * STATE_UNKNOWN is not used.
+     *
      * @generated from protobuf enum value: STATE_UNKNOWN = 0;
      */
     UNKNOWN = 0,
     /**
+     * STATE_RUNNING means that the pre-build is currently running.
+     *
      * @generated from protobuf enum value: STATE_RUNNING = 1;
      */
     RUNNING = 1,
     /**
+     * STATE_READY means that the pre-build successfully completed and
+     * that its storage snapshot can be used by the new Workspaces.
+     *
      * @generated from protobuf enum value: STATE_READY = 2;
      */
     READY = 2,
     /**
+     * STATE_FAILED means that the pre-build failed or that it was
+     * canceled.
+     *
      * @generated from protobuf enum value: STATE_FAILED = 3;
      */
     FAILED = 3
 }
 /**
+ * TemplateList is the response of the ListTemplate method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.TemplateList
  */
 export interface TemplateList {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `TemplateList`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Items is the list of Templates.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Template items = 3
      */
     items: Template[];
@@ -1660,155 +2565,248 @@ export interface TemplateList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * ListTemplateOptions is the request of the ListTemplate method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListTemplateOptions
  */
 export interface ListTemplateOptions {
     /**
+     * Common is the pagination and ordering options that are common to all the
+     * List methods.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
     /**
+     * SpaceRef is the reference of the Space whose Templates are listed.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 2
      */
     spaceRef?: ObjectReference;
 }
 /**
+ * BuildTemplateRequest is the request of the BuildTemplate method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.BuildTemplateRequest
  */
 export interface BuildTemplateRequest {
     /**
+     * TemplateRef is the reference of the Template to be pre-built.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference templateRef = 1
      */
     templateRef?: ObjectReference;
     /**
+     * Tags is the list of the tags that are assigned to the pre-build. It
+     * defaults to `latest`.
+     *
      * @generated from protobuf field: repeated string tags = 2
      */
     tags: string[];
 }
 /**
+ * Space is the top-level namespace of Cordium. It groups the Templates,
+ * Workspaces, Secrets, GitProviders and Memberships under a single
+ * organizational unit. A `default` Space is automatically created for a User
+ * upon the creation of their first Workspace. A Space can define runtime
+ * configuration that cascades down to all of its Workspaces as well as the
+ * default and the maximum resource limits of its Workspaces.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Space
  */
 export interface Space {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `Space`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Metadata is the object's metadata.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
     metadata?: Metadata;
     /**
+     * Spec is the Space specification.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Space.Spec spec = 4
      */
     spec?: Space_Spec;
     /**
+     * Status is the current status of the Space.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Space.Status status = 5
      */
     status?: Space_Status;
 }
 /**
+ * Spec is the Space specification
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Space.Spec
  */
 export interface Space_Spec {
     /**
+     * Limit is the default and the maximum compute resources of the Space's
+     * Workspaces.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Space.Spec.Limit limit = 1
      */
     limit?: Space_Spec_Limit;
     /**
+     * Runtime is the runtime configuration that cascades down to every
+     * Workspace of the Space.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Space.Spec.Runtime runtime = 2
      */
     runtime?: Space_Spec_Runtime;
     /**
+     * Authorization is the access control configuration of the Space's
+     * Workspaces.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Space.Spec.Authorization authorization = 3
      */
     authorization?: Space_Spec_Authorization;
 }
 /**
+ * Limit is the default and the maximum compute resources of the Space's
+ * Workspaces. It can only be set for ORGANIZATION Spaces.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Space.Spec.Limit
  */
 export interface Space_Spec_Limit {
     /**
+     * DefaultLimit is the limits that are applied to the Workspaces of the
+     * Space that do not define their own limits.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Limit defaultLimit = 1
      */
     defaultLimit?: Workspace_Spec_Limit;
     /**
+     * MaxLimit is a hard cap that no Workspace of the Space can exceed.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Limit maxLimit = 2
      */
     maxLimit?: Workspace_Spec_Limit;
 }
 /**
+ * Runtime is the runtime configuration that cascades down to every
+ * Workspace of the Space regardless of its Template.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Space.Spec.Runtime
  */
 export interface Space_Spec_Runtime {
     /**
+     * EnvVars is the list of the environment variables that are injected
+     * into every Workspace of the Space. Secret-sourced environment
+     * variables can only be used in ORGANIZATION Spaces.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.EnvVar envVars = 1
      */
     envVars: Workspace_Spec_Runtime_EnvVar[];
     /**
+     * Tasks is the list of the lifecycle tasks that are run in every
+     * Workspace of the Space.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Task tasks = 2
      */
     tasks: Workspace_Spec_Runtime_Task[];
     /**
+     * Capabilities is the Linux capabilities that are merged into every
+     * Workspace of the Space.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Capabilities capabilities = 3
      */
     capabilities?: Workspace_Spec_Runtime_Capabilities;
 }
 /**
+ * Authorization is the access control configuration of the Space's
+ * Workspaces.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Space.Spec.Authorization
  */
 export interface Space_Spec_Authorization {
     /**
+     * DisableSSH denies SSH access to the Workspaces of the Space.
+     *
      * @generated from protobuf field: bool disableSSH = 1
      */
     disableSSH: boolean;
 }
 /**
+ * Status is the current status of the Space. It is managed by the Cluster
+ * and it is read-only.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Space.Status
  */
 export interface Space_Status {
     /**
+     * UserRef is the reference of the Octelium User who created the Space.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 1
      */
     userRef?: ObjectReference;
     /**
+     * Type is the type of the Space.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Space.Status.Type type = 2
      */
     type: Space_Status_Type;
 }
 /**
+ * Type is the type of the Space
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.Space.Status.Type
  */
 export enum Space_Status_Type {
     /**
+     * SPACE_TYPE_UNSET is not used.
+     *
      * @generated from protobuf enum value: SPACE_TYPE_UNSET = 0;
      */
     SPACE_TYPE_UNSET = 0,
     /**
+     * USER is a Space that is personal to a single Octelium User. Members
+     * cannot currently be added to it and it cannot define resource limits.
+     *
      * @generated from protobuf enum value: USER = 1;
      */
     USER = 1,
     /**
+     * ORGANIZATION is a shared Space that can have several Members with
+     * different roles.
+     *
      * @generated from protobuf enum value: ORGANIZATION = 2;
      */
     ORGANIZATION = 2
 }
 /**
+ * SpaceList is the response of the ListSpace method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.SpaceList
  */
 export interface SpaceList {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `SpaceList`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Items is the list of Spaces.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Space items = 3
      */
     items: Space[];
@@ -1820,111 +2818,179 @@ export interface SpaceList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * ListSpaceOptions is the request of the ListSpace method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListSpaceOptions
  */
 export interface ListSpaceOptions {
     /**
+     * Common is the pagination and ordering options that are common to all the
+     * List methods.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
     /**
+     * Type optionally lists only the Spaces of this type.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Space.Status.Type type = 2
      */
     type: Space_Status_Type;
     /**
+     * Mode is the relationship between the calling User and the listed Spaces.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ListSpaceOptions.Mode mode = 3
      */
     mode: ListSpaceOptions_Mode;
 }
 /**
+ * Mode is the relationship between the calling User and the listed Spaces
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.ListSpaceOptions.Mode
  */
 export enum ListSpaceOptions_Mode {
     /**
+     * MODE_UNSET falls back to MODE_CREATED_BY.
+     *
      * @generated from protobuf enum value: MODE_UNSET = 0;
      */
     UNSET = 0,
     /**
+     * MODE_CREATED_BY lists only the Spaces that were created by the calling
+     * User.
+     *
      * @generated from protobuf enum value: MODE_CREATED_BY = 1;
      */
     CREATED_BY = 1,
     /**
+     * MODE_MEMBER lists the Spaces in which the calling User has a Membership.
+     *
      * @generated from protobuf enum value: MODE_MEMBER = 2;
      */
     MEMBER = 2
 }
 /**
+ * Membership binds an Octelium User to a Space with a specific Role. It is the
+ * resource that grants a User access to the Space's Templates, Workspaces,
+ * Secrets and GitProviders. A Membership with the OWNER Role is automatically
+ * created for the User who creates a Space.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Membership
  */
 export interface Membership {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `Membership`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Metadata is the object's metadata.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
     metadata?: Metadata;
     /**
+     * Spec is the Membership specification.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Membership.Spec spec = 4
      */
     spec?: Membership_Spec;
     /**
+     * Status is the current status of the Membership.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Membership.Status status = 5
      */
     status?: Membership_Status;
 }
 /**
+ * Spec is the Membership specification
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Membership.Spec
  */
 export interface Membership_Spec {
     /**
+     * Role is the level of access that the Member has inside the Space.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Membership.Spec.Role role = 1
      */
     role: Membership_Spec_Role;
 }
 /**
+ * Role is the level of access that the Member has inside the Space
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.Membership.Spec.Role
  */
 export enum Membership_Spec_Role {
     /**
+     * UNKNOWN is not used. It is treated as USER upon the creation of a
+     * Membership.
+     *
      * @generated from protobuf enum value: UNKNOWN = 0;
      */
     UNKNOWN = 0,
     /**
+     * OWNER has full control over the Space including deleting it and
+     * managing its Owners. Granting this Role requires the caller to be an
+     * OWNER themselves and requires the target User to be authorized to own
+     * Spaces by the ClusterConfig.
+     *
      * @generated from protobuf enum value: OWNER = 1;
      */
     OWNER = 1,
     /**
+     * ADMIN can manage the Space's Templates, Secrets, GitProviders and
+     * Memberships.
+     *
      * @generated from protobuf enum value: ADMIN = 2;
      */
     ADMIN = 2,
     /**
+     * USER can use the Space (e.g. create Workspaces in it) but cannot
+     * manage it.
+     *
      * @generated from protobuf enum value: USER = 3;
      */
     USER = 3
 }
 /**
+ * Status is the current status of the Membership. It is managed by the
+ * Cluster and it is read-only.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Membership.Status
  */
 export interface Membership_Status {
     /**
+     * UserRef is the reference of the Octelium User that the Membership
+     * belongs to.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 1
      */
     userRef?: ObjectReference;
     /**
+     * SpaceRef is the reference of the Space that the Membership belongs to.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 2
      */
     spaceRef?: ObjectReference;
     /**
+     * UserInfo is the human-readable information about the Member.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Membership.Status.UserInfo userInfo = 3
      */
     userInfo?: Membership_Status_UserInfo;
     /**
+     * GitProviderStateMap is the map of the in-flight GitProvider OAuth2
+     * authorization flows of the Member keyed by the UID of the Workspace that
+     * each flow was initiated for. It is internal to the Cluster and it is
+     * never exposed by the Membership methods.
+     *
      * @generated from protobuf field: map<string, octelium.api.main.cordium.v1.Membership.Status.GitProviderState> gitProviderStateMap = 4
      */
     gitProviderStateMap: {
@@ -1932,52 +2998,83 @@ export interface Membership_Status {
     };
 }
 /**
+ * GitProviderState is the state of an in-flight GitProvider OAuth2
+ * authorization flow that was initiated for a specific Workspace.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Membership.Status.GitProviderState
  */
 export interface Membership_Status_GitProviderState {
     /**
+     * GitProviderRef is the reference of the GitProvider that the flow
+     * authenticates against.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference gitProviderRef = 1
      */
     gitProviderRef?: ObjectReference;
     /**
+     * WorkspaceRef is the reference of the Workspace that the flow was
+     * initiated for.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceRef = 2
      */
     workspaceRef?: ObjectReference;
     /**
+     * CreatedAt is the timestamp at which the flow was initiated. The state
+     * is short-lived and it is discarded once it expires.
+     *
      * @generated from protobuf field: google.protobuf.Timestamp createdAt = 3
      */
     createdAt?: Timestamp;
     /**
+     * StateID is the randomly generated value that is used as the OAuth2
+     * `state` parameter in order to protect the flow against CSRF.
+     *
      * @generated from protobuf field: string stateID = 4
      */
     stateID: string;
 }
 /**
+ * UserInfo is the human-readable information about the Member which is
+ * copied from the Octelium User in order to be displayed alongside the
+ * Membership.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Membership.Status.UserInfo
  */
 export interface Membership_Status_UserInfo {
     /**
+     * DisplayName is the Member's display name.
+     *
      * @generated from protobuf field: string displayName = 1
      */
     displayName: string;
     /**
+     * PicURL is the URL of the Member's picture.
+     *
      * @generated from protobuf field: string picURL = 2
      */
     picURL: string;
 }
 /**
+ * MembershipList is the response of the ListMembership method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.MembershipList
  */
 export interface MembershipList {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `MembershipList`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Items is the list of Memberships.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Membership items = 3
      */
     items: Membership[];
@@ -1989,42 +3086,63 @@ export interface MembershipList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * ListMembershipOptions is the request of the ListMembership method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListMembershipOptions
  */
 export interface ListMembershipOptions {
     /**
+     * Common is the pagination and ordering options that are common to all the
+     * List methods.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
     /**
+     * SpaceRef is the reference of the Space whose Memberships are listed.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 2
      */
     spaceRef?: ObjectReference;
 }
 /**
+ * CreateMembershipRequest is the request of the CreateMembership method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.CreateMembershipRequest
  */
 export interface CreateMembershipRequest {
     /**
+     * Role is the level of access that the new Member has inside the Space. It
+     * defaults to USER.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.CreateMembershipRequest.Role role = 1
      */
     role: CreateMembershipRequest_Role;
     /**
+     * SpaceRef is the reference of the Space to add the Member to.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 2
      */
     spaceRef?: ObjectReference;
     /**
+     * UserType identifies the Octelium User to be added as a Member
+     *
      * @generated from protobuf oneof: userType
      */
     userType: {
         oneofKind: "userRef";
         /**
+         * UserRef is the reference of the Octelium User to be added.
+         *
          * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 3
          */
         userRef: ObjectReference;
     } | {
         oneofKind: "email";
         /**
+         * Email is the email address of the Octelium User to be added. The User
+         * must already exist in the Cluster.
+         *
          * @generated from protobuf field: string email = 4
          */
         email: string;
@@ -2033,73 +3151,114 @@ export interface CreateMembershipRequest {
     };
 }
 /**
+ * Role is the level of access that the new Member has inside the Space. It
+ * mirrors the Membership's own Role
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.CreateMembershipRequest.Role
  */
 export enum CreateMembershipRequest_Role {
     /**
+     * UNKNOWN is not used. It is treated as USER.
+     *
      * @generated from protobuf enum value: UNKNOWN = 0;
      */
     UNKNOWN = 0,
     /**
+     * OWNER has full control over the Space. Granting this Role requires the
+     * caller to be an OWNER themselves.
+     *
      * @generated from protobuf enum value: OWNER = 1;
      */
     OWNER = 1,
     /**
+     * ADMIN can manage the Space's Templates, Secrets, GitProviders and
+     * Memberships.
+     *
      * @generated from protobuf enum value: ADMIN = 2;
      */
     ADMIN = 2,
     /**
+     * USER can use the Space but cannot manage it.
+     *
      * @generated from protobuf enum value: USER = 3;
      */
     USER = 3
 }
 /**
+ * GitProvider configures OAuth2 authentication against a git hosting service
+ * (i.e. GitHub, GitLab or a generic OAuth2 provider) inside a Space. Once a
+ * GitProvider is attached to a Template, the User's stored OAuth2 token is
+ * automatically injected into the Workspaces of that Template which enables
+ * `git clone`, `git push` and the other authenticated operations without any
+ * manual credential configuration.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.GitProvider
  */
 export interface GitProvider {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `GitProvider`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Metadata is the object's metadata.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
     metadata?: Metadata;
     /**
+     * Spec is the GitProvider specification.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.GitProvider.Spec spec = 4
      */
     spec?: GitProvider_Spec;
     /**
+     * Status is the current status of the GitProvider.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.GitProvider.Status status = 5
      */
     status?: GitProvider_Status;
 }
 /**
+ * Spec is the GitProvider specification
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.GitProvider.Spec
  */
 export interface GitProvider_Spec {
     /**
+     * Type is the git hosting service that the GitProvider authenticates
+     * against
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "github";
         /**
+         * Github is the GitHub OAuth2 provider.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.GitProvider.Spec.Github github = 2
          */
         github: GitProvider_Spec_Github;
     } | {
         oneofKind: "gitlab";
         /**
+         * Gitlab is the GitLab OAuth2 provider.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.GitProvider.Spec.Gitlab gitlab = 3
          */
         gitlab: GitProvider_Spec_Gitlab;
     } | {
         oneofKind: "oauth2";
         /**
+         * OAuth2 is a generic OAuth2 provider.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.GitProvider.Spec.OAuth2 oauth2 = 4
          */
         oauth2: GitProvider_Spec_OAuth2;
@@ -2108,32 +3267,48 @@ export interface GitProvider_Spec {
     };
 }
 /**
+ * Github is the GitHub OAuth2 provider.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.GitProvider.Spec.Github
  */
 export interface GitProvider_Spec_Github {
     /**
+     * ClientID is the OAuth2 application's client ID.
+     *
      * @generated from protobuf field: string clientID = 1
      */
     clientID: string;
     /**
+     * ClientSecret is the OAuth2 application's client secret.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.GitProvider.Spec.Github.ClientSecret clientSecret = 2
      */
     clientSecret?: GitProvider_Spec_Github_ClientSecret;
     /**
+     * Scopes is the list of the OAuth2 scopes that are requested from the
+     * provider (e.g. `repo`).
+     *
      * @generated from protobuf field: repeated string scopes = 3
      */
     scopes: string[];
 }
 /**
+ * ClientSecret is the OAuth2 application's client secret.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.GitProvider.Spec.Github.ClientSecret
  */
 export interface GitProvider_Spec_Github_ClientSecret {
     /**
+     * Type is the source of the client secret
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret is the name of a Secret in the same Space whose content
+         * is used as the client secret.
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -2142,32 +3317,48 @@ export interface GitProvider_Spec_Github_ClientSecret {
     };
 }
 /**
+ * Gitlab is the GitLab OAuth2 provider.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.GitProvider.Spec.Gitlab
  */
 export interface GitProvider_Spec_Gitlab {
     /**
+     * ClientID is the OAuth2 application's client ID.
+     *
      * @generated from protobuf field: string clientID = 1
      */
     clientID: string;
     /**
+     * ClientSecret is the OAuth2 application's client secret.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.GitProvider.Spec.Gitlab.ClientSecret clientSecret = 2
      */
     clientSecret?: GitProvider_Spec_Gitlab_ClientSecret;
     /**
+     * Scopes is the list of the OAuth2 scopes that are requested from the
+     * provider (e.g. `read_repository`).
+     *
      * @generated from protobuf field: repeated string scopes = 3
      */
     scopes: string[];
 }
 /**
+ * ClientSecret is the OAuth2 application's client secret.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.GitProvider.Spec.Gitlab.ClientSecret
  */
 export interface GitProvider_Spec_Gitlab_ClientSecret {
     /**
+     * Type is the source of the client secret
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret is the name of a Secret in the same Space whose content
+         * is used as the client secret.
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -2176,40 +3367,61 @@ export interface GitProvider_Spec_Gitlab_ClientSecret {
     };
 }
 /**
+ * OAuth2 is a generic OAuth2 provider for the self-hosted and the other
+ * git hosting services.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.GitProvider.Spec.OAuth2
  */
 export interface GitProvider_Spec_OAuth2 {
     /**
+     * ClientID is the OAuth2 application's client ID.
+     *
      * @generated from protobuf field: string clientID = 1
      */
     clientID: string;
     /**
+     * ClientSecret is the OAuth2 application's client secret.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.GitProvider.Spec.OAuth2.ClientSecret clientSecret = 2
      */
     clientSecret?: GitProvider_Spec_OAuth2_ClientSecret;
     /**
+     * AuthURL is the provider's authorization endpoint URL.
+     *
      * @generated from protobuf field: string authURL = 3
      */
     authURL: string;
     /**
+     * TokenURL is the provider's token endpoint URL.
+     *
      * @generated from protobuf field: string tokenURL = 4
      */
     tokenURL: string;
     /**
+     * Scopes is the list of the OAuth2 scopes that are requested from the
+     * provider. At least one scope must be provided.
+     *
      * @generated from protobuf field: repeated string scopes = 5
      */
     scopes: string[];
 }
 /**
+ * ClientSecret is the OAuth2 application's client secret.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.GitProvider.Spec.OAuth2.ClientSecret
  */
 export interface GitProvider_Spec_OAuth2_ClientSecret {
     /**
+     * Type is the source of the client secret
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "fromSecret";
         /**
+         * FromSecret is the name of a Secret in the same Space whose content
+         * is used as the client secret.
+         *
          * @generated from protobuf field: string fromSecret = 1
          */
         fromSecret: string;
@@ -2218,31 +3430,47 @@ export interface GitProvider_Spec_OAuth2_ClientSecret {
     };
 }
 /**
+ * Status is the current status of the GitProvider. It is managed by the
+ * Cluster and it is read-only.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.GitProvider.Status
  */
 export interface GitProvider_Status {
     /**
+     * UserRef is the reference of the Octelium User who created the
+     * GitProvider.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 1
      */
     userRef?: ObjectReference;
     /**
+     * SpaceRef is the reference of the Space that owns the GitProvider.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 2
      */
     spaceRef?: ObjectReference;
 }
 /**
+ * GitProviderList is the response of the ListGitProvider method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.GitProviderList
  */
 export interface GitProviderList {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `GitProviderList`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Items is the list of GitProviders.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.GitProvider items = 3
      */
     items: GitProvider[];
@@ -2254,19 +3482,31 @@ export interface GitProviderList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * ListGitProviderOptions is the request of the ListGitProvider method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListGitProviderOptions
  */
 export interface ListGitProviderOptions {
     /**
+     * Common is the pagination and ordering options that are common to all the
+     * List methods.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
     /**
+     * SpaceRef is the reference of the Space whose GitProviders are listed.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 2
      */
     spaceRef?: ObjectReference;
 }
 /**
+ * UserSecret is a sensitive value that is scoped to its owner Octelium User
+ * rather than to a Space. UserSecrets are used as the value source of the
+ * UserConfig environment variables as well as for the dotfiles repository
+ * authentication. Their content is never returned back by the API.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserSecret
  */
 export interface UserSecret {
@@ -2277,7 +3517,7 @@ export interface UserSecret {
      */
     apiVersion: string;
     /**
-     * Kind is the resource name (i.e. `Secret`).
+     * Kind is the resource name (i.e. `UserSecret`).
      *
      * @generated from protobuf field: string kind = 2
      */
@@ -2289,60 +3529,82 @@ export interface UserSecret {
      */
     metadata?: Metadata;
     /**
-     * Spec is the Secret specification.
+     * Spec is the UserSecret specification.
      *
      * @generated from protobuf field: octelium.api.main.cordium.v1.UserSecret.Spec spec = 4
      */
     spec?: UserSecret_Spec;
     /**
-     * Status is the current status of the Secret.
+     * Status is the current status of the UserSecret.
      *
      * @generated from protobuf field: octelium.api.main.cordium.v1.UserSecret.Status status = 5
      */
     status?: UserSecret_Status;
     /**
-     * Data is the Secret data content.
+     * Data is the UserSecret data content.
      *
      * @generated from protobuf field: octelium.api.main.cordium.v1.UserSecret.Data data = 6
      */
     data?: UserSecret_Data;
 }
 /**
+ * Spec is the UserSecret specification
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserSecret.Spec
  */
 export interface UserSecret_Spec {
     /**
+     * Type is the kind of the UserSecret's content.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.UserSecret.Spec.Type type = 1
      */
     type: UserSecret_Spec_Type;
 }
 /**
+ * Type is the kind of the UserSecret's content
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.UserSecret.Spec.Type
  */
 export enum UserSecret_Spec_Type {
     /**
+     * DEFAULT is an arbitrary value that is provided by the User.
+     *
      * @generated from protobuf enum value: DEFAULT = 0;
      */
     DEFAULT = 0,
     /**
+     * SSH_KEY is an ECDSA key pair that is generated by the Cluster. The
+     * private key is stored as the UserSecret's data and it is automatically
+     * loaded into an SSH agent inside every Workspace of the User while the
+     * public key is exposed in the status.
+     *
      * @generated from protobuf enum value: SSH_KEY = 1;
      */
     SSH_KEY = 1
 }
 /**
+ * Status is the current status of the UserSecret. It is managed by the
+ * Cluster and it is read-only.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserSecret.Status
  */
 export interface UserSecret_Status {
     /**
+     * UserRef is the reference of the Octelium User who owns the UserSecret.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 1
      */
     userRef?: ObjectReference;
     /**
+     * Details is the type-specific status information
+     *
      * @generated from protobuf oneof: details
      */
     details: {
         oneofKind: "sshKey";
         /**
+         * SSHKey is set for the UserSecrets of the SSH_KEY type.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.UserSecret.Status.SSHKey sshKey = 3
          */
         sshKey: UserSecret_Status_SSHKey;
@@ -2351,36 +3613,52 @@ export interface UserSecret_Status {
     };
 }
 /**
+ * SSHKey is the public part of a generated SSH_KEY UserSecret.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserSecret.Status.SSHKey
  */
 export interface UserSecret_Status_SSHKey {
     /**
+     * PublicKey is the OpenSSH-formatted public key.
+     *
      * @generated from protobuf field: string publicKey = 1
      */
     publicKey: string;
 }
 /**
+ * Data is the UserSecret's sensitive content. It is write-only (i.e. it can
+ * only be set at creation time and it is never returned back by the API).
+ * For the UserSecrets of the SSH_KEY type it is generated by the Cluster.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserSecret.Data
  */
 export interface UserSecret_Data {
     /**
+     * Type is the format of the UserSecret's content
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "value";
         /**
+         * Value is the content provided as a string.
+         *
          * @generated from protobuf field: string value = 1
          */
         value: string;
     } | {
         oneofKind: "valueBytes";
         /**
+         * ValueBytes is the content provided as raw bytes.
+         *
          * @generated from protobuf field: bytes valueBytes = 2
          */
         valueBytes: Uint8Array;
     } | {
         oneofKind: "attrs";
         /**
+         * Attrs is the content provided as a structured map of attributes.
+         *
          * @generated from protobuf field: google.protobuf.Struct attrs = 3
          */
         attrs: Struct;
@@ -2389,27 +3667,42 @@ export interface UserSecret_Data {
     };
 }
 /**
+ * ListUserSecretOptions is the request of the ListUserSecret method. Only the
+ * UserSecrets that are owned by the calling User are returned.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListUserSecretOptions
  */
 export interface ListUserSecretOptions {
     /**
+     * Common is the pagination and ordering options that are common to all the
+     * List methods.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
 }
 /**
+ * UserSecretList is the response of the ListUserSecret method. The
+ * UserSecrets' data is not included.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserSecretList
  */
 export interface UserSecretList {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `UserSecretList`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Items is the list of UserSecrets.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.UserSecret items = 3
      */
     items: UserSecret[];
@@ -2421,87 +3714,140 @@ export interface UserSecretList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * GetSpaceMembershipRequest is the request of the GetSpaceMembership method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.GetSpaceMembershipRequest
  */
 export interface GetSpaceMembershipRequest {
     /**
+     * SpaceRef is the reference of the Space whose Membership of the calling
+     * User is retrieved.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 1
      */
     spaceRef?: ObjectReference;
 }
 /**
+ * UserConfig is the per-User configuration that is applied to all of the
+ * User's Workspaces regardless of their Space or Template. There is exactly
+ * one UserConfig per Octelium User and it is automatically created by the
+ * Cluster upon its first use.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserConfig
  */
 export interface UserConfig {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `UserConfig`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Metadata is the object's metadata.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
     metadata?: Metadata;
     /**
+     * Spec is the UserConfig specification.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.UserConfig.Spec spec = 4
      */
     spec?: UserConfig_Spec;
     /**
+     * Status is the current status of the UserConfig.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.UserConfig.Status status = 5
      */
     status?: UserConfig_Status;
 }
 /**
+ * Spec is the UserConfig specification
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserConfig.Spec
  */
 export interface UserConfig_Spec {
     /**
+     * Dotfiles is the User's personal dotfiles repository.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.UserConfig.Spec.Dotfiles dotfiles = 1
      */
     dotfiles?: UserConfig_Spec_Dotfiles;
     /**
+     * EnvVars is the list of the environment variables that are injected into
+     * every Workspace of the User.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.UserConfig.Spec.EnvVar envVars = 2
      */
     envVars: UserConfig_Spec_EnvVar[];
     /**
+     * Tasks is the list of the personal lifecycle tasks that are run in every
+     * Workspace of the User. They are run after the Template-level and the
+     * Space-level tasks.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Task tasks = 3
      */
     tasks: Workspace_Spec_Runtime_Task[];
     /**
+     * PreferredRegion is the name of the Octelium Region in which the User's
+     * Workspaces are preferably run. The Region must be enabled to host
+     * Workspaces.
+     *
      * @generated from protobuf field: string preferredRegion = 4
      */
     preferredRegion: string;
 }
 /**
+ * Dotfiles is a git repository containing the User's personal dotfiles. It
+ * is cloned into the Workspace at the beginning of the PREPARING phase and
+ * the first install script that is found in it is executed.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserConfig.Spec.Dotfiles
  */
 export interface UserConfig_Spec_Dotfiles {
     /**
+     * URL is the HTTPS URL of the dotfiles git repository.
+     *
      * @generated from protobuf field: string url = 1
      */
     url: string;
     /**
+     * Authentication is set for the private dotfiles repositories.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.UserConfig.Spec.Dotfiles.Authentication authentication = 2
      */
     authentication?: UserConfig_Spec_Dotfiles_Authentication;
     /**
+     * Branch is the branch of the dotfiles repository to be cloned. It
+     * defaults to the repository's default branch.
+     *
      * @generated from protobuf field: string branch = 3
      */
     branch: string;
 }
 /**
+ * Authentication is the credentials that are used to clone a private
+ * dotfiles repository.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserConfig.Spec.Dotfiles.Authentication
  */
 export interface UserConfig_Spec_Dotfiles_Authentication {
     /**
+     * Type is the authentication method
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "http";
         /**
+         * HTTP is the HTTP basic authentication.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.UserConfig.Spec.Dotfiles.Authentication.HTTP http = 1
          */
         http: UserConfig_Spec_Dotfiles_Authentication_HTTP;
@@ -2510,28 +3856,41 @@ export interface UserConfig_Spec_Dotfiles_Authentication {
     };
 }
 /**
+ * HTTP is the HTTP basic authentication credentials.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserConfig.Spec.Dotfiles.Authentication.HTTP
  */
 export interface UserConfig_Spec_Dotfiles_Authentication_HTTP {
     /**
+     * Username is the basic authentication username.
+     *
      * @generated from protobuf field: string username = 1
      */
     username: string;
     /**
+     * Password is the basic authentication password.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.UserConfig.Spec.Dotfiles.Authentication.HTTP.Password password = 2
      */
     password?: UserConfig_Spec_Dotfiles_Authentication_HTTP_Password;
 }
 /**
+ * Password is the password, token or personal access token.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserConfig.Spec.Dotfiles.Authentication.HTTP.Password
  */
 export interface UserConfig_Spec_Dotfiles_Authentication_HTTP_Password {
     /**
+     * Type is the source of the password
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "fromUserSecret";
         /**
+         * FromUserSecret is the name of a UserSecret of the same User
+         * whose content is used as the password.
+         *
          * @generated from protobuf field: string fromUserSecret = 1
          */
         fromUserSecret: string;
@@ -2540,25 +3899,37 @@ export interface UserConfig_Spec_Dotfiles_Authentication_HTTP_Password {
     };
 }
 /**
+ * EnvVar is an environment variable that is injected into every Workspace
+ * of the User.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserConfig.Spec.EnvVar
  */
 export interface UserConfig_Spec_EnvVar {
     /**
+     * Key is the environment variable's name.
+     *
      * @generated from protobuf field: string key = 1
      */
     key: string;
     /**
+     * Type is the source of the environment variable's value
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "value";
         /**
+         * Value is the value provided directly as a string.
+         *
          * @generated from protobuf field: string value = 2
          */
         value: string;
     } | {
         oneofKind: "fromUserSecret";
         /**
+         * FromUserSecret is the name of a UserSecret of the same User whose
+         * content is used as the value.
+         *
          * @generated from protobuf field: string fromUserSecret = 3
          */
         fromUserSecret: string;
@@ -2567,103 +3938,163 @@ export interface UserConfig_Spec_EnvVar {
     };
 }
 /**
+ * Status is the current status of the UserConfig. It is managed by the
+ * Cluster and it is read-only.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UserConfig.Status
  */
 export interface UserConfig_Status {
     /**
+     * UserRef is the reference of the Octelium User who owns the UserConfig.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 1
      */
     userRef?: ObjectReference;
     /**
+     * PreferredRegionRef is the reference of the Region that the spec's
+     * preferredRegion resolves to.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference preferredRegionRef = 2
      */
     preferredRegionRef?: ObjectReference;
 }
 /**
+ * GetUserConfigRequest is the request of the GetUserConfig method. It is
+ * intentionally empty since the UserConfig of the calling User is always the
+ * one that is returned.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.GetUserConfigRequest
  */
 export interface GetUserConfigRequest {
 }
 /**
+ * ShareWorkspacePortRequest is the request of the ShareWorkspacePort method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ShareWorkspacePortRequest
  */
 export interface ShareWorkspacePortRequest {
     /**
+     * WorkspaceRef is the reference of the Workspace that owns the Application.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceRef = 1
      */
     workspaceRef?: ObjectReference;
     /**
+     * Mode is the audience with which the Application is shared.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ShareWorkspacePortRequest.Mode mode = 2
      */
     mode: ShareWorkspacePortRequest_Mode;
     /**
+     * ApplicationName is the name of the Application to be shared as it is
+     * defined in the Workspace's spec.
+     *
      * @generated from protobuf field: string applicationName = 3
      */
     applicationName: string;
 }
 /**
+ * Mode is the audience with which the Application is shared. It mirrors the
+ * Workspace status' SharedPort mode
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.ShareWorkspacePortRequest.Mode
  */
 export enum ShareWorkspacePortRequest_Mode {
     /**
+     * UNSET is not used. A mode must be explicitly provided.
+     *
      * @generated from protobuf enum value: UNSET = 0;
      */
     UNSET = 0,
     /**
+     * MEMBERS shares the Application with the Members of the Workspace's
+     * Space.
+     *
      * @generated from protobuf enum value: MEMBERS = 1;
      */
     MEMBERS = 1,
     /**
+     * ALL shares the Application with all the Cluster's Users.
+     *
      * @generated from protobuf enum value: ALL = 2;
      */
     ALL = 2
 }
 /**
+ * ShareWorkspacePortResponse is the response of the ShareWorkspacePort method.
+ * It is intentionally empty.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ShareWorkspacePortResponse
  */
 export interface ShareWorkspacePortResponse {
 }
 /**
+ * UnshareWorkspacePortRequest is the request of the UnshareWorkspacePort
+ * method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UnshareWorkspacePortRequest
  */
 export interface UnshareWorkspacePortRequest {
     /**
+     * WorkspaceRef is the reference of the Workspace that owns the Application.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceRef = 1
      */
     workspaceRef?: ObjectReference;
     /**
+     * ApplicationName is the name of the Application to stop sharing.
+     *
      * @generated from protobuf field: string applicationName = 2
      */
     applicationName: string;
 }
 /**
+ * UnshareWorkspacePortResponse is the response of the UnshareWorkspacePort
+ * method. It is intentionally empty.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.UnshareWorkspacePortResponse
  */
 export interface UnshareWorkspacePortResponse {
 }
 /**
+ * LeaveSpaceRequest is the request of the LeaveSpace method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.LeaveSpaceRequest
  */
 export interface LeaveSpaceRequest {
     /**
+     * SpaceRef is the reference of the Space to be left.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 1
      */
     spaceRef?: ObjectReference;
 }
 /**
+ * LeaveSpaceResponse is the response of the LeaveSpace method. It is
+ * intentionally empty.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.LeaveSpaceResponse
  */
 export interface LeaveSpaceResponse {
 }
 /**
+ * Region is an Octelium Region of the Cluster that is enabled to host
+ * Workspaces. Regions are managed by the Cluster administrators and they are
+ * read-only for the Users who can only choose among them when starting a
+ * Workspace or when setting their preferred Region in their UserConfig.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Region
  */
 export interface Region {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `Region`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
@@ -2687,24 +4118,35 @@ export interface Region {
     status?: Region_Status;
 }
 /**
+ * Spec is the Region specification. It is intentionally empty.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Region.Spec
  */
 export interface Region_Spec {
 }
 /**
+ * Status is the current status of the Region. It is managed by the Cluster
+ * and it is read-only.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Region.Status
  */
 export interface Region_Status {
     /**
+     * Country is the country in which the Region is located.
+     *
      * @generated from protobuf field: string country = 1
      */
     country: string;
     /**
+     * City is the city in which the Region is located.
+     *
      * @generated from protobuf field: string city = 2
      */
     city: string;
 }
 /**
+ * RegionList is the response of the ListRegion method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.RegionList
  */
 export interface RegionList {
@@ -2734,152 +4176,225 @@ export interface RegionList {
     listResponseMeta?: ListResponseMeta;
 }
 /**
+ * ListRegionOptions is the request of the ListRegion method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListRegionOptions
  */
 export interface ListRegionOptions {
     /**
+     * Common is the pagination and ordering options that are common to all the
+     * List methods.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
      */
     common?: CommonListOptions;
 }
 /**
+ * CreateTerminalRequest is the request of the CreateTerminal method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.CreateTerminalRequest
  */
 export interface CreateTerminalRequest {
     /**
+     * WorkspaceRef is the reference of the Workspace in which the terminal is
+     * created.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceRef = 1
      */
     workspaceRef?: ObjectReference;
     /**
+     * Cols is the initial number of the columns of the terminal's window.
+     *
      * @generated from protobuf field: uint32 cols = 2
      */
     cols: number;
     /**
+     * Rows is the initial number of the rows of the terminal's window.
+     *
      * @generated from protobuf field: uint32 rows = 3
      */
     rows: number;
 }
 /**
+ * Terminal is an interactive terminal that is running inside a Workspace.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Terminal
  */
 export interface Terminal {
     /**
+     * ID is the terminal's identifier. It is prefixed by the name of the
+     * Workspace that owns the terminal (i.e. `<workspace>-<id>`).
+     *
      * @generated from protobuf field: string id = 1
      */
     id: string;
 }
 /**
+ * CreateTerminalResponse is the response of the CreateTerminal method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.CreateTerminalResponse
  */
 export interface CreateTerminalResponse {
     /**
+     * ID is the identifier of the newly created terminal.
+     *
      * @generated from protobuf field: string id = 1
      */
     id: string;
 }
 /**
+ * RemoveTerminalRequest is the request of the RemoveTerminal method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.RemoveTerminalRequest
  */
 export interface RemoveTerminalRequest {
     /**
+     * ID is the identifier of the terminal to be terminated.
+     *
      * @generated from protobuf field: string id = 1
      */
     id: string;
 }
 /**
+ * RemoveTerminalResponse is the response of the RemoveTerminal method. It is
+ * intentionally empty.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.RemoveTerminalResponse
  */
 export interface RemoveTerminalResponse {
 }
 /**
+ * ListTerminalRequest is the request of the ListTerminal method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListTerminalRequest
  */
 export interface ListTerminalRequest {
     /**
+     * WorkspaceRef is the reference of the Workspace whose terminals are listed.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceRef = 1
      */
     workspaceRef?: ObjectReference;
 }
 /**
+ * ListTerminalResponse is the response of the ListTerminal method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListTerminalResponse
  */
 export interface ListTerminalResponse {
     /**
+     * Items is the list of the currently open terminals of the Workspace.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Terminal items = 1
      */
     items: Terminal[];
 }
 /**
+ * WriteTerminalDataResponse is the response of the WriteTerminalData method.
+ * It is intentionally empty.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.WriteTerminalDataResponse
  */
 export interface WriteTerminalDataResponse {
 }
 /**
+ * SetTerminalWindowSizeRequest is the request of the SetTerminalWindowSize
+ * method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.SetTerminalWindowSizeRequest
  */
 export interface SetTerminalWindowSizeRequest {
     /**
+     * ID is the identifier of the terminal to be resized.
+     *
      * @generated from protobuf field: string id = 1
      */
     id: string;
     /**
+     * Cols is the new number of the columns of the terminal's window.
+     *
      * @generated from protobuf field: uint32 cols = 2
      */
     cols: number;
     /**
+     * Rows is the new number of the rows of the terminal's window.
+     *
      * @generated from protobuf field: uint32 rows = 3
      */
     rows: number;
 }
 /**
+ * SetTerminalWindowSizeResponse is the response of the SetTerminalWindowSize
+ * method. It is intentionally empty.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.SetTerminalWindowSizeResponse
  */
 export interface SetTerminalWindowSizeResponse {
 }
 /**
+ * WriteTerminalDataRequest is the request of the WriteTerminalData method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.WriteTerminalDataRequest
  */
 export interface WriteTerminalDataRequest {
     /**
+     * ID is the identifier of the terminal to write to.
+     *
      * @generated from protobuf field: string id = 1
      */
     id: string;
     /**
+     * Data is the raw data (i.e. stdin) that is written to the terminal.
+     *
      * @generated from protobuf field: bytes data = 2
      */
     data: Uint8Array;
 }
 /**
+ * ListenTerminalRequest is the request of the ListenTerminal method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListenTerminalRequest
  */
 export interface ListenTerminalRequest {
     /**
+     * ID is the identifier of the terminal to listen to.
+     *
      * @generated from protobuf field: string id = 1
      */
     id: string;
 }
 /**
+ * ListenTerminalResponse is a single event of the ListenTerminal stream.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListenTerminalResponse
  */
 export interface ListenTerminalResponse {
     /**
+     * Type is the terminal event's type
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "stdout";
         /**
+         * Stdout is a chunk of the terminal's output.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.ListenTerminalResponse.Stdout stdout = 1
          */
         stdout: ListenTerminalResponse_Stdout;
     } | {
         oneofKind: "windowSize";
         /**
+         * WindowSize is a resize event of the terminal's window.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.ListenTerminalResponse.WindowSize windowSize = 2
          */
         windowSize: ListenTerminalResponse_WindowSize;
     } | {
         oneofKind: "close";
         /**
+         * Close means that the terminal was closed.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.ListenTerminalResponse.Close close = 3
          */
         close: ListenTerminalResponse_Close;
@@ -2888,135 +4403,200 @@ export interface ListenTerminalResponse {
     };
 }
 /**
+ * Stdout is a chunk of the terminal's output.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListenTerminalResponse.Stdout
  */
 export interface ListenTerminalResponse_Stdout {
     /**
+     * Data is the raw output data.
+     *
      * @generated from protobuf field: bytes data = 1
      */
     data: Uint8Array;
 }
 /**
+ * WindowSize is a resize event of the terminal's window.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListenTerminalResponse.WindowSize
  */
 export interface ListenTerminalResponse_WindowSize {
     /**
+     * Cols is the number of the columns of the terminal's window.
+     *
      * @generated from protobuf field: uint32 cols = 1
      */
     cols: number;
     /**
+     * Rows is the number of the rows of the terminal's window.
+     *
      * @generated from protobuf field: uint32 rows = 2
      */
     rows: number;
 }
 /**
+ * Close means that the terminal was closed.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListenTerminalResponse.Close
  */
 export interface ListenTerminalResponse_Close {
 }
 /**
+ * ListenLogRequest is the request of the ListenLog method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListenLogRequest
  */
 export interface ListenLogRequest {
     /**
+     * WorkspaceRef is the reference of the Workspace whose logs are streamed.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceRef = 1
      */
     workspaceRef?: ObjectReference;
 }
 /**
+ * ListenLogResponse is a single log entry of the ListenLog stream.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ListenLogResponse
  */
 export interface ListenLogResponse {
     /**
+     * CreatedAt is the timestamp at which the log entry was produced.
+     *
      * @generated from protobuf field: google.protobuf.Timestamp createdAt = 1
      */
     createdAt?: Timestamp;
     /**
+     * Type is the initialization stage that produced the log entry.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ListenLogResponse.Type type = 2
      */
     type: ListenLogResponse_Type;
     /**
+     * Mode is the output stream that the log entry was emitted on.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ListenLogResponse.Mode mode = 3
      */
     mode: ListenLogResponse_Mode;
     /**
+     * Data is the raw content of the log entry.
+     *
      * @generated from protobuf field: bytes data = 4
      */
     data: Uint8Array;
 }
 /**
+ * Mode is the output stream that the log entry was emitted on
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.ListenLogResponse.Mode
  */
 export enum ListenLogResponse_Mode {
     /**
+     * MODE_UNKNOWN is not used.
+     *
      * @generated from protobuf enum value: MODE_UNKNOWN = 0;
      */
     UNKNOWN = 0,
     /**
+     * MODE_STDOUT means that the entry was emitted on the standard output.
+     *
      * @generated from protobuf enum value: MODE_STDOUT = 1;
      */
     STDOUT = 1,
     /**
+     * MODE_STDERR means that the entry was emitted on the standard error.
+     *
      * @generated from protobuf enum value: MODE_STDERR = 2;
      */
     STDERR = 2
 }
 /**
+ * Type is the initialization stage that produced the log entry
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.ListenLogResponse.Type
  */
 export enum ListenLogResponse_Type {
     /**
+     * TYPE_UNKNOWN is not used.
+     *
      * @generated from protobuf enum value: TYPE_UNKNOWN = 0;
      */
     UNKNOWN = 0,
     /**
+     * TYPE_CLONING_REPO means that the entry was produced while cloning a
+     * repository.
+     *
      * @generated from protobuf enum value: TYPE_CLONING_REPO = 1;
      */
     CLONING_REPO = 1,
     /**
+     * TYPE_PULLING_IMAGE means that the entry was produced while pulling the
+     * container image.
+     *
      * @generated from protobuf enum value: TYPE_PULLING_IMAGE = 2;
      */
     PULLING_IMAGE = 2,
     /**
+     * TYPE_BUILDING_IMAGE means that the entry was produced while building the
+     * container image.
+     *
      * @generated from protobuf enum value: TYPE_BUILDING_IMAGE = 3;
      */
     BUILDING_IMAGE = 3,
     /**
+     * TYPE_TASK means that the entry was produced by a lifecycle task.
+     *
      * @generated from protobuf enum value: TYPE_TASK = 4;
      */
     TASK = 4
 }
 /**
+ * WatchWorkspaceRequest is the request of the WatchWorkspace method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.WatchWorkspaceRequest
  */
 export interface WatchWorkspaceRequest {
     /**
+     * WorkspaceRef optionally restricts the stream to the events of a single
+     * Workspace. If it is unset, the events of all the Workspaces that are owned
+     * by the calling User are published.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceRef = 1
      */
     workspaceRef?: ObjectReference;
 }
 /**
+ * WatchWorkspaceResponse is a single event of the WatchWorkspace stream.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.WatchWorkspaceResponse
  */
 export interface WatchWorkspaceResponse {
     /**
+     * Type is the Workspace event's type
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "create";
         /**
+         * Create means that a Workspace was created.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.WatchWorkspaceResponse.Create create = 3
          */
         create: WatchWorkspaceResponse_Create;
     } | {
         oneofKind: "update";
         /**
+         * Update means that a Workspace was updated.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.WatchWorkspaceResponse.Update update = 4
          */
         update: WatchWorkspaceResponse_Update;
     } | {
         oneofKind: "delete";
         /**
+         * Delete means that a Workspace was deleted.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.WatchWorkspaceResponse.Delete delete = 5
          */
         delete: WatchWorkspaceResponse_Delete;
@@ -3025,67 +4605,99 @@ export interface WatchWorkspaceResponse {
     };
 }
 /**
+ * Create means that a Workspace was created.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.WatchWorkspaceResponse.Create
  */
 export interface WatchWorkspaceResponse_Create {
     /**
+     * Item is the created Workspace.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace item = 1
      */
     item?: Workspace;
 }
 /**
+ * Update means that a Workspace was updated (e.g. its state changed).
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.WatchWorkspaceResponse.Update
  */
 export interface WatchWorkspaceResponse_Update {
     /**
+     * NewItem is the Workspace after the update.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace newItem = 1
      */
     newItem?: Workspace;
     /**
+     * OldItem is the Workspace before the update. Comparing it against the
+     * newItem is the recommended way to detect the actual state transitions.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace oldItem = 2
      */
     oldItem?: Workspace;
 }
 /**
+ * Delete means that a Workspace was deleted.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.WatchWorkspaceResponse.Delete
  */
 export interface WatchWorkspaceResponse_Delete {
     /**
+     * Item is the deleted Workspace.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace item = 1
      */
     item?: Workspace;
 }
 /**
+ * CancelBuildTemplateRequest is the request of the CancelBuildTemplate method.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.CancelBuildTemplateRequest
  */
 export interface CancelBuildTemplateRequest {
     /**
+     * TemplateRef is the reference of the Template whose running pre-build is
+     * canceled.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference templateRef = 1
      */
     templateRef?: ObjectReference;
 }
 /**
+ * ExecRequest is a client message of the Exec bidirectional stream. The first
+ * message of the stream must carry a `request`.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ExecRequest
  */
 export interface ExecRequest {
     /**
+     * Type is the client message's type
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "request";
         /**
+         * Request initializes the execution. It must be the first message of the
+         * stream.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.ExecRequest.Request request = 1
          */
         request: ExecRequest_Request;
     } | {
         oneofKind: "writeData";
         /**
+         * WriteData writes data to the command's standard input.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.ExecRequest.WriteData writeData = 2
          */
         writeData: ExecRequest_WriteData;
     } | {
         oneofKind: "kill";
         /**
+         * Kill terminates the running command.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.ExecRequest.Kill kill = 3
          */
         kill: ExecRequest_Kill;
@@ -3094,83 +4706,123 @@ export interface ExecRequest {
     };
 }
 /**
+ * Request initializes the execution. It must be the first message that is
+ * sent by the client.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ExecRequest.Request
  */
 export interface ExecRequest_Request {
     /**
+     * WorkspaceRef is the reference of the Workspace in which the command is
+     * executed.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceRef = 1
      */
     workspaceRef?: ObjectReference;
     /**
+     * Command is the shell command to be executed.
+     *
      * @generated from protobuf field: string command = 2
      */
     command: string;
     /**
+     * WorkingDir is the working directory of the command.
+     *
      * @generated from protobuf field: string workingDir = 3
      */
     workingDir: string;
     /**
+     * EnvVars is the list of the environment variables that are set for the
+     * command.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.ExecRequest.Request.EnvVar envVars = 4
      */
     envVars: ExecRequest_Request_EnvVar[];
     /**
+     * RunAsRoot runs the command as `root` instead of as the Workspace User.
+     *
      * @generated from protobuf field: bool runAsRoot = 5
      */
     runAsRoot: boolean;
     /**
+     * HasStdin means that the client streams stdin to the command via the
+     * subsequent writeData messages.
+     *
      * @generated from protobuf field: bool hasStdin = 6
      */
     hasStdin: boolean;
 }
 /**
+ * EnvVar is an environment variable that is set for the executed command.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ExecRequest.Request.EnvVar
  */
 export interface ExecRequest_Request_EnvVar {
     /**
+     * Key is the environment variable's name.
+     *
      * @generated from protobuf field: string key = 1
      */
     key: string;
     /**
+     * Value is the environment variable's value.
+     *
      * @generated from protobuf field: string value = 2
      */
     value: string;
 }
 /**
+ * Kill terminates the running command.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ExecRequest.Kill
  */
 export interface ExecRequest_Kill {
 }
 /**
+ * WriteData writes data to the command's standard input.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ExecRequest.WriteData
  */
 export interface ExecRequest_WriteData {
     /**
+     * Data is the raw data that is written to the command's standard input.
+     *
      * @generated from protobuf field: bytes data = 1
      */
     data: Uint8Array;
 }
 /**
+ * ExecResponse is a server message of the Exec bidirectional stream.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ExecResponse
  */
 export interface ExecResponse {
     /**
+     * Type is the server message's type
+     *
      * @generated from protobuf oneof: type
      */
     type: {
         oneofKind: "stdout";
         /**
+         * Stdout is a chunk of the command's standard output.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.ExecResponse.Stdout stdout = 1
          */
         stdout: ExecResponse_Stdout;
     } | {
         oneofKind: "stderr";
         /**
+         * Stderr is a chunk of the command's standard error.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.ExecResponse.Stderr stderr = 2
          */
         stderr: ExecResponse_Stderr;
     } | {
         oneofKind: "exit";
         /**
+         * Exit means that the command exited.
+         *
          * @generated from protobuf field: octelium.api.main.cordium.v1.ExecResponse.Exit exit = 3
          */
         exit: ExecResponse_Exit;
@@ -3179,89 +4831,138 @@ export interface ExecResponse {
     };
 }
 /**
+ * Stdout is a chunk of the command's standard output.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ExecResponse.Stdout
  */
 export interface ExecResponse_Stdout {
     /**
+     * Data is the raw output data.
+     *
      * @generated from protobuf field: bytes data = 1
      */
     data: Uint8Array;
 }
 /**
+ * Stderr is a chunk of the command's standard error.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ExecResponse.Stderr
  */
 export interface ExecResponse_Stderr {
     /**
+     * Data is the raw error output data.
+     *
      * @generated from protobuf field: bytes data = 1
      */
     data: Uint8Array;
 }
 /**
+ * Exit means that the command exited.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ExecResponse.Exit
  */
 export interface ExecResponse_Exit {
     /**
+     * Code is the exit code with which the command exited.
+     *
      * @generated from protobuf field: int32 code = 1
      */
     code: number;
 }
 /**
+ * ClusterConfig is the sole source of truth for all the global configurations
+ * and settings of the Cordium Cluster. It controls the Space ownership policy,
+ * the Workspace storage class selection, the Cluster-wide resource limits as
+ * well as the Workspace timeouts. There is exactly one ClusterConfig per
+ * Cordium Cluster. It is created automatically at installation time and it is
+ * managed by the Cluster administrators via the ManagementService.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig
  */
 export interface ClusterConfig {
     /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
      * @generated from protobuf field: string apiVersion = 1
      */
     apiVersion: string;
     /**
+     * Kind is the resource name (i.e. `ClusterConfig`).
+     *
      * @generated from protobuf field: string kind = 2
      */
     kind: string;
     /**
+     * Metadata is the object's metadata.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
      */
     metadata?: Metadata;
     /**
+     * Spec is the ClusterConfig specification.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec spec = 4
      */
     spec?: ClusterConfig_Spec;
     /**
+     * Status is the current status of the ClusterConfig.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Status status = 5
      */
     status?: ClusterConfig_Status;
 }
 /**
+ * Spec is the ClusterConfig specification
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec
  */
 export interface ClusterConfig_Spec {
     /**
+     * Space is the Cluster-wide Space-related configuration.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Space space = 1
      */
     space?: ClusterConfig_Spec_Space;
     /**
+     * Workspace is the Cluster-wide Workspace-related configuration.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace workspace = 2
      */
     workspace?: ClusterConfig_Spec_Workspace;
 }
 /**
+ * Space is the Cluster-wide Space-related configuration.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Space
  */
 export interface ClusterConfig_Spec_Space {
     /**
+     * Ownership is the policy that controls which Users are allowed to own
+     * Spaces. If it is unset, no User is allowed to own a Space.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Space.Ownership ownership = 1
      */
     ownership?: ClusterConfig_Spec_Space_Ownership;
 }
 /**
+ * Ownership is the policy that controls which Users are allowed to own
+ * (i.e. create) Spaces.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Space.Ownership
  */
 export interface ClusterConfig_Spec_Space_Ownership {
     /**
+     * Rules is the list of the ownership rules. The DENY rules are
+     * evaluated first and, if none of them matches, the ALLOW rules are
+     * evaluated. If no rule matches, the request is denied.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.ClusterConfig.Spec.Space.Ownership.Rule rules = 1
      */
     rules: ClusterConfig_Spec_Space_Ownership_Rule[];
 }
 /**
+ * Rule is a single ownership rule.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Space.Ownership.Rule
  */
 export interface ClusterConfig_Spec_Space_Ownership_Rule {
@@ -3273,11 +4974,17 @@ export interface ClusterConfig_Spec_Space_Ownership_Rule {
      */
     effect: ClusterConfig_Spec_Space_Ownership_Rule_Effect;
     /**
+     * Condition is evaluated against the request context which contains
+     * the requesting User (i.e. `ctx.user`) and the Space that is being
+     * created (i.e. `ctx.space`).
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Condition condition = 2
      */
     condition?: Condition;
 }
 /**
+ * Effect is the effect of the Rule when its Condition matches
+ *
  * @generated from protobuf enum octelium.api.main.cordium.v1.ClusterConfig.Spec.Space.Ownership.Rule.Effect
  */
 export enum ClusterConfig_Spec_Space_Ownership_Rule_Effect {
@@ -3303,156 +5010,256 @@ export enum ClusterConfig_Spec_Space_Ownership_Rule_Effect {
     DENY = 2
 }
 /**
+ * Workspace is the Cluster-wide Workspace-related configuration.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace
  */
 export interface ClusterConfig_Spec_Workspace {
     /**
+     * Storage is the storage provisioning configuration of the Workspaces.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Storage storage = 1
      */
     storage?: ClusterConfig_Spec_Workspace_Storage;
     /**
+     * Limit is the Cluster-wide Workspace limits.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Limit limit = 2
      */
     limit?: ClusterConfig_Spec_Workspace_Limit;
     /**
+     * Timeout is the Cluster-wide Workspace inactivity timeouts.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Timeout timeout = 3
      */
     timeout?: ClusterConfig_Spec_Workspace_Timeout;
     /**
+     * Runtime is the Cluster-wide runtime configuration of the Workspaces.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Runtime runtime = 4
      */
     runtime?: ClusterConfig_Spec_Workspace_Runtime;
 }
 /**
+ * Storage is the storage provisioning configuration of the Workspaces.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Storage
  */
 export interface ClusterConfig_Spec_Workspace_Storage {
     /**
+     * StorageClass selects the StorageClass of the Workspaces' volumes.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Storage.StorageClass storageClass = 1
      */
     storageClass?: ClusterConfig_Spec_Workspace_Storage_StorageClass;
     /**
+     * VolumeSnapshotClass selects the VolumeSnapshotClass of the Template
+     * pre-build snapshots. If it is unset or if no rule matches, the
+     * Template pre-builds are disabled.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Storage.VolumeSnapshotClass volumeSnapshotClass = 2
      */
     volumeSnapshotClass?: ClusterConfig_Spec_Workspace_Storage_VolumeSnapshotClass;
 }
 /**
+ * StorageClass selects the Kubernetes StorageClass that is used to
+ * provision the Workspaces' volumes.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Storage.StorageClass
  */
 export interface ClusterConfig_Spec_Workspace_Storage_StorageClass {
     /**
+     * Rules is the list of the storage class selection rules. They are
+     * evaluated in order and the first matching one is used.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Storage.StorageClass.Rule rules = 1
      */
     rules: ClusterConfig_Spec_Workspace_Storage_StorageClass_Rule[];
 }
 /**
+ * Rule is a single storage class selection rule.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Storage.StorageClass.Rule
  */
 export interface ClusterConfig_Spec_Workspace_Storage_StorageClass_Rule {
     /**
+     * Condition is evaluated against the Workspace that is being
+     * provisioned (i.e. `workspace`).
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Condition condition = 1
      */
     condition?: Condition;
     /**
+     * StorageClass is the name of the Kubernetes StorageClass that is
+     * used once the Condition matches.
+     *
      * @generated from protobuf field: string storageClass = 2
      */
     storageClass: string;
 }
 /**
+ * VolumeSnapshotClass selects the Kubernetes VolumeSnapshotClass that
+ * is used for the Template pre-build snapshots.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Storage.VolumeSnapshotClass
  */
 export interface ClusterConfig_Spec_Workspace_Storage_VolumeSnapshotClass {
     /**
+     * Rules is the list of the volume snapshot class selection rules.
+     * They are evaluated in order and the first matching one is used.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Storage.VolumeSnapshotClass.Rule rules = 1
      */
     rules: ClusterConfig_Spec_Workspace_Storage_VolumeSnapshotClass_Rule[];
 }
 /**
+ * Rule is a single volume snapshot class selection rule.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Storage.VolumeSnapshotClass.Rule
  */
 export interface ClusterConfig_Spec_Workspace_Storage_VolumeSnapshotClass_Rule {
     /**
+     * Condition is evaluated against the request context which
+     * contains the build Workspace (i.e. `ctx.workspace`) and its
+     * Template (i.e. `ctx.template`).
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Condition condition = 1
      */
     condition?: Condition;
     /**
+     * VolumeSnapshotClass is the name of the Kubernetes
+     * VolumeSnapshotClass that is used once the Condition matches.
+     *
      * @generated from protobuf field: string volumeSnapshotClass = 2
      */
     volumeSnapshotClass: string;
 }
 /**
+ * Limit is the Cluster-wide Workspace limits. All the fields are
+ * optional and omitting one means that no Cluster-level restriction is
+ * applied for that dimension.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Limit
  */
 export interface ClusterConfig_Spec_Workspace_Limit {
     /**
+     * MaxPerUser is the maximum total number of the Workspaces that a
+     * single User can own.
+     *
      * @generated from protobuf field: uint32 maxPerUser = 1
      */
     maxPerUser: number;
     /**
+     * MaxActivePerUser is the maximum number of the Workspaces that a
+     * single User can have running at the same time.
+     *
      * @generated from protobuf field: uint32 maxActivePerUser = 2
      */
     maxActivePerUser: number;
     /**
+     * BuildLimit is the compute resources that are allocated for the
+     * Template pre-build Workspaces.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Limit buildLimit = 3
      */
     buildLimit?: Workspace_Spec_Limit;
     /**
+     * DefaultOrganizationSpaceLimit is the default compute resources of
+     * the Workspaces that belong to ORGANIZATION Spaces.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Limit defaultOrganizationSpaceLimit = 4
      */
     defaultOrganizationSpaceLimit?: Workspace_Spec_Limit;
     /**
+     * DefaultUserSpaceLimit is the default compute resources of the
+     * Workspaces that belong to USER Spaces.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Limit defaultUserSpaceLimit = 5
      */
     defaultUserSpaceLimit?: Workspace_Spec_Limit;
     /**
+     * MaxLimit is a hard cap that no Workspace of the Cluster can exceed.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Limit maxLimit = 6
      */
     maxLimit?: Workspace_Spec_Limit;
 }
 /**
+ * Timeout is the Cluster-wide inactivity timeouts after which a running
+ * Workspace is automatically stopped. All the fields are optional.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Timeout
  */
 export interface ClusterConfig_Spec_Workspace_Timeout {
     /**
+     * DefaultDuration is the inactivity timeout that is applied when no
+     * Space-type-specific duration is set.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration defaultDuration = 1
      */
     defaultDuration?: Duration;
     /**
+     * UserSpaceDuration is the inactivity timeout of the Workspaces that
+     * belong to USER Spaces.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration userSpaceDuration = 2
      */
     userSpaceDuration?: Duration;
     /**
+     * OrganizationSpaceDuration is the inactivity timeout of the
+     * Workspaces that belong to ORGANIZATION Spaces.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration organizationSpaceDuration = 3
      */
     organizationSpaceDuration?: Duration;
     /**
+     * MaxActiveDuration is the maximum total duration for which a
+     * Workspace can remain running regardless of its activity.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration maxActiveDuration = 4
      */
     maxActiveDuration?: Duration;
     /**
+     * AllowNoTimeout allows the Workspaces to disable their inactivity
+     * timeout entirely via their runtime's timeout mode.
+     *
      * @generated from protobuf field: bool allowNoTimeout = 5
      */
     allowNoTimeout: boolean;
 }
 /**
+ * Runtime is the Cluster-wide runtime configuration of the Workspaces.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Runtime
  */
 export interface ClusterConfig_Spec_Workspace_Runtime {
     /**
+     * Capabilities is the Linux capabilities that are merged into every
+     * Workspace of the Cluster.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Capabilities capabilities = 1
      */
     capabilities?: Workspace_Spec_Runtime_Capabilities;
 }
 /**
+ * Status is the current status of the ClusterConfig. It is intentionally
+ * empty.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Status
  */
 export interface ClusterConfig_Status {
 }
 /**
+ * Condition is a boolean expression that is evaluated by the Cluster against a
+ * request context. It is used by the ClusterConfig rules (e.g. the Space
+ * ownership rules and the storage class selection rules).
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Condition
  */
 export interface Condition {
     /**
+     * Type is the kind of the Condition
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -3517,41 +5324,53 @@ export interface Condition {
     };
 }
 /**
+ * All acts as a logical AND operator on its list of Conditions.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Condition.All
  */
 export interface Condition_All {
     /**
+     * Of is the list of the Conditions that all have to match.
+     *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Condition of = 1
      */
     of: Condition[];
 }
 /**
+ * Any acts as a logical OR operator on its list of Conditions.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Condition.Any
  */
 export interface Condition_Any {
     /**
-     * Expressions is the list of CEL expressions
+     * Of is the list of the Conditions of which at least one has to match.
      *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Condition of = 1
      */
     of: Condition[];
 }
 /**
+ * None acts as a logical NOR operator on its list of Conditions.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Condition.None
  */
 export interface Condition_None {
     /**
-     * Expressions is the list of CEL expressions
+     * Of is the list of the Conditions of which none is allowed to match.
      *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Condition of = 1
      */
     of: Condition[];
 }
 /**
+ * OPA is an OPA (Open Policy Agent) Rego script.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.Condition.OPA
  */
 export interface Condition_OPA {
     /**
+     * Type is the source of the Rego script
+     *
      * @generated from protobuf oneof: type
      */
     type: {
@@ -3567,36 +5386,60 @@ export interface Condition_OPA {
     };
 }
 /**
+ * GetClusterConfigRequest is the request of the GetClusterConfig method. It is
+ * intentionally empty since there is exactly one ClusterConfig per Cluster.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.GetClusterConfigRequest
  */
 export interface GetClusterConfigRequest {
 }
 /**
+ * SessionExtInfo is the Cordium-specific information that is attached to the
+ * dedicated Octelium Session that is created for a Workspace run. It lets the
+ * rest of the Octelium Cluster identify which Workspace, Space and Template a
+ * given Session belongs to.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.SessionExtInfo
  */
 export interface SessionExtInfo {
     /**
+     * WorkspaceRef is the reference of the Workspace that the Session was
+     * created for.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceRef = 1
      */
     workspaceRef?: ObjectReference;
     /**
+     * SpaceRef is the reference of the Space that the Workspace belongs to.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 2
      */
     spaceRef?: ObjectReference;
     /**
+     * TemplateRef is the reference of the Template that the Workspace was
+     * created from.
+     *
      * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference templateRef = 3
      */
     templateRef?: ObjectReference;
     /**
+     * SpaceType is the type of the Space that the Workspace belongs to.
+     *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Space.Status.Type spaceType = 4
      */
     spaceType: Space_Status_Type;
 }
 /**
+ * RegionExtInfo is the Cordium-specific information that is attached to an
+ * Octelium Region. It is what marks a Region as being able to host Cordium
+ * Workspaces.
+ *
  * @generated from protobuf message octelium.api.main.cordium.v1.RegionExtInfo
  */
 export interface RegionExtInfo {
     /**
+     * IsEnabled means that the Region is enabled to host Workspaces.
+     *
      * @generated from protobuf field: bool isEnabled = 1
      */
     isEnabled: boolean;

@@ -2518,10 +2518,10 @@ export interface Service_Spec_Config_MCP {
      * is needed since many MCP servers are served at a path that differs
      * from the one that the Service serves to its downstreams. Whenever
      * the upstream URL carries no path at all, which is the default, the
-     * downstream request path is proxied to the upstream as is. This is needed since many MCP
-     * servers are served at the root path. This field has to be set in the
-     * "default" or global Configuration (as opposed to named dynamic
-     * Configs) in order to actually work.
+     * downstream request path is proxied to the upstream as is. This is
+     * needed since many MCP servers are served at the root path. This field
+     * has to be set in the "default" or global Configuration (as opposed to
+     * named dynamic Configs) in order to actually work.
      *
      * @generated from protobuf field: string endpoint = 1
      */
@@ -2567,17 +2567,24 @@ export interface Service_Spec_Config_MCP {
      */
     path?: Service_Spec_Config_HTTP_Path;
     /**
-     * Plugins is the list of plugins. The Cache plugin is unsupported for
-     * MCP Services since generic HTTP caching understands neither the
-     * authorization scope nor the MCP cache invalidation semantics. Note
+     * Plugins is the list of the Plugins of the Service. Unlike the
+     * fields of this Configuration, which apply to every request that the
+     * Configuration serves, every Plugin carries its own Condition which
+     * decides whether that Plugin is invoked for a specific request. Note
      * that a Plugin that rewrites the JSON-RPC request body (e.g. Lua,
      * ExtProc) should also rewrite the corresponding MCP reserved headers
      * whenever the downstream sets them, otherwise the upstream MCP server
      * rejects the request since the headers no longer match the body.
+     * Note that this list used to be a list of the HTTP mode's own
+     * Plugins. The MCP Plugin keeps the same field names and the same
+     * field numbers for every Plugin type that the two modes share, so
+     * the Plugins that were already valid for an MCP Service are
+     * unaffected. The Cache Plugin, which was already rejected for the
+     * MCP Services, is the only removed type.
      *
-     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin plugins = 7
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin plugins = 7
      */
-    plugins: Service_Spec_Config_HTTP_Plugin[];
+    plugins: Service_Spec_Config_MCP_Plugin[];
     /**
      * IsUpstreamHTTP2 sets HTTP connections to the upstream to HTTP/2. Not
      * enabled by default.
@@ -2752,6 +2759,329 @@ export interface Service_Spec_Config_MCP_Visibility {
     excludeResponseHeaders: string[];
 }
 /**
+ * Plugin provides a dynamic, per-request way to manipulate the
+ * JSON-RPC requests and responses. A Service can have one or more
+ * Plugins, including multiple Plugins of the same type. Unlike the
+ * Configuration fields, which apply to every request that the
+ * Configuration serves, every Plugin carries its own Condition which
+ * decides whether that Plugin is invoked for a specific request.
+ *
+ * The Plugins that are not specific to the MCP semantics (e.g. Lua,
+ * ExtProc, RateLimit) reuse the HTTP mode's own Plugin types as is,
+ * and they deliberately keep the same field names and the same field
+ * numbers that they have in the HTTP mode's Plugin. The Cache Plugin
+ * is the only HTTP Plugin that has no counterpart here since generic
+ * HTTP caching understands neither the authorization scope nor the
+ * MCP cache invalidation semantics.
+ *
+ * The MCP-specific Plugins are invoked in a fixed order that does not
+ * depend on the order of the Plugin list, and two Plugins of the same
+ * type are invoked in the order in which they are listed. Note that
+ * the Plugins which reuse the HTTP mode's own types sit outside that
+ * order and outside the Guardrail boundary: they run before every
+ * MCP-specific Plugin on the request and after every one of them on
+ * the response. A Lua or an ExtProc Plugin can therefore rewrite a
+ * response that a Guardrail has already inspected, and a Direct
+ * Plugin answers a request that no Guardrail has seen. That boundary
+ * is deliberate, since those Plugins carry the logic of the Service
+ * itself rather than the content of the downstream or of the
+ * upstream, but a Service that uses them to carry MCP content has to
+ * inspect that content itself.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin
+ */
+export interface Service_Spec_Config_MCP_Plugin {
+    /**
+     * Name is the unique name of the Plugin
+     *
+     * @generated from protobuf field: string name = 1
+     */
+    name: string;
+    /**
+     * IsDisabled disables the Plugin without having to change its
+     * Condition or to delete it.
+     *
+     * @generated from protobuf field: bool isDisabled = 2
+     */
+    isDisabled: boolean;
+    /**
+     * Phase sets whether the Plugin is invoked before or after the
+     * authentication and authorization processes. It is the HTTP mode's
+     * own Phase so that a Plugin behaves identically in either mode.
+     * The two phases sit on either side of a single step which
+     * authenticates and authorizes at once: a PRE_AUTH Plugin therefore
+     * runs without a known User while a POST_AUTH one runs after the
+     * Policies have already decided. Note that the MCP-specific Plugins
+     * are always invoked in the POST_AUTH phase, since they act on a
+     * request whose content and verdict both routinely depend on the
+     * identity of the requesting User, and that setting PRE_AUTH for
+     * one of them is rejected rather than silently ignored.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Phase phase = 3
+     */
+    phase: Service_Spec_Config_HTTP_Plugin_Phase;
+    /**
+     * Condition decides whether the Plugin is invoked on a per-request
+     * basis. It is always required: a Plugin that carries no Condition
+     * is rejected rather than silently never invoked. Use `matchAny` in
+     * order to invoke a Plugin unconditionally. Note that a Condition
+     * is always evaluated against the request context, including for
+     * the Plugins that act on the response, so the response itself is
+     * unavailable to it. Note also that a Condition of an MCP-specific
+     * Plugin which cannot be evaluated at all (e.g. it errors at
+     * runtime or it exceeds its cost limit) rejects the request rather
+     * than skipping the Plugin, since skipping it would turn an
+     * evaluation error into a silent bypass of the control that it
+     * carries. The Plugins that reuse the HTTP mode's own types behave
+     * in either mode as they do in the HTTP one, where such a Plugin is
+     * skipped instead.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Condition condition = 4
+     */
+    condition?: Condition;
+    /**
+     * Type sets the type of the Plugin
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "extProc";
+        /**
+         * ExtProc processes the requests via an Envoy ext_proc compliant
+         * gRPC server
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc extProc = 5
+         */
+        extProc: Service_Spec_Config_HTTP_Plugin_ExtProc;
+    } | {
+        oneofKind: "lua";
+        /**
+         * Lua processes the requests via a Lua script
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Lua lua = 6
+         */
+        lua: Service_Spec_Config_HTTP_Plugin_Lua;
+    } | {
+        oneofKind: "direct";
+        /**
+         * Direct returns a response directly without proxying the request
+         * to the upstream. Note that the body is served to an MCP client,
+         * so it has to be a valid JSON-RPC response or error object.
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct direct = 7
+         */
+        direct: Service_Spec_Config_HTTP_Plugin_Direct;
+    } | {
+        oneofKind: "rateLimit";
+        /**
+         * RateLimit rate limits the requests
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit rateLimit = 8
+         */
+        rateLimit: Service_Spec_Config_HTTP_Plugin_RateLimit;
+    } | {
+        oneofKind: "jsonSchema";
+        /**
+         * JSONSchema validates the JSON request body against a JSON
+         * schema
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema jsonSchema = 10
+         */
+        jsonSchema: Service_Spec_Config_HTTP_Plugin_JSONSchema;
+    } | {
+        oneofKind: "path";
+        /**
+         * Path removes and/or adds prefixes of the request path
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Path path = 11
+         */
+        path: Service_Spec_Config_HTTP_Plugin_Path;
+    } | {
+        oneofKind: "guardrail";
+        /**
+         * Guardrail inspects the content that the request carries, and
+         * optionally the content that the response carries, and decides
+         * what to do about it
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail guardrail = 12
+         */
+        guardrail: Service_Spec_Config_MCP_Plugin_Guardrail;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * Guardrail inspects the content that the JSON-RPC request carries,
+ * and optionally the content that the response carries, and decides
+ * what to do about it. Note that a Guardrail is a content control:
+ * the identity, the method and the named target of a request are
+ * governed by the Policies, and its shape is governed by the
+ * `limits` and the `protocol` fields, and all of them are always
+ * evaluated regardless of the Guardrails. Note also that a
+ * Guardrail verdict is never an input to the Policies: a Guardrail
+ * runs after the authorization decision has already been reached,
+ * it acts on the request itself rather than informing a Policy
+ * about it. A Guardrail is always invoked in the POST_AUTH phase.
+ *
+ * A Guardrail that cannot reach a verdict at all (e.g. a `replace`
+ * evaluation that errors) rejects the request rather than
+ * proceeding: a Guardrail that silently allows the content that it
+ * could not inspect provides a compliance claim that is not true.
+ *
+ * The MCP exchange is the usual carrier of two risks that a
+ * Guardrail addresses directly. On the request leg, the arguments
+ * of a tool call are content that the downstream sends to a server
+ * which is frequently operated by somebody else, which makes them
+ * the usual carrier of credential and of PII leakage. On the
+ * response leg, the content that a tool call, a resource read or a
+ * prompt fetch returns is content that the server chose rather than
+ * content that anybody asked for, which makes it the usual carrier
+ * of indirect prompt injection and of tool poisoning.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail
+ */
+export interface Service_Spec_Config_MCP_Plugin_Guardrail {
+    /**
+     * Leg is the part of the exchange that is inspected
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail.Leg leg = 1
+     */
+    leg: Service_Spec_Config_MCP_Plugin_Guardrail_Leg;
+    /**
+     * Scopes is the list of the parts of the content that are
+     * inspected. If not set, only the default Scope of the inspected
+     * leg is inspected.
+     *
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail.Scope scopes = 2
+     */
+    scopes: Service_Spec_Config_MCP_Plugin_Guardrail_Scope[];
+    /**
+     * Patterns is the list of the Patterns that are matched against
+     * the inspected content. It is deliberately the LLM mode's own
+     * Pattern: matching content is the same problem in either mode,
+     * and a Pattern carries nothing that is specific to the inference
+     * semantics, so the two modes share one detector set, one Action
+     * set and one set of guarantees rather than growing two that
+     * drift apart.
+     *
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern patterns = 3
+     */
+    patterns: Service_Spec_Config_LLM_Plugin_Guardrail_Pattern[];
+    /**
+     * DenyMessage is the message of the JSON-RPC error that is
+     * returned for the DENY Action. Note that it is served to the
+     * downstream, so it should not disclose the detection logic
+     * itself.
+     *
+     * @generated from protobuf field: string denyMessage = 4
+     */
+    denyMessage: string;
+}
+/**
+ * Leg is the part of the exchange that is inspected
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail.Leg
+ */
+export enum Service_Spec_Config_MCP_Plugin_Guardrail_Leg {
+    /**
+     * LEG_UNSET falls back to the default behavior which is REQUEST
+     *
+     * @generated from protobuf enum value: LEG_UNSET = 0;
+     */
+    LEG_UNSET = 0,
+    /**
+     * REQUEST inspects the JSON-RPC request before it is proxied to
+     * the upstream
+     *
+     * @generated from protobuf enum value: REQUEST = 1;
+     */
+    REQUEST = 1,
+    /**
+     * RESPONSE inspects the JSON-RPC response before it is served
+     * to the downstream. Note that a response that is streamed as
+     * `text/event-stream` events is withheld in its entirety until
+     * it ends, then inspected, and only then forwarded: it is the
+     * only behavior that guarantees that no matched content ever
+     * reaches the downstream.
+     *
+     * @generated from protobuf enum value: RESPONSE = 2;
+     */
+    RESPONSE = 2,
+    /**
+     * BOTH inspects the request as well as the response
+     *
+     * @generated from protobuf enum value: BOTH = 3;
+     */
+    BOTH = 3
+}
+/**
+ * Scope is the part of the content that is inspected. Note that
+ * every Scope belongs to one leg of the exchange: a Scope that
+ * does not belong to the inspected leg is a no-op rather than an
+ * error, since a Guardrail whose leg is BOTH is expected to carry
+ * the Scopes of both legs.
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail.Scope
+ */
+export enum Service_Spec_Config_MCP_Plugin_Guardrail_Scope {
+    /**
+     * SCOPE_UNSET falls back to the default behavior which is
+     * TOOL_ARGUMENTS on the request leg and TOOL_RESULTS on the
+     * response leg
+     *
+     * @generated from protobuf enum value: SCOPE_UNSET = 0;
+     */
+    SCOPE_UNSET = 0,
+    /**
+     * TOOL_ARGUMENTS is the arguments that a `tools/call` request
+     * carries. It is a request-leg Scope.
+     *
+     * @generated from protobuf enum value: TOOL_ARGUMENTS = 1;
+     */
+    TOOL_ARGUMENTS = 1,
+    /**
+     * TOOL_RESULTS is the content that a `tools/call` result
+     * carries, which includes both its content blocks and its
+     * structured content. It is a response-leg Scope.
+     *
+     * @generated from protobuf enum value: TOOL_RESULTS = 2;
+     */
+    TOOL_RESULTS = 2,
+    /**
+     * RESOURCE_CONTENTS is the content that a `resources/read`
+     * result carries. It is a response-leg Scope.
+     *
+     * @generated from protobuf enum value: RESOURCE_CONTENTS = 3;
+     */
+    RESOURCE_CONTENTS = 3,
+    /**
+     * PROMPT_MESSAGES is the messages that a `prompts/get` result
+     * carries. It is a response-leg Scope.
+     *
+     * @generated from protobuf enum value: PROMPT_MESSAGES = 4;
+     */
+    PROMPT_MESSAGES = 4,
+    /**
+     * TOOL_DEFINITIONS is the names, the descriptions and the JSON
+     * Schemas that a `tools/list` result carries. It is the surface
+     * on which a server describes to a model what it should do,
+     * which makes it the carrier of tool poisoning, and it is a
+     * response-leg Scope. Note that it is inspect-only: a tool
+     * definition is a structured document rather than free text, so
+     * the REDACT, STRIP and REPLACE Actions are rejected for this
+     * Scope and only the DENY one is available.
+     *
+     * @generated from protobuf enum value: TOOL_DEFINITIONS = 5;
+     */
+    TOOL_DEFINITIONS = 5,
+    /**
+     * ALL is every scope
+     *
+     * @generated from protobuf enum value: ALL = 6;
+     */
+    ALL = 6
+}
+/**
  * LLM sets the LLM-gateway-specific configuration. LLM Services are
  * HTTP-based: they reuse the entire HTTP dataplane and additionally
  * understand the inference API semantics.
@@ -2766,18 +3096,20 @@ export interface Service_Spec_Config_LLM {
      * OpenAI and Anthropic SDKs use a base URL. Octelium always serves the
      * canonical routes of the protocol to the downstreams (e.g.
      * `/v1/chat/completions`) and it rewrites the upstream request path to
-     * the base path followed by the route without its leading `/v1`
-     * segment. For instance, an upstream URL of
-     * `https://openrouter.ai/api/v1` turns a downstream request to
-     * `/v1/chat/completions` into an upstream request to
+     * the base path followed by the route without the leading version
+     * segment of the protocol, which is `/v1` for the OPENAI and the
+     * ANTHROPIC protocols and `/v1beta` for the GEMINI one. For instance,
+     * an upstream URL of `https://openrouter.ai/api/v1` turns a downstream
+     * request to `/v1/chat/completions` into an upstream request to
      * `/api/v1/chat/completions`. The base path therefore has to contain
-     * the API version segment whenever the upstream uses one. Whenever the
-     * upstream URL carries no path at all, which is the default, the
-     * downstream request path is proxied to the upstream as is. The
-     * upstreams that serve neither of these two shapes (e.g. the ones that
-     * serve the routes with no version segment at all) are supported via
-     * the `path` field instead. If not set, which is the default, the
-     * OPENAI protocol is used. Note that Octelium currently proxies the
+     * the API version segment whenever the upstream uses one. The BEDROCK
+     * protocol is the exception, since its own routes carry no version
+     * segment at all: its request path is appended to the base path as is.
+     * Whenever the upstream URL carries no path at all, which is the
+     * default, the downstream request path is proxied to the upstream as
+     * is. The upstreams that serve neither of these two shapes are
+     * supported via the `path` field instead. If not set, which is the
+     * default, the OPENAI protocol is used. Note that Octelium currently proxies the
      * requests to the upstream in the same protocol that it accepts them
      * from the downstreams, it does not translate between the protocols.
      * This field has to be set in the "default" or global Configuration
@@ -2788,9 +3120,11 @@ export interface Service_Spec_Config_LLM {
     protocol: Service_Spec_Config_LLM_Protocol;
     /**
      * Model overwrites the model name requested by the downstream before
-     * the request is proxied to the upstream. If not set, which is the
-     * default, the requested model name is preserved as is. Note that the
-     * model access control itself is done by the Policies via the
+     * the request is proxied to the upstream. It is the default of the
+     * Service: a Model Plugin whose Condition matches overwrites it for
+     * that request. If neither is set, which is the default, the
+     * requested model name is preserved as is. Note that the model access
+     * control itself is done by the Policies via the
      * `ctx.request.llm.model` field which always carries the model name as
      * requested by the downstream.
      *
@@ -2828,14 +3162,20 @@ export interface Service_Spec_Config_LLM {
      */
     path?: Service_Spec_Config_HTTP_Path;
     /**
-     * Plugins is the list of plugins. The Cache plugin is unsupported for
-     * LLM Services since generic HTTP caching understands neither the
-     * authorization scope nor the model, tool and sampling parameters that
-     * make up a correct inference cache key.
+     * Plugins is the list of the Plugins of the Service. Unlike the
+     * fields of this Configuration, which apply to every request that the
+     * Configuration serves, every Plugin carries its own Condition which
+     * decides whether that Plugin is invoked for a specific request.
+     * Note that this list used to be a list of the HTTP mode's own
+     * Plugins. The LLM Plugin keeps the same field names and the same
+     * field numbers for every Plugin type that the two modes share, so
+     * the Plugins that were already valid for an LLM Service are
+     * unaffected. The Cache Plugin, which was already rejected for the
+     * LLM Services, is the only removed type.
      *
-     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin plugins = 7
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin plugins = 7
      */
-    plugins: Service_Spec_Config_HTTP_Plugin[];
+    plugins: Service_Spec_Config_LLM_Plugin[];
     /**
      * IsUpstreamHTTP2 sets HTTP connections to the upstream to HTTP/2. Not
      * enabled by default.
@@ -2869,6 +3209,27 @@ export interface Service_Spec_Config_LLM {
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.CORS cors = 11
      */
     cors?: Service_Spec_Config_HTTP_CORS;
+    /**
+     * Reasoning sets the reasoning, or thinking, configuration of the
+     * requests before they are proxied to the upstream. It is the default
+     * of the Service: a Reasoning Plugin whose Condition matches
+     * overwrites it for that request. If neither is set, which is the
+     * default, the reasoning configuration that the downstream requested
+     * is preserved as is.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning reasoning = 12
+     */
+    reasoning?: Service_Spec_Config_LLM_Reasoning;
+    /**
+     * Embedding sets how the semantic representations of the requests are
+     * generated. It is the default of the Service: a SemanticCache or a
+     * SemanticRouter Plugin that sets an `embedding` of its own uses that
+     * one instead. A Plugin which needs an embedding while neither is set
+     * is rejected rather than silently disabled.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding embedding = 13
+     */
+    embedding?: Service_Spec_Config_LLM_Embedding;
 }
 /**
  * Model overwrites the model name requested by the downstream
@@ -2902,8 +3263,329 @@ export interface Service_Spec_Config_LLM_Model {
          */
         eval: string;
     } | {
+        oneofKind: "opa";
+        /**
+         * OPA overwrites the model name requested by the downstream with
+         * the string result of a Rego script. An empty result preserves
+         * the requested model name.
+         *
+         * @generated from protobuf field: string opa = 3
+         */
+        opa: string;
+    } | {
         oneofKind: undefined;
     };
+}
+/**
+ * Reasoning sets the reasoning, or thinking, configuration of the
+ * request before it is proxied to the upstream. It is the mechanism
+ * by which the Service, rather than the downstream, decides how much
+ * a model is allowed to think, which is the largest controllable
+ * component of both the latency and the cost of a reasoning model.
+ *
+ * Every model expresses reasoning in its own way: some accept an
+ * ordinal effort, others accept a numeric token budget, and the same
+ * provider routinely changes which of the two a model family accepts
+ * from one generation to the next. The protocol does not decide it
+ * either, since a protocol that is a transport over the models of
+ * several vendors carries whatever each of those models defines
+ * rather than a reasoning configuration of its own. A Reasoning is
+ * therefore written once, as an intent that belongs to no model in
+ * particular, and Octelium encodes that intent in whatever the model
+ * that actually serves the request accepts.
+ *
+ * The intent is resolved by a single rule: Octelium serves the
+ * closest configuration that the model accepts and that does not
+ * exceed the configured one, and it rejects the request whenever the
+ * model accepts nothing at or below it. A `level` that the model does
+ * not offer is therefore served as the strongest level below it that
+ * the model does offer rather than dropped, a `tokenBudget` larger
+ * than the largest budget of the model is lowered to that budget, and
+ * a `tokenBudget` smaller than the smallest one is served as disabled
+ * reasoning wherever the model can stop reasoning at all. Nothing is
+ * ever resolved upwards, since a Service that configured little
+ * reasoning is not asking for whatever larger amount the model
+ * happens to offer, and nothing is silently dropped, since a dropped
+ * configuration lets the model think as much as it likes.
+ *
+ * Note that a Reasoning overwrites whatever the downstream requested
+ * rather than merging with it, and that it applies to the operations
+ * that carry a reasoning configuration at all: it is a no-op for the
+ * other operations rather than an error, since a Service usually
+ * serves a mixture of them.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning
+ */
+export interface Service_Spec_Config_LLM_Reasoning {
+    /**
+     * Type sets how the reasoning configuration is computed
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "level";
+        /**
+         * Level sets a model-independent reasoning effort. It is the
+         * portable way to configure reasoning: Octelium translates it
+         * into an ordinal effort, into a token budget or into disabled
+         * reasoning, according to what the model that serves the request
+         * accepts.
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning.Level level = 1
+         */
+        level: Service_Spec_Config_LLM_Reasoning_Level;
+    } | {
+        oneofKind: "tokenBudget";
+        /**
+         * TokenBudget sets the number of the tokens that the model is
+         * allowed to spend on reasoning. Unlike a Level it is exact
+         * rather than portable: it is served only to the models that
+         * accept a numeric reasoning budget and the requests of a model
+         * that accepts an ordinal effort instead are rejected, since
+         * translating a budget into an effort would mean inventing a
+         * correspondence that no provider defines. Note that the models
+         * which do accept a budget commonly read it as guidance rather
+         * than as a ceiling, so it bounds what the Service asks for
+         * rather than what the model eventually spends. Note also that
+         * zero is rejected rather than read as disabling reasoning, since
+         * the two are too easy to confuse in a generated configuration:
+         * use the NONE Level in order to disable it.
+         *
+         * @generated from protobuf field: uint64 tokenBudget = 2
+         */
+        tokenBudget: number;
+    } | {
+        oneofKind: "eval";
+        /**
+         * Eval is a CEL expression that is evaluated against the request
+         * context and whose string result is the name of a Level (e.g.
+         * `HIGH`), a number of tokens (e.g. `4096`) or a model-native
+         * effort, which are read in the same way as the `level`, the
+         * `tokenBudget` and the `effort` fields respectively. An empty
+         * result preserves the reasoning configuration that the
+         * downstream requested.
+         *
+         * @generated from protobuf field: string eval = 3
+         */
+        eval: string;
+    } | {
+        oneofKind: "opa";
+        /**
+         * OPA is a Rego script whose string result is used in the same
+         * way as the one of the `eval` field
+         *
+         * @generated from protobuf field: string opa = 4
+         */
+        opa: string;
+    } | {
+        oneofKind: "effort";
+        /**
+         * Effort sets a model-native ordinal reasoning effort that is
+         * served to the upstream exactly as it is written here. It is the
+         * escape hatch of the `level` field: a provider that names an
+         * effort which no Level names yet is usable through it without
+         * waiting for Octelium to name it. Since Octelium knows neither
+         * where such a value sits on its own scale nor whether the model
+         * accepts it at all, an Effort is neither ordered nor translated:
+         * it is served only to the models that accept an ordinal effort,
+         * the requests of a model that accepts a numeric budget instead
+         * are rejected, and a value that the model does not accept is
+         * rejected by the upstream itself rather than by Octelium. Prefer
+         * a Level wherever one names the wanted effort.
+         *
+         * @generated from protobuf field: string effort = 5
+         */
+        effort: string;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * Level is a model-independent reasoning effort. The Levels are
+ * ordered, from NONE up to MAX, and they name the positions on that
+ * scale rather than the values of any particular provider: a model
+ * that offers fewer steps than are named here is served the
+ * strongest step of its own that does not exceed the configured
+ * Level, while a model that names a step which no Level names is
+ * reached through the `effort` field instead.
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning.Level
+ */
+export enum Service_Spec_Config_LLM_Reasoning_Level {
+    /**
+     * LEVEL_UNSET is not used
+     *
+     * @generated from protobuf enum value: LEVEL_UNSET = 0;
+     */
+    LEVEL_UNSET = 0,
+    /**
+     * NONE disables reasoning. Note that a model which cannot stop
+     * reasoning at all offers nothing at or below this Level, so its
+     * requests are rejected rather than served the smallest effort,
+     * or the smallest budget, that the model does accept, which would
+     * be more reasoning than the Service allowed.
+     *
+     * @generated from protobuf enum value: NONE = 1;
+     */
+    NONE = 1,
+    /**
+     * MINIMAL is the smallest amount of reasoning that a model
+     * performs while still reasoning at all
+     *
+     * @generated from protobuf enum value: MINIMAL = 2;
+     */
+    MINIMAL = 2,
+    /**
+     * LOW is a small amount of reasoning
+     *
+     * @generated from protobuf enum value: LOW = 3;
+     */
+    LOW = 3,
+    /**
+     * MEDIUM is a moderate amount of reasoning
+     *
+     * @generated from protobuf enum value: MEDIUM = 4;
+     */
+    MEDIUM = 4,
+    /**
+     * HIGH is a large amount of reasoning
+     *
+     * @generated from protobuf enum value: HIGH = 5;
+     */
+    HIGH = 5,
+    /**
+     * XHIGH is a larger amount of reasoning than HIGH. It is only
+     * distinct from HIGH for the models that offer a step between
+     * HIGH and their own largest one, and it is served as HIGH by the
+     * models that do not.
+     *
+     * @generated from protobuf enum value: XHIGH = 6;
+     */
+    XHIGH = 6,
+    /**
+     * MAX is the largest amount of reasoning that the model offers.
+     * It is the one Level that no model can exceed, which makes it
+     * the way to ask for as much reasoning as possible without naming
+     * a budget that a later model would then cap.
+     *
+     * @generated from protobuf enum value: MAX = 7;
+     */
+    MAX = 7
+}
+/**
+ * Embedding sets how the semantic representation, or embedding, of a
+ * text is generated. It is used by the Plugins that decide from the
+ * meaning of a request rather than from its literal content (i.e.
+ * SemanticCache and SemanticRouter) and it is written once here so
+ * that a Service does not have to repeat it for each of them.
+ *
+ * Note that an embedding is generated from content that the downstream
+ * itself supplied, so whichever API this field names does see the
+ * prompts of the Service. That is why every Guardrail Plugin is always
+ * applied before any embedding is generated, so that a redacted prompt
+ * is embedded rather than the original one, and why a Service whose
+ * prompts must not leave its own upstream has to name an embedding
+ * backend that satisfies that requirement.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding
+ */
+export interface Service_Spec_Config_LLM_Embedding {
+    /**
+     * Source sets where the embedding requests are sent
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding.Source source = 1
+     */
+    source?: Service_Spec_Config_LLM_Embedding_Source;
+    /**
+     * Model is the name of the embedding model (e.g.
+     * "text-embedding-3-small")
+     *
+     * @generated from protobuf field: string model = 2
+     */
+    model: string;
+    /**
+     * Dimensions requests this vector size from the embedding backends
+     * that accept one. Zero, which is the default, uses the model's own
+     * default size. Note that a smaller vector is materially cheaper to
+     * store and to search, so it is worth setting wherever the model
+     * supports it, and that changing it makes whatever was already
+     * stored under the previous size unreachable rather than incorrect.
+     *
+     * @generated from protobuf field: uint32 dimensions = 3
+     */
+    dimensions: number;
+}
+/**
+ * Source sets where the embedding requests are sent
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding.Source
+ */
+export interface Service_Spec_Config_LLM_Embedding_Source {
+    /**
+     * Type sets the embedding backend
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "currentUpstream";
+        /**
+         * CurrentUpstream sends the embedding requests to the Service's
+         * own upstream, with the Service's own credentials and in the
+         * Service's own protocol. It is only usable where that upstream
+         * serves an embedding operation that the protocol itself
+         * defines, which is the case for the OPENAI and the GEMINI
+         * protocols. The ANTHROPIC protocol serves no embedding
+         * operation at all and the BEDROCK one serves its embedding
+         * models through the InvokeModel operations whose bodies are
+         * model-native rather than defined by the protocol, so the
+         * Services of either protocol name an `upstream` instead.
+         *
+         * @generated from protobuf field: bool currentUpstream = 1
+         */
+        currentUpstream: boolean;
+    } | {
+        oneofKind: "upstream";
+        /**
+         * Upstream sends the embedding requests to a separate embedding
+         * API. It is how a Service whose own upstream serves no
+         * embedding operation, or whose embedding model is served
+         * elsewhere, generates embeddings.
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding.Source.Upstream upstream = 2
+         */
+        upstream: Service_Spec_Config_LLM_Embedding_Source_Upstream;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * Upstream is an embedding API that is not the Service's own
+ * upstream
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding.Source.Upstream
+ */
+export interface Service_Spec_Config_LLM_Embedding_Source_Upstream {
+    /**
+     * URL is the base URL of the embedding API, in the same sense
+     * that the Service's own upstream URL is a base URL
+     *
+     * @generated from protobuf field: string url = 1
+     */
+    url: string;
+    /**
+     * Protocol is the inference API protocol spoken by the URL. If
+     * not set, which is the default, the OPENAI protocol is used.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol = 2
+     */
+    protocol: Service_Spec_Config_LLM_Protocol;
+    /**
+     * Auth sets the credentials that are used with the URL. Octelium
+     * never forwards the downstream credentials to it.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth auth = 3
+     */
+    auth?: Service_Spec_Config_HTTP_Auth;
 }
 /**
  * Limits sets the LLM request parsing and inference limits
@@ -2954,6 +3636,16 @@ export interface Service_Spec_Config_LLM_Limits {
      * @generated from protobuf field: uint32 maxTools = 5
      */
     maxTools: number;
+    /**
+     * MaxToolSchemaBytes rejects the requests that declare a tool whose
+     * serialized JSON Schema is above this value. Note that the
+     * MaxTools field bounds the number of the declared tools while this
+     * field bounds the size of a single one. Zero uses the default
+     * value.
+     *
+     * @generated from protobuf field: uint32 maxToolSchemaBytes = 6
+     */
+    maxToolSchemaBytes: number;
 }
 /**
  * Visibility sets the LLM-specific access logging configuration
@@ -3038,6 +3730,1915 @@ export interface Service_Spec_Config_LLM_Visibility {
     excludeResponseHeaders: string[];
 }
 /**
+ * Plugin provides a dynamic, per-request way to manipulate the
+ * inference requests and responses. A Service can have one or more
+ * Plugins, including multiple Plugins of the same type. Unlike the
+ * Configuration fields, which apply to every request that the
+ * Configuration serves, every Plugin carries its own Condition which
+ * decides whether that Plugin is invoked for a specific request.
+ *
+ * The Plugins that are not specific to the inference semantics (e.g.
+ * Lua, ExtProc, RateLimit) reuse the HTTP mode's own Plugin types as
+ * is, and they deliberately keep the same field names and the same
+ * field numbers that they have in the HTTP mode's Plugin. The Cache
+ * Plugin is the only HTTP Plugin that has no counterpart here since
+ * generic HTTP caching understands neither the authorization scope
+ * nor the model, tool and sampling parameters that make up a correct
+ * inference cache key. The SemanticCache Plugin is the
+ * inference-aware replacement of it.
+ *
+ * The inference-specific Plugins (i.e. Prompt, Tools, Guardrail,
+ * Model, Reasoning, TokenRateLimit, SemanticCache and SemanticRouter)
+ * are invoked in a fixed order that does not depend on the order of
+ * the Plugin list: every Guardrail first, then every Tools, then the
+ * SemanticRouter, then every Prompt, then every Model, then every
+ * Reasoning, then the SemanticCache and finally every TokenRateLimit.
+ * A Guardrail therefore always inspects the request before the Service
+ * has added anything of its own to it, a SemanticRouter always decides
+ * from what the downstream asked rather than from what the Service
+ * then added, a SemanticCache always keys on the request that the
+ * upstream would actually receive, a TokenRateLimit always counts the
+ * request that the upstream actually receives and never counts a
+ * request that the cache served instead, and a later Plugin always
+ * observes the mutations of the earlier ones, including through its
+ * own Condition and through the request context that its own
+ * expressions read. The Model Plugin is the exception: it
+ * rewrites the model of the request that is proxied to the upstream
+ * rather than the model that the request context carries, so the
+ * `ctx.request.llm.model` field that a Condition and an expression
+ * read is always the model that the downstream itself requested. That
+ * is deliberate, since the record of a request is the record of what
+ * was asked for rather than of what the Service turned it into, and a
+ * Reasoning Plugin therefore decides from the requested model. The
+ * SemanticRouter Plugin behaves in the same way for the same reason.
+ * Two Plugins of the same type are invoked in the order in which they
+ * are listed, so the last Model or Reasoning Plugin that is invoked is
+ * the one whose value is served. The TokenRateLimit Plugin is the
+ * exception to that as well, since a quota that a later Plugin could
+ * overwrite would be no quota at all: every TokenRateLimit Plugin
+ * whose Condition matches is enforced and the request is served only
+ * if all of them admit it. The SemanticCache and the SemanticRouter
+ * Plugins are the opposite exception: the first one of either type
+ * whose Condition matches is the one that is applied and the rest are
+ * skipped, since a second cache lookup or a second routing decision
+ * would either repeat work that was already done or silently discard
+ * its result.
+ *
+ * The Model and the Reasoning Plugins are the per-request form of the
+ * Configuration's own `model` and `reasoning` fields: the
+ * Configuration field is the default of every request that the
+ * Configuration serves and a Plugin whose Condition matches
+ * overwrites it. The two exist side by side because they answer
+ * different questions: a Configuration field states what the Service
+ * is, while a Plugin states what a particular request gets. The
+ * SemanticRouter sits between the two where the model is concerned: it
+ * overwrites the Configuration's own `model` field and a Model Plugin
+ * overwrites it in turn, so the model of a request is decided by what
+ * the Service is by default, then by what the request means, and
+ * finally by whatever a Model Plugin states explicitly. The
+ * TokenRateLimit, the SemanticCache and the SemanticRouter Plugins
+ * deliberately have no Configuration counterpart of their own, since
+ * each of them is only meaningful for the requests that a Condition
+ * selects: use a Plugin whose Condition is `matchAny` in order to
+ * apply one to every request. The Configuration's own `embedding`
+ * field is not such a counterpart: it is the default embedding
+ * configuration that the SemanticCache and the SemanticRouter Plugins
+ * read whenever they set none of their own, so that a Service which
+ * uses both of them describes its embedding backend once.
+ *
+ * Note that the Plugins which reuse the HTTP mode's own types sit
+ * outside that order and outside the Guardrail boundary: they run
+ * before every inference-specific Plugin on the request and after
+ * every one of them on the response. A Lua or an ExtProc Plugin can
+ * therefore rewrite a response that a Guardrail has already inspected,
+ * and a Direct Plugin answers a request that no Guardrail has seen.
+ * That boundary is deliberate, since those Plugins carry the logic of
+ * the Service itself rather than the content of the downstream or of
+ * the upstream, but a Service that uses them to carry inference
+ * content has to inspect that content itself.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin
+ */
+export interface Service_Spec_Config_LLM_Plugin {
+    /**
+     * Name is the unique name of the Plugin
+     *
+     * @generated from protobuf field: string name = 1
+     */
+    name: string;
+    /**
+     * IsDisabled disables the Plugin without having to change its
+     * Condition or to delete it.
+     *
+     * @generated from protobuf field: bool isDisabled = 2
+     */
+    isDisabled: boolean;
+    /**
+     * Phase sets whether the Plugin is invoked before or after the
+     * authentication and authorization processes. It is the HTTP mode's
+     * own Phase so that a Plugin behaves identically in either mode.
+     * The two phases sit on either side of a single step which
+     * authenticates and authorizes at once: a PRE_AUTH Plugin therefore
+     * runs without a known User while a POST_AUTH one runs after the
+     * Policies have already decided. Note that the inference-specific
+     * Plugins (i.e. Prompt, Tools, Guardrail, Model, Reasoning,
+     * TokenRateLimit, SemanticCache and SemanticRouter) are always
+     * invoked in the POST_AUTH phase, since they act on a
+     * request whose content and verdict both routinely depend on the
+     * identity of the requesting User, and that setting PRE_AUTH for
+     * one of them is rejected rather than silently ignored.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Phase phase = 3
+     */
+    phase: Service_Spec_Config_HTTP_Plugin_Phase;
+    /**
+     * Condition decides whether the Plugin is invoked on a per-request
+     * basis. It is always required: a Plugin that carries no Condition
+     * is rejected rather than silently never invoked. Use `matchAny` in
+     * order to invoke a Plugin unconditionally. Note that a Condition
+     * is always evaluated against the request context, including for
+     * the Plugins that act on the response, so the response status, the
+     * token usage, the finish reason and the model that the upstream
+     * itself reported are unavailable to it. Note also that a Condition
+     * of an inference-specific Plugin (i.e. Prompt, Tools, Guardrail,
+     * Model, Reasoning, TokenRateLimit, SemanticCache and
+     * SemanticRouter) which cannot be evaluated at
+     * all (e.g. it
+     * errors at runtime or it exceeds its cost limit) rejects the
+     * request rather than skipping the Plugin, since skipping it would
+     * turn an evaluation error into a silent bypass of the control that
+     * it carries. The Plugins that
+     * reuse the HTTP mode's own types behave in either mode as they do
+     * in the HTTP one, where such a Plugin is skipped instead.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Condition condition = 4
+     */
+    condition?: Condition;
+    /**
+     * Type sets the type of the Plugin
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "extProc";
+        /**
+         * ExtProc processes the requests via an Envoy ext_proc compliant
+         * gRPC server
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc extProc = 5
+         */
+        extProc: Service_Spec_Config_HTTP_Plugin_ExtProc;
+    } | {
+        oneofKind: "lua";
+        /**
+         * Lua processes the requests via a Lua script
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Lua lua = 6
+         */
+        lua: Service_Spec_Config_HTTP_Plugin_Lua;
+    } | {
+        oneofKind: "direct";
+        /**
+         * Direct returns a response directly without proxying the request
+         * to the upstream. Note that the body is served to an inference
+         * API client, so it has to be a valid response or error object of
+         * the Service's own protocol.
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct direct = 7
+         */
+        direct: Service_Spec_Config_HTTP_Plugin_Direct;
+    } | {
+        oneofKind: "rateLimit";
+        /**
+         * RateLimit rate limits the requests
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit rateLimit = 8
+         */
+        rateLimit: Service_Spec_Config_HTTP_Plugin_RateLimit;
+    } | {
+        oneofKind: "jsonSchema";
+        /**
+         * JSONSchema validates the JSON request body against a JSON
+         * schema
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema jsonSchema = 10
+         */
+        jsonSchema: Service_Spec_Config_HTTP_Plugin_JSONSchema;
+    } | {
+        oneofKind: "path";
+        /**
+         * Path removes and/or adds prefixes of the request path
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Path path = 11
+         */
+        path: Service_Spec_Config_HTTP_Plugin_Path;
+    } | {
+        oneofKind: "prompt";
+        /**
+         * Prompt manipulates the instruction content of the request
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt prompt = 12
+         */
+        prompt: Service_Spec_Config_LLM_Plugin_Prompt;
+    } | {
+        oneofKind: "tools";
+        /**
+         * Tools controls the tools that the request declares to the model
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools tools = 13
+         */
+        tools: Service_Spec_Config_LLM_Plugin_Tools;
+    } | {
+        oneofKind: "guardrail";
+        /**
+         * Guardrail inspects the content of the request, and optionally
+         * of the response, and decides what to do about it
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail guardrail = 14
+         */
+        guardrail: Service_Spec_Config_LLM_Plugin_Guardrail;
+    } | {
+        oneofKind: "model";
+        /**
+         * Model overwrites the model name requested by the downstream. It
+         * overwrites the Configuration's own `model` field for the
+         * requests whose Condition matches.
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Model model = 15
+         */
+        model: Service_Spec_Config_LLM_Model;
+    } | {
+        oneofKind: "reasoning";
+        /**
+         * Reasoning sets the reasoning configuration of the request. It
+         * overwrites the Configuration's own `reasoning` field for the
+         * requests whose Condition matches.
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning reasoning = 16
+         */
+        reasoning: Service_Spec_Config_LLM_Reasoning;
+    } | {
+        oneofKind: "tokenRateLimit";
+        /**
+         * TokenRateLimit rate limits the inference token consumption of
+         * the requests
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit tokenRateLimit = 17
+         */
+        tokenRateLimit: Service_Spec_Config_LLM_Plugin_TokenRateLimit;
+    } | {
+        oneofKind: "semanticCache";
+        /**
+         * SemanticCache serves the requests from the responses that the
+         * Service already produced for the earlier requests of the same
+         * meaning
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticCache semanticCache = 18
+         */
+        semanticCache: Service_Spec_Config_LLM_Plugin_SemanticCache;
+    } | {
+        oneofKind: "semanticRouter";
+        /**
+         * SemanticRouter selects the model of a request from what the
+         * request means. It overwrites the Configuration's own `model`
+         * field for the requests whose Condition matches.
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticRouter semanticRouter = 19
+         */
+        semanticRouter: Service_Spec_Config_LLM_Plugin_SemanticRouter;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * Prompt manipulates the instruction content of the request before
+ * it is proxied to the upstream. It is the mechanism by which the
+ * Service, rather than the downstream, controls the instructions
+ * that are actually sent to the upstream.
+ *
+ * It applies to the operations that carry a conversation, which are
+ * the `CHAT_COMPLETIONS` and the `RESPONSES` operations of the
+ * OPENAI protocol and the `MESSAGES` and `COUNT_TOKENS` operations
+ * of the ANTHROPIC one, and it is a no-op for the operations that
+ * carry neither instructions nor messages at all (e.g.
+ * `COMPLETIONS`, `EMBEDDINGS`, `MODERATIONS`, `MODELS_LIST`). Note
+ * that `COUNT_TOKENS` is included deliberately, so that the count
+ * that the downstream receives is the count of the request that
+ * this Service would actually send. Use the Condition whenever a
+ * Plugin has to be scoped to a specific operation.
+ *
+ * Note that a Prompt Plugin is always invoked in the POST_AUTH
+ * phase since the inserted content routinely depends on the
+ * identity of the requesting User, and since mutating the request
+ * before the authorization process would invalidate the pre-flight
+ * limits that were already applied to it. The consequence of that
+ * phase is that the `limits` field is evaluated against the request
+ * exactly as the downstream sent it, before any content is inserted
+ * here, so a Service that inserts large instructions has to size
+ * `maxEstimatedInputTokens` with that added content in mind. The
+ * size of the rendered content itself is bounded by an internal
+ * hard limit.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt
+ */
+export interface Service_Spec_Config_LLM_Plugin_Prompt {
+    /**
+     * Type sets which part of the input the Plugin manipulates
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "system";
+        /**
+         * System manipulates the system instructions of the request
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.System system = 1
+         */
+        system: Service_Spec_Config_LLM_Plugin_Prompt_System;
+    } | {
+        oneofKind: "message";
+        /**
+         * Message inserts or edits the conversation messages of the
+         * request
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message message = 2
+         */
+        message: Service_Spec_Config_LLM_Plugin_Prompt_Message;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * Content is the instruction content that is inserted by the
+ * Plugin. Note that an evaluation which fails outright (e.g. the
+ * expression returns a non-string result, exceeds its cost limit
+ * or errors at runtime) rejects the request rather than inserting
+ * nothing: a Prompt Plugin that silently disappears whenever its
+ * own evaluation breaks provides a control that is not there.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Content
+ */
+export interface Service_Spec_Config_LLM_Plugin_Prompt_Content {
+    /**
+     * Type sets how the content is computed
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "value";
+        /**
+         * Value is a static string
+         *
+         * @generated from protobuf field: string value = 1
+         */
+        value: string;
+    } | {
+        oneofKind: "eval";
+        /**
+         * Eval is a CEL expression that is evaluated against the
+         * request context and whose string result is used as the
+         * content. An empty result is a no-op which leaves the
+         * request exactly as it is. A result that is not a string at
+         * all is an error rather than an empty result.
+         *
+         * @generated from protobuf field: string eval = 2
+         */
+        eval: string;
+    } | {
+        oneofKind: "opa";
+        /**
+         * OPA is a Rego script whose string result is used as the
+         * content. An empty result is a no-op while a result that is
+         * not a string at all is an error.
+         *
+         * @generated from protobuf field: string opa = 3
+         */
+        opa: string;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * System manipulates the system instructions of the request. Note
+ * that the system instructions are not simply a message that has
+ * a `system` role: they are the top-level `system` field for the
+ * ANTHROPIC protocol, the top-level `instructions` field for the
+ * `RESPONSES` operation, and the `system` or `developer` role
+ * messages for the `CHAT_COMPLETIONS` operation. Octelium always
+ * reads and writes every instruction carrier that the request's
+ * own protocol and operation allow, which for the `RESPONSES`
+ * operation includes the instruction-role input items as well as
+ * the top-level field, so that a downstream cannot keep its own
+ * instructions by moving them from one carrier to another.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.System
+ */
+export interface Service_Spec_Config_LLM_Plugin_Prompt_System {
+    /**
+     * Mode sets how the content is applied
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.System.Mode mode = 1
+     */
+    mode: Service_Spec_Config_LLM_Plugin_Prompt_System_Mode;
+    /**
+     * Content is the instruction content
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Content content = 2
+     */
+    content?: Service_Spec_Config_LLM_Plugin_Prompt_Content;
+}
+/**
+ * Mode sets how the content is applied to the instructions that
+ * the downstream itself supplied
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.System.Mode
+ */
+export enum Service_Spec_Config_LLM_Plugin_Prompt_System_Mode {
+    /**
+     * MODE_UNSET falls back to the default behavior which is
+     * PREPEND
+     *
+     * @generated from protobuf enum value: MODE_UNSET = 0;
+     */
+    MODE_UNSET = 0,
+    /**
+     * PREPEND inserts the content before the downstream's own
+     * instructions. The downstream's own instruction carrier is
+     * preserved as it is: a structured system block list keeps its
+     * blocks and their metadata, and the instruction messages of
+     * the `CHAT_COMPLETIONS` operation keep their own roles and
+     * their own order.
+     *
+     * @generated from protobuf enum value: PREPEND = 1;
+     */
+    PREPEND = 1,
+    /**
+     * APPEND inserts the content after the downstream's own
+     * instructions. It preserves the downstream's own instruction
+     * carrier in the same way as PREPEND.
+     *
+     * @generated from protobuf enum value: APPEND = 2;
+     */
+    APPEND = 2,
+    /**
+     * REPLACE discards the downstream's own instructions entirely
+     * and uses the content instead. Note that it therefore also
+     * discards the structure of the downstream's own instruction
+     * carrier, which is the point of owning that carrier.
+     *
+     * @generated from protobuf enum value: REPLACE = 3;
+     */
+    REPLACE = 3,
+    /**
+     * STRIP removes the downstream's own instructions and inserts
+     * nothing at all. The content field is unused.
+     *
+     * @generated from protobuf enum value: STRIP = 4;
+     */
+    STRIP = 4,
+    /**
+     * REJECT rejects the requests that carry their own system
+     * instructions instead of silently discarding them, and
+     * otherwise inserts the content. Note that it tests the
+     * instructions that the request carried when it reached the
+     * Prompt stage, so that several Prompt Plugins never reject
+     * the content that one another inserted. Use it whenever the
+     * Service, rather than the downstream, has to own the
+     * instruction carrier that reaches the upstream: without it, a
+     * downstream that supplies its own instructions turns the
+     * Service's instructions into one more input that the model
+     * weighs rather than a control that it obeys. A REJECT that
+     * carries no content at all is how a Service refuses every
+     * downstream-supplied instruction outright. Note that this
+     * owns the carrier and nothing beyond it: it decides which
+     * instructions are sent upstream, it does not make a model
+     * obey them and it does not stop a prompt injection that
+     * arrives through the messages, the tool results or the
+     * retrieved content.
+     *
+     * @generated from protobuf enum value: REJECT = 5;
+     */
+    REJECT = 5
+}
+/**
+ * Message inserts or edits the conversation messages of the
+ * request. Note that the inserted content is recorded only
+ * wherever the request body is recorded at all, which the
+ * `visibility` field governs, and that a recorded body records
+ * the request as the upstream receives it rather than as the
+ * downstream sent it.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message
+ */
+export interface Service_Spec_Config_LLM_Plugin_Prompt_Message {
+    /**
+     * Role is the role of the messages that are inserted or edited
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Role role = 1
+     */
+    role: Service_Spec_Config_LLM_Plugin_Prompt_Message_Role;
+    /**
+     * Position sets where the content goes
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Position position = 2
+     */
+    position: Service_Spec_Config_LLM_Plugin_Prompt_Message_Position;
+    /**
+     * Selector chooses which of the messages of the Role are
+     * selected
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Selector selector = 3
+     */
+    selector: Service_Spec_Config_LLM_Plugin_Prompt_Message_Selector;
+    /**
+     * Content is the message content
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Content content = 4
+     */
+    content?: Service_Spec_Config_LLM_Plugin_Prompt_Content;
+}
+/**
+ * Role is the role of the messages that are inserted or edited
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Role
+ */
+export enum Service_Spec_Config_LLM_Plugin_Prompt_Message_Role {
+    /**
+     * ROLE_UNSET is not used
+     *
+     * @generated from protobuf enum value: ROLE_UNSET = 0;
+     */
+    ROLE_UNSET = 0,
+    /**
+     * USER is a user message
+     *
+     * @generated from protobuf enum value: USER = 1;
+     */
+    USER = 1,
+    /**
+     * ASSISTANT is an assistant message. Note that a trailing
+     * assistant message is a prefill, which only the ANTHROPIC
+     * protocol supports at all: a prefill against the OPENAI
+     * protocol rejects the request rather than being silently
+     * dropped, while editing or inserting an assistant message
+     * that is not the trailing one is supported by either
+     * protocol. Note also that a prefill is additionally subject
+     * to the upstream's own rules, which a gateway cannot know in
+     * advance (e.g. Anthropic rejects a prefill whenever extended
+     * thinking is enabled), so an upstream that refuses one
+     * surfaces as an upstream error.
+     *
+     * @generated from protobuf enum value: ASSISTANT = 2;
+     */
+    ASSISTANT = 2
+}
+/**
+ * Position sets where the content goes
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Position
+ */
+export enum Service_Spec_Config_LLM_Plugin_Prompt_Message_Position {
+    /**
+     * POSITION_UNSET falls back to the default behavior which is
+     * APPEND
+     *
+     * @generated from protobuf enum value: POSITION_UNSET = 0;
+     */
+    POSITION_UNSET = 0,
+    /**
+     * PREPEND inserts the content into the selected message
+     * itself, before that message's own content
+     *
+     * @generated from protobuf enum value: PREPEND = 1;
+     */
+    PREPEND = 1,
+    /**
+     * APPEND inserts the content into the selected message
+     * itself, after that message's own content
+     *
+     * @generated from protobuf enum value: APPEND = 2;
+     */
+    APPEND = 2,
+    /**
+     * NEW_BEFORE inserts a whole new message of the Role before
+     * the selected one. Whenever the request carries no message of
+     * that Role at all, the new message is appended at the end of
+     * the conversation.
+     *
+     * @generated from protobuf enum value: NEW_BEFORE = 3;
+     */
+    NEW_BEFORE = 3,
+    /**
+     * NEW_AFTER inserts a whole new message of the Role after the
+     * selected one. Whenever the request carries no message of
+     * that Role at all, the new message is appended at the end of
+     * the conversation.
+     *
+     * @generated from protobuf enum value: NEW_AFTER = 4;
+     */
+    NEW_AFTER = 4
+}
+/**
+ * Selector chooses which of the messages of the Role are
+ * selected
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Selector
+ */
+export enum Service_Spec_Config_LLM_Plugin_Prompt_Message_Selector {
+    /**
+     * SELECTOR_UNSET falls back to the default behavior which is
+     * LAST
+     *
+     * @generated from protobuf enum value: SELECTOR_UNSET = 0;
+     */
+    SELECTOR_UNSET = 0,
+    /**
+     * LAST selects the last message of the Role
+     *
+     * @generated from protobuf enum value: LAST = 1;
+     */
+    LAST = 1,
+    /**
+     * FIRST selects the first message of the Role
+     *
+     * @generated from protobuf enum value: FIRST = 2;
+     */
+    FIRST = 2,
+    /**
+     * ALL selects every message of the Role. It is unused for the
+     * NEW_BEFORE and the NEW_AFTER positions.
+     *
+     * @generated from protobuf enum value: ALL = 3;
+     */
+    ALL = 3
+}
+/**
+ * Tools controls the tools that the request declares to the model.
+ * Tools are where a model stops generating text and starts acting,
+ * which makes them the main lever against excessive agency. Note
+ * that this Plugin governs the tools that an inference request
+ * offers to the model, and that where those tools are eventually
+ * executed decides what else governs them. A tool call that the
+ * downstream executes against an MCP Service is additionally
+ * governed by the Policies of that Service. A provider-hosted tool
+ * (e.g. web search, file search, code execution or computer use)
+ * and a remote MCP server that the inference provider itself
+ * invokes are both executed inside the provider, so they never
+ * reach an Octelium Service at all and this Plugin is the only
+ * place where they are governed. A Tools Plugin is always invoked
+ * in the POST_AUTH phase.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools
+ */
+export interface Service_Spec_Config_LLM_Plugin_Tools {
+    /**
+     * Filters decides what happens to the tools that the request
+     * declares. If not set, every declared tool is preserved as is.
+     *
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter filters = 1
+     */
+    filters: Service_Spec_Config_LLM_Plugin_Tools_Filter[];
+    /**
+     * Tools is the list of the tool definitions that the Service
+     * itself adds to the request
+     *
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Tool tools = 2
+     */
+    tools: Service_Spec_Config_LLM_Plugin_Tools_Tool[];
+    /**
+     * Choice sets how the requested tool choice is handled. Note that
+     * a tool choice which names a tool that is no longer declared,
+     * because a Filter removed or replaced it, is always reconciled
+     * against the remaining tools regardless of this field.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Choice choice = 3
+     */
+    choice: Service_Spec_Config_LLM_Plugin_Tools_Choice;
+    /**
+     * DenyMessage is the message of the protocol-correct error that
+     * is returned for the DENY Decision. Note that it is served to
+     * the downstream, so it should not disclose the policy itself.
+     *
+     * @generated from protobuf field: string denyMessage = 4
+     */
+    denyMessage: string;
+}
+/**
+ * Filter decides what happens to a declared tool. The Filters are
+ * evaluated in the order in which they are listed and the first
+ * one that matches a tool decides what happens to it.
+ *
+ * A tool that matches no Filter at all is allowed, with one
+ * deliberate exception: whenever at least one Filter is set, a
+ * provider-hosted tool (i.e. a tool whose `type` is set to
+ * anything other than "function") that matches no Filter is
+ * removed rather than allowed, since such a tool executes inside
+ * the inference provider and therefore crosses the execution
+ * boundary before any Octelium Service sees it. Use a `type`
+ * Filter in order to allow one explicitly.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter
+ */
+export interface Service_Spec_Config_LLM_Plugin_Tools_Filter {
+    /**
+     * Match sets how the Filter selects a tool
+     *
+     * @generated from protobuf oneof: match
+     */
+    match: {
+        oneofKind: "name";
+        /**
+         * Name is a glob pattern (e.g. "read_*") that is matched
+         * against the name of the tool. The name is read from
+         * `tools[].name` for the ANTHROPIC protocol as well as for
+         * the `RESPONSES` operation of the OPENAI one, and from
+         * `tools[].function.name` for its `CHAT_COMPLETIONS`
+         * operation. Note that the provider-hosted tools usually
+         * carry no name at all, which means that a name pattern
+         * cannot express them and that the `type` field is what
+         * matches them.
+         *
+         * @generated from protobuf field: string name = 1
+         */
+        name: string;
+    } | {
+        oneofKind: "type";
+        /**
+         * Type is a glob pattern (e.g. "web_search*") that is matched
+         * against the `tools[].type` field, which is how the
+         * provider-hosted tools and the provider-invoked remote MCP
+         * servers are declared and which is the only identity that
+         * most of them carry. A tool that declares no type at all is
+         * matched as "function". Note that a type is a coarse
+         * identity: every remote MCP server declaration shares the
+         * same "mcp" type regardless of the endpoint that it points
+         * to, so allowing that type allows every such server. Use the
+         * REPLACE Decision in order to pin a specific declaration.
+         *
+         * @generated from protobuf field: string type = 2
+         */
+        type: string;
+    } | {
+        oneofKind: undefined;
+    };
+    /**
+     * Decision is what happens to a tool that the Filter matches
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter.Decision decision = 3
+     */
+    decision: Service_Spec_Config_LLM_Plugin_Tools_Filter_Decision;
+    /**
+     * Replace is the tool definition that replaces the matched one.
+     * It is only used for the REPLACE Decision.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter.Replace replace = 4
+     */
+    replace?: Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace;
+}
+/**
+ * Replace is the tool definition that replaces the matched one.
+ * It is a serialized JSON object of the request's own protocol
+ * (i.e. a single entry of the request's `tools` array) and it
+ * is inserted as is, which means that the Service rather than
+ * the downstream defines the tool. An evaluation that fails
+ * outright, or that returns anything that is not a JSON object,
+ * rejects the request.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter.Replace
+ */
+export interface Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace {
+    /**
+     * Type sets how the tool definition is computed
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "value";
+        /**
+         * Value is a static serialized JSON object
+         *
+         * @generated from protobuf field: string value = 1
+         */
+        value: string;
+    } | {
+        oneofKind: "eval";
+        /**
+         * Eval is a CEL expression that is evaluated against the
+         * request context and whose string result is the
+         * serialized JSON object
+         *
+         * @generated from protobuf field: string eval = 2
+         */
+        eval: string;
+    } | {
+        oneofKind: "opa";
+        /**
+         * OPA is a Rego script whose result is the tool definition
+         *
+         * @generated from protobuf field: string opa = 3
+         */
+        opa: string;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * Decision is what happens to a tool that the Filter matches
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter.Decision
+ */
+export enum Service_Spec_Config_LLM_Plugin_Tools_Filter_Decision {
+    /**
+     * DECISION_UNSET falls back to the default behavior which is
+     * REMOVE
+     *
+     * @generated from protobuf enum value: DECISION_UNSET = 0;
+     */
+    DECISION_UNSET = 0,
+    /**
+     * ALLOW keeps the tool as is and stops the evaluation of the
+     * remaining Filters for it. It is how an allow list is
+     * written: the allowed tools are listed first and a catch-all
+     * Filter that removes or denies everything else is listed
+     * last.
+     *
+     * @generated from protobuf enum value: ALLOW = 1;
+     */
+    ALLOW = 1,
+    /**
+     * REMOVE silently drops the tool from the request and proxies
+     * it to the upstream. Use it for the downstreams that
+     * optimistically declare a superset of the tools that they
+     * actually need.
+     *
+     * @generated from protobuf enum value: REMOVE = 2;
+     */
+    REMOVE = 2,
+    /**
+     * DENY rejects the entire request. This is the auditable
+     * behavior: the downstream is told that the tool is not
+     * allowed instead of silently receiving a model that is
+     * unable to call it.
+     *
+     * @generated from protobuf enum value: DENY = 3;
+     */
+    DENY = 3,
+    /**
+     * REPLACE replaces the declared tool definition with the one
+     * that the `replace` field computes. Use it in order to pin a
+     * tool that a downstream may declare but may not define, for
+     * instance to narrow the JSON Schema of a tool, to rewrite
+     * its description, or to pin the endpoint of a remote MCP
+     * server declaration.
+     *
+     * @generated from protobuf enum value: REPLACE = 4;
+     */
+    REPLACE = 4
+}
+/**
+ * Tool is a tool definition that the Service itself adds to the
+ * request. It is a serialized JSON object of the request's own
+ * protocol (i.e. a single entry of the request's `tools` array).
+ * Note that the added tools are not subject to the Filters, since
+ * the Service rather than the downstream declared them, and that
+ * an evaluation that fails outright, or that returns anything
+ * that is not a JSON object, rejects the request.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Tool
+ */
+export interface Service_Spec_Config_LLM_Plugin_Tools_Tool {
+    /**
+     * Type sets how the tool definition is computed
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "value";
+        /**
+         * Value is a static serialized JSON object
+         *
+         * @generated from protobuf field: string value = 1
+         */
+        value: string;
+    } | {
+        oneofKind: "eval";
+        /**
+         * Eval is a CEL expression that is evaluated against the
+         * request context and whose string result is the serialized
+         * JSON object
+         *
+         * @generated from protobuf field: string eval = 2
+         */
+        eval: string;
+    } | {
+        oneofKind: "opa";
+        /**
+         * OPA is a Rego script whose result is the tool definition
+         *
+         * @generated from protobuf field: string opa = 3
+         */
+        opa: string;
+    } | {
+        oneofKind: undefined;
+    };
+    /**
+     * Position sets where the tool is added
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Tool.Position position = 4
+     */
+    position: Service_Spec_Config_LLM_Plugin_Tools_Tool_Position;
+}
+/**
+ * Position sets where the tool is added
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Tool.Position
+ */
+export enum Service_Spec_Config_LLM_Plugin_Tools_Tool_Position {
+    /**
+     * POSITION_UNSET falls back to the default behavior which is
+     * APPEND
+     *
+     * @generated from protobuf enum value: POSITION_UNSET = 0;
+     */
+    POSITION_UNSET = 0,
+    /**
+     * PREPEND adds the tool before the downstream's own tools
+     *
+     * @generated from protobuf enum value: PREPEND = 1;
+     */
+    PREPEND = 1,
+    /**
+     * APPEND adds the tool after the downstream's own tools
+     *
+     * @generated from protobuf enum value: APPEND = 2;
+     */
+    APPEND = 2
+}
+/**
+ * Choice sets how the tool choice that is requested by the
+ * downstream itself is handled
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Choice
+ */
+export enum Service_Spec_Config_LLM_Plugin_Tools_Choice {
+    /**
+     * CHOICE_UNSET falls back to the default behavior which is
+     * PRESERVE
+     *
+     * @generated from protobuf enum value: CHOICE_UNSET = 0;
+     */
+    CHOICE_UNSET = 0,
+    /**
+     * PRESERVE keeps the requested tool choice as is
+     *
+     * @generated from protobuf enum value: PRESERVE = 1;
+     */
+    PRESERVE = 1,
+    /**
+     * NONE forces the tool choice to "none" which means that the
+     * model is still offered the tools but it may not call any of
+     * them
+     *
+     * @generated from protobuf enum value: NONE = 2;
+     */
+    NONE = 2,
+    /**
+     * AUTO downgrades a forced tool choice (i.e. "required" or a
+     * named tool) to "auto". It neutralizes a downstream that
+     * compels a specific tool call without otherwise changing the
+     * request.
+     *
+     * @generated from protobuf enum value: AUTO = 3;
+     */
+    AUTO = 3
+}
+/**
+ * Guardrail inspects the content of the request, and optionally of
+ * the response, and decides what to do about it. Note that a
+ * Guardrail is a content control: the identity, the model and the
+ * operation of a request are governed by the Policies, and its
+ * shape is governed by the `limits` field, and both of them are
+ * always evaluated regardless of the Guardrails. Note also that a
+ * Guardrail verdict is never an input to the Policies: a Guardrail
+ * runs after the authorization decision has already been reached,
+ * it acts on the request itself rather than informing a Policy
+ * about it. A Guardrail is always invoked in the POST_AUTH phase.
+ *
+ * A Guardrail that cannot reach a verdict at all (e.g. a `replace`
+ * evaluation that errors) rejects the request rather than
+ * proceeding: a Guardrail that silently allows the content that it
+ * could not inspect provides a compliance claim that is not true.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail
+ */
+export interface Service_Spec_Config_LLM_Plugin_Guardrail {
+    /**
+     * Leg is the part of the exchange that is inspected
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Leg leg = 1
+     */
+    leg: Service_Spec_Config_LLM_Plugin_Guardrail_Leg;
+    /**
+     * Scopes is the list of the parts of the content that are
+     * inspected. If not set, only CONTENT is inspected. Note that it
+     * is unused on the RESPONSE leg, where the generated content is
+     * the only content that there is to inspect.
+     *
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Scope scopes = 2
+     */
+    scopes: Service_Spec_Config_LLM_Plugin_Guardrail_Scope[];
+    /**
+     * Patterns is the list of the Patterns that are matched against
+     * the inspected content
+     *
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern patterns = 3
+     */
+    patterns: Service_Spec_Config_LLM_Plugin_Guardrail_Pattern[];
+    /**
+     * DenyMessage is the message of the protocol-correct error that
+     * is returned for the DENY Action. Note that it is served to the
+     * downstream, so it should not disclose the detection logic
+     * itself.
+     *
+     * @generated from protobuf field: string denyMessage = 4
+     */
+    denyMessage: string;
+}
+/**
+ * Pattern matches the inspected content and decides what happens
+ * to a match. Every Pattern is evaluated against the content and
+ * its own Action applies to its own matches, so that a Guardrail
+ * can redact one kind of content while it strips another. A
+ * single match whose Action is DENY rejects the request, or
+ * withholds the response, regardless of what the remaining
+ * Patterns decided, and the rewriting Actions are applied to the
+ * matched spans in the order in which they appear in the content
+ * so that the result never depends on the order of this list.
+ *
+ * Two rewriting Patterns whose matches overlap are applied once,
+ * to the union of the two spans, with the most destructive Action
+ * among them: STRIP removes more than REPLACE, which in turn does
+ * not preserve what REDACT names. Two overlapping matches of the
+ * same Action are decided by the order of this list, and two
+ * matches that are merely adjacent are applied separately. Note
+ * that a Pattern which matches more than an internal hard limit of
+ * times in a single run of text rejects the request rather than
+ * rewriting it, since neither the work nor the size of such a
+ * rewrite is bounded by anything that the Service configured.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern
+ */
+export interface Service_Spec_Config_LLM_Plugin_Guardrail_Pattern {
+    /**
+     * Match sets what the Pattern matches
+     *
+     * @generated from protobuf oneof: match
+     */
+    match: {
+        oneofKind: "regex";
+        /**
+         * Regex is an RE2 regular expression. Note that RE2 has
+         * neither backreferences nor lookarounds, which is what makes
+         * its matching time linear in the size of the input.
+         *
+         * @generated from protobuf field: string regex = 1
+         */
+        regex: string;
+    } | {
+        oneofKind: "type";
+        /**
+         * Type is a built-in deterministic detector of personal
+         * information
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Type type = 2
+         */
+        type: Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Type;
+    } | {
+        oneofKind: "secrets";
+        /**
+         * Secrets is the built-in secret detector
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Secrets secrets = 3
+         */
+        secrets: Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets;
+    } | {
+        oneofKind: undefined;
+    };
+    /**
+     * Action is what happens to the matched content
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Action action = 4
+     */
+    action: Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Action;
+    /**
+     * Replace is the content that replaces the matched content. It
+     * is only used for the REPLACE Action.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Replace replace = 5
+     */
+    replace?: Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace;
+}
+/**
+ * Replace is the content that replaces the matched content
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Replace
+ */
+export interface Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace {
+    /**
+     * Type sets how the content is computed
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "value";
+        /**
+         * Value is a static string
+         *
+         * @generated from protobuf field: string value = 1
+         */
+        value: string;
+    } | {
+        oneofKind: "eval";
+        /**
+         * Eval is a CEL expression that is evaluated against the
+         * request context and whose string result is used as the
+         * content
+         *
+         * @generated from protobuf field: string eval = 2
+         */
+        eval: string;
+    } | {
+        oneofKind: "opa";
+        /**
+         * OPA is a Rego script whose string result is used as the
+         * content
+         *
+         * @generated from protobuf field: string opa = 3
+         */
+        opa: string;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * Secrets is the built-in secret detector. It matches the
+ * credentials that its rules recognize, which are the API keys,
+ * the tokens, the private keys and the connection strings of
+ * hundreds of providers, so that a Service does not have to
+ * name each of them in a Pattern of its own. Note that it
+ * detects credentials rather than personal information, which
+ * the `type` detectors match instead.
+ *
+ * A matched span covers the credential together with whatever
+ * its rule needs in order to recognize it, which is sometimes
+ * the assignment that carries it rather than the secret alone,
+ * so a rewriting Action can remove slightly more than the
+ * credential. Note also that a credential which appears more
+ * than once in the same run of text is reported once, which is
+ * why every occurrence of a matched span, rather than only the
+ * reported one, is rewritten.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Secrets
+ */
+export interface Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets {
+    /**
+     * ExcludeRules is the list of the rules that are skipped,
+     * which is how a rule that matches content that the Service
+     * legitimately carries is turned off without giving up the
+     * detector as a whole. A rule is named by its identifier,
+     * which is the name that the REDACT placeholder carries and
+     * which is matched without regard to its case, and an
+     * identifier that no rule has is ignored.
+     *
+     * @generated from protobuf field: repeated string excludeRules = 1
+     */
+    excludeRules: string[];
+}
+/**
+ * Type is a built-in deterministic detector of personal
+ * information. Note that the credentials are matched by the
+ * `secrets` detector instead.
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Type
+ */
+export enum Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Type {
+    /**
+     * TYPE_UNSET is not used
+     *
+     * @generated from protobuf enum value: TYPE_UNSET = 0;
+     */
+    TYPE_UNSET = 0,
+    /**
+     * EMAIL is an email address
+     *
+     * @generated from protobuf enum value: EMAIL = 1;
+     */
+    EMAIL = 1,
+    /**
+     * CREDIT_CARD is a Luhn-validated payment card number
+     *
+     * @generated from protobuf enum value: CREDIT_CARD = 2;
+     */
+    CREDIT_CARD = 2,
+    /**
+     * IBAN is an international bank account number
+     *
+     * @generated from protobuf enum value: IBAN = 3;
+     */
+    IBAN = 3,
+    /**
+     * US_SSN is a United States social security number
+     *
+     * @generated from protobuf enum value: US_SSN = 4;
+     */
+    US_SSN = 4
+}
+/**
+ * Action is what happens to the matched content. Note that
+ * the rewriting Actions, which are REDACT, STRIP and REPLACE,
+ * apply to the request leg only: a Guardrail whose leg is
+ * RESPONSE or BOTH, as well as one whose scopes carry the tool
+ * definitions, can only use the DENY Action, since rewriting a
+ * response that the downstream is already reading, or a
+ * structured document that is not free text, sanitizes nothing
+ * while it reports that it did.
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Action
+ */
+export enum Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Action {
+    /**
+     * ACTION_UNSET falls back to the default behavior which is
+     * DENY
+     *
+     * @generated from protobuf enum value: ACTION_UNSET = 0;
+     */
+    ACTION_UNSET = 0,
+    /**
+     * DENY rejects the request, or withholds the response, with a
+     * protocol-correct error
+     *
+     * @generated from protobuf enum value: DENY = 1;
+     */
+    DENY = 1,
+    /**
+     * REDACT replaces the matched content with a fixed
+     * placeholder, which names the built-in detector that matched
+     * it whenever the Pattern is one, and the secret detection
+     * rule that matched it whenever it is a `secrets` one, and
+     * proceeds
+     *
+     * @generated from protobuf enum value: REDACT = 2;
+     */
+    REDACT = 2,
+    /**
+     * STRIP removes the matched content entirely and proceeds
+     *
+     * @generated from protobuf enum value: STRIP = 3;
+     */
+    STRIP = 3,
+    /**
+     * REPLACE replaces the matched content with the content that
+     * the `replace` field computes, and proceeds
+     *
+     * @generated from protobuf enum value: REPLACE = 4;
+     */
+    REPLACE = 4
+}
+/**
+ * Leg is the part of the exchange that is inspected
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Leg
+ */
+export enum Service_Spec_Config_LLM_Plugin_Guardrail_Leg {
+    /**
+     * LEG_UNSET falls back to the default behavior which is REQUEST
+     *
+     * @generated from protobuf enum value: LEG_UNSET = 0;
+     */
+    LEG_UNSET = 0,
+    /**
+     * REQUEST inspects the request before it is proxied to the
+     * upstream
+     *
+     * @generated from protobuf enum value: REQUEST = 1;
+     */
+    REQUEST = 1,
+    /**
+     * RESPONSE inspects the response before it is served to the
+     * downstream. Note that a streamed response is withheld in its
+     * entirety until it ends, then inspected, and only then
+     * forwarded: it is the only behavior that guarantees that no
+     * matched content ever reaches the downstream, and its price is
+     * that the time to first token grows by the duration that the
+     * upstream needs in order to generate the whole response.
+     *
+     * @generated from protobuf enum value: RESPONSE = 2;
+     */
+    RESPONSE = 2,
+    /**
+     * BOTH inspects the request as well as the response
+     *
+     * @generated from protobuf enum value: BOTH = 3;
+     */
+    BOTH = 3
+}
+/**
+ * Scope is the part of the content that is inspected
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Scope
+ */
+export enum Service_Spec_Config_LLM_Plugin_Guardrail_Scope {
+    /**
+     * SCOPE_UNSET falls back to the default behavior which is
+     * CONTENT
+     *
+     * @generated from protobuf enum value: SCOPE_UNSET = 0;
+     */
+    SCOPE_UNSET = 0,
+    /**
+     * CONTENT is the text that the request carries as its own
+     * input, which is the conversation messages of the operations
+     * that carry a conversation, the `prompt` of the `COMPLETIONS`
+     * operation and the `input` of the `EMBEDDINGS` and the
+     * `MODERATIONS` ones
+     *
+     * @generated from protobuf enum value: CONTENT = 1;
+     */
+    CONTENT = 1,
+    /**
+     * INSTRUCTIONS is the system instructions
+     *
+     * @generated from protobuf enum value: INSTRUCTIONS = 2;
+     */
+    INSTRUCTIONS = 2,
+    /**
+     * TOOL_DEFINITIONS is the names, the descriptions and the JSON
+     * Schemas of the declared tools. Note that it is inspect-only:
+     * a tool definition is a structured document rather than free
+     * text, so the REDACT, STRIP and REPLACE Actions are rejected
+     * for this Scope and only the DENY one is available. Use a
+     * Tools Plugin in order to rewrite a tool definition.
+     *
+     * @generated from protobuf enum value: TOOL_DEFINITIONS = 3;
+     */
+    TOOL_DEFINITIONS = 3,
+    /**
+     * TOOL_RESULTS is the content of the tool results that the
+     * request carries. It is the content that the model retrieved
+     * from somewhere else, which makes it the usual carrier of
+     * indirect prompt injection. A content block is a tool result
+     * whenever the protocol names it one (i.e. `tool_result`,
+     * `function_call_output`, `search_result` and the
+     * `*_tool_result` blocks of the provider-hosted tools), and
+     * every block that is not one of those, including the ones that
+     * a provider adds after this list was written, belongs to
+     * CONTENT instead so that no block is skipped by both Scopes.
+     *
+     * @generated from protobuf enum value: TOOL_RESULTS = 4;
+     */
+    TOOL_RESULTS = 4,
+    /**
+     * ALL is every scope
+     *
+     * @generated from protobuf enum value: ALL = 5;
+     */
+    ALL = 5
+}
+/**
+ * TokenRateLimit rate limits the inference token consumption of
+ * the requests rather than their number. It answers a question that
+ * a request rate limit cannot: a downstream that is bounded to one
+ * request per second is not thereby bounded at all, since a single
+ * request can carry an entire repository as its input and can
+ * generate for minutes. Note that it is therefore not a replacement
+ * for the `rateLimit` Plugin, which bounds the request rate itself
+ * and which is the cheaper control against a downstream that simply
+ * loops.
+ *
+ * Note that this is a consumption quota rather than a per-request
+ * ceiling, which is what distinguishes it from the Configuration's
+ * own `limits` field: `limits` decides whether a single request may
+ * be as large as it is, while this Plugin decides whether an
+ * identity may still consume anything at all.
+ *
+ * ## Reservation and reconciliation
+ *
+ * The token consumption of a request is not known at the moment at
+ * which the request has to be admitted or refused: the input token
+ * count that the upstream will report is not exactly the pre-flight
+ * estimate that Octelium calculates, and the output token count is
+ * not known at all until the response has been generated. A limiter
+ * that simply charged the consumption after the fact would admit
+ * every one of the requests that are already in flight against the
+ * same window, which is precisely the case that a quota exists to
+ * bound.
+ *
+ * Octelium therefore reserves before the request is proxied and
+ * reconciles after the response has been observed. The reservation
+ * occupies the window from the moment the request is admitted, so
+ * that the concurrent requests of the same identity see one another
+ * rather than each of them seeing the same stale capacity. The
+ * reconciliation then replaces that reservation by what the request
+ * actually consumed, which returns the unused part of an
+ * over-reservation to the window and charges the excess of an
+ * under-reservation to it, and it charges that final count at the
+ * moment the request completed rather than at the moment it was
+ * admitted, so that a request is accounted the same way whether it
+ * took an instant or outlived its own window.
+ *
+ * Note that a request which is still in flight once the window has
+ * moved past its own admission stops occupying that window until it
+ * completes. That follows from counting the requests that fall
+ * within a window rather than the ones that are open, and it means
+ * that a Service whose requests routinely run for longer than the
+ * window is bounded by the requests that completed rather than by
+ * the ones that are still running.
+ *
+ * The reservation is calculated from the request as the upstream
+ * receives it, which is after every other Plugin has already mutated
+ * it, since the instructions and the tool definitions that a Service
+ * inserts are consumed by the model exactly as the ones that the
+ * downstream sent are. Its input part is the pre-flight estimate,
+ * which is a byte-based heuristic rather than a provider-accurate
+ * count, and its output part is the maximum output token count that
+ * the request itself declares, or the `defaultOutputTokens` field
+ * for a request that declares none.
+ *
+ * The reconciliation uses the token usage that the upstream itself
+ * reported, which is the only authoritative count and which Octelium
+ * already observes for the AccessLogs, including across a streamed
+ * response. Whenever that usage is only partially observed (e.g. a
+ * stream ended before its usage event) the larger of the reservation
+ * and the observed count is charged. Whenever a response carried no
+ * usage at all the reservation is kept as it is rather than
+ * returned, since a consumption that could not be measured is not a
+ * consumption that did not happen. The exception is an upstream that
+ * answered with an error and reported no usage, which releases the
+ * reservation in full, since a provider does not bill a request that
+ * it refused and a Service whose upstream is failing has no reason
+ * to spend its quota on those failures. A request that never reached
+ * the upstream at all releases its reservation in the same way.
+ *
+ * Note that a request which declares no output maximum of its own
+ * and whose Plugin sets no `defaultOutputTokens` reserves nothing
+ * for its output, so it is admitted against its input alone and is
+ * charged for what it generated only once it has already generated
+ * it. That is a stated limitation rather than a guarantee that is
+ * quietly approximated: Octelium cannot bound in advance an output
+ * whose ceiling neither the downstream nor the Service has declared.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit
+ */
+export interface Service_Spec_Config_LLM_Plugin_TokenRateLimit {
+    /**
+     * Scope sets which of the token counts of a request are counted
+     * against the limit
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit.Scope scope = 1
+     */
+    scope: Service_Spec_Config_LLM_Plugin_TokenRateLimit_Scope;
+    /**
+     * Key sets the identity against which the tokens are counted. It
+     * is the HTTP mode's own Key so that a rate limit is written
+     * identically in either mode. Note that a token quota is usually
+     * written per User rather than per Session, since recreating a
+     * Session is not supposed to reset a quota. Note also that every
+     * Plugin counts against a window of its own even where two of them
+     * resolve to the same key.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.Key key = 2
+     */
+    key?: Service_Spec_Config_HTTP_Plugin_RateLimit_Key;
+    /**
+     * Limit is the maximum number of the tokens of the Scope that can
+     * be consumed within the window
+     *
+     * @generated from protobuf field: int64 limit = 3
+     */
+    limit: number;
+    /**
+     * Window is the duration of the sliding window
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.Duration window = 4
+     */
+    window?: Duration;
+    /**
+     * DefaultOutputTokens is the number of the output tokens that are
+     * reserved for a request which declares no maximum output token
+     * count of its own. Zero, which is the default, reserves nothing
+     * for such a request. It is unused for the INPUT Scope.
+     *
+     * @generated from protobuf field: uint64 defaultOutputTokens = 5
+     */
+    defaultOutputTokens: number;
+    /**
+     * DenyMessage is the message of the protocol-correct 429 error
+     * that is returned once the limit is exceeded
+     *
+     * @generated from protobuf field: string denyMessage = 6
+     */
+    denyMessage: string;
+    /**
+     * Headers is the list of the headers that are set in the response
+     * that is returned once the limit is exceeded (e.g. `Retry-After`)
+     *
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.KeyValue headers = 7
+     */
+    headers: Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue[];
+}
+/**
+ * Scope sets which of the token counts of a request are counted
+ * against the limit
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit.Scope
+ */
+export enum Service_Spec_Config_LLM_Plugin_TokenRateLimit_Scope {
+    /**
+     * SCOPE_UNSET falls back to the default behavior which is TOTAL
+     *
+     * @generated from protobuf enum value: SCOPE_UNSET = 0;
+     */
+    SCOPE_UNSET = 0,
+    /**
+     * TOTAL counts the input tokens together with the output ones
+     *
+     * @generated from protobuf enum value: TOTAL = 1;
+     */
+    TOTAL = 1,
+    /**
+     * INPUT counts the input tokens only. Note that the cached input
+     * tokens are counted as input wherever the upstream reports them
+     * as a part of the input rather than as a discount on it.
+     *
+     * @generated from protobuf enum value: INPUT = 2;
+     */
+    INPUT = 2,
+    /**
+     * OUTPUT counts the output tokens only, which include the
+     * reasoning tokens that the upstream reports
+     *
+     * @generated from protobuf enum value: OUTPUT = 3;
+     */
+    OUTPUT = 3
+}
+/**
+ * SemanticCache serves a request from a response that the Service
+ * already produced for an earlier request of the same meaning,
+ * without invoking the model at all. It is the inference-aware
+ * replacement of the HTTP mode's own Cache Plugin, which has no
+ * counterpart here because a generic HTTP cache keys on a URI and
+ * therefore understands neither who is allowed to read a response
+ * nor which of the request's own fields change what the model would
+ * have generated.
+ *
+ * A lookup has two stages. An exactly repeated request is served
+ * from the cache without generating an embedding at all, since the
+ * embedding is routinely the most expensive part of the lookup and
+ * an identical request needs no similarity to be recognized. Only a
+ * request that no exact entry matches is embedded and searched by
+ * similarity.
+ *
+ * It applies to the operations that generate a completion from a
+ * conversation, which are the `CHAT_COMPLETIONS` and `RESPONSES`
+ * operations of the OPENAI protocol, the `MESSAGES` operation of the
+ * ANTHROPIC one, the `GENERATE_CONTENT` operation of the GEMINI one
+ * and the `CONVERSE` operation of the BEDROCK one, and it is a no-op
+ * for the rest of them rather than an error. Only a successful
+ * response is ever stored, and a response that asks the downstream
+ * to call a tool is deliberately never stored at all: replaying such
+ * a response would make an application carry out an action again
+ * even though no model decided that it should be carried out now.
+ *
+ * The identity of a cache entry is deliberately split in two. The
+ * semantic subject, which is the content that the downstream is
+ * actually asking about, is the only part that is matched by
+ * meaning. Everything else that decides what the model would
+ * generate (i.e. the effective model, the operation, the system
+ * instructions, the preceding messages, the tools, the tool choice,
+ * the response schema, the reasoning configuration, the sampling
+ * parameters and every other field of the request that Octelium does
+ * not recognize) is matched exactly, so two requests only ever
+ * compete with one another when their entire execution context is
+ * identical. Embedding a whole request instead would let two
+ * requests that merely read similarly be served the same answer even
+ * though they asked different models, carried different instructions
+ * or declared different tools.
+ *
+ * The cache always acts on the request as the upstream would have
+ * received it, which is why it is invoked after every Plugin that
+ * rewrites that request: a secret that a Guardrail redacted is never
+ * embedded, instructions that a Prompt inserted are a part of the
+ * exact context, and the model that a Model Plugin or a
+ * SemanticRouter selected is the model whose responses the entry
+ * belongs to rather than the one that the downstream named.
+ *
+ * Note that a hit consumes no inference tokens at all, which is why
+ * the cache is invoked before every TokenRateLimit Plugin: a request
+ * that the model never saw does not spend the quota of the identity
+ * that sent it. Note also that a hit is not a bypass of the
+ * Service's own controls: the response Guardrails are applied to a
+ * cached response exactly as they are applied to an upstream one,
+ * since an administrator can have changed a Guardrail after the
+ * entry was stored, and a response that a Guardrail rejected is
+ * never stored in the first place.
+ *
+ * Note that the exact execution context is derived from the request
+ * body, from the request path and from the Configuration that served
+ * the request, and that it deliberately does not include the request
+ * headers, since the headers that the Service itself adds are not
+ * applied until after this Plugin has already decided. A Service
+ * whose answers vary with a header that the downstream sends, or
+ * with one that the Service derives from an expression, therefore
+ * has to name that value in an `eval` scope rather than to assume
+ * that the cache separates it.
+ *
+ * Note that this Plugin fails open. A request whose embedding
+ * backend or whose vector store is unavailable, times out or errors
+ * is proxied to the upstream as a miss rather than rejected, since a
+ * cache that can refuse to serve a Service is a new availability
+ * dependency rather than an optimization.
+ *
+ * Note finally that enabling this Plugin stores prompt-derived
+ * vectors and generated responses for the lifetime of an entry, and
+ * that it does so independently of the `visibility` field: a Service
+ * that records neither request nor response bodies in its AccessLogs
+ * still stores both of them here while its entries live. Octelium
+ * never stores the prompts themselves, it stores their vectors and
+ * opaque digests of their execution context, but the generated
+ * responses are stored as they are since serving them again is the
+ * entire point.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticCache
+ */
+export interface Service_Spec_Config_LLM_Plugin_SemanticCache {
+    /**
+     * Embedding sets how the semantic subject of the request is
+     * embedded. It overwrites the Configuration's own `embedding`
+     * field for the requests whose Condition matches.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding embedding = 1
+     */
+    embedding?: Service_Spec_Config_LLM_Embedding;
+    /**
+     * Scope sets the caller partition of the cache. If not set, which
+     * is the default, the cache is partitioned per User.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticCache.Scope scope = 2
+     */
+    scope?: Service_Spec_Config_LLM_Plugin_SemanticCache_Scope;
+    /**
+     * MinSimilarity is the smallest cosine similarity, between 0 and
+     * 1, at which two semantic subjects are treated as the same
+     * question. Zero uses the default value which is deliberately
+     * conservative. Note that the value that is correct for one
+     * embedding model is not the value that is correct for another, so
+     * it has to be tuned against the model that the `embedding` field
+     * names rather than carried over from another Service.
+     *
+     * @generated from protobuf field: float minSimilarity = 3
+     */
+    minSimilarity: number;
+    /**
+     * TTL is the duration after which a cache entry expires. Zero uses
+     * the default value. Note that it is also the window during which
+     * a response that a model would generate differently today is
+     * still served, so it is the Service's own statement of how stale
+     * an answer is allowed to be.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.Duration ttl = 4
+     */
+    ttl?: Duration;
+    /**
+     * MaxSize is the maximum size in bytes of a response that can be
+     * stored. Zero uses the default value. A larger response is served
+     * to the downstream as it is, it is simply not stored. This value
+     * is always bounded by an internal hard limit.
+     *
+     * Note that a response is only stored once it is known to be
+     * complete: a stream that ended before its own final event, a
+     * response that carries a tool call and a response that a
+     * Guardrail rejected are all served to the downstream that asked
+     * for them and none of them is stored.
+     *
+     * @generated from protobuf field: uint64 maxSize = 5
+     */
+    maxSize: number;
+    /**
+     * UseXCacheHeader sets the `X-Cache` response header to indicate
+     * whether the response was served from the cache
+     *
+     * @generated from protobuf field: bool useXCacheHeader = 6
+     */
+    useXCacheHeader: boolean;
+}
+/**
+ * Scope partitions the cached responses between the callers. It is
+ * the boundary that decides who is allowed to be served a response
+ * that was generated for somebody else, so it is a security
+ * control rather than a tuning parameter.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticCache.Scope
+ */
+export interface Service_Spec_Config_LLM_Plugin_SemanticCache_Scope {
+    /**
+     * Type sets how the caller partition is computed
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "perUser";
+        /**
+         * PerUser partitions the cache by User, which is the default.
+         * A response is therefore only ever served again to the User
+         * that it was generated for.
+         *
+         * @generated from protobuf field: bool perUser = 1
+         */
+        perUser: boolean;
+    } | {
+        oneofKind: "perSession";
+        /**
+         * PerSession partitions the cache by Session, which is the
+         * narrowest partition. It is the default for the Services that
+         * serve anonymous requests, where there is no User to
+         * partition by.
+         *
+         * @generated from protobuf field: bool perSession = 2
+         */
+        perSession: boolean;
+    } | {
+        oneofKind: "shared";
+        /**
+         * Shared lets every authorized caller of the Service be served
+         * any cached response of the Service. It is a deliberate
+         * cross-identity boundary: a response that was generated from
+         * one caller's prompt is served to another caller whose own
+         * prompt merely means the same thing, so it is only ever
+         * correct where every caller of the Service is already
+         * entitled to every answer that the Service can produce.
+         *
+         * @generated from protobuf field: bool shared = 3
+         */
+        shared: boolean;
+    } | {
+        oneofKind: "eval";
+        /**
+         * Eval partitions the cache by the string result of a CEL
+         * expression that is evaluated against the request context
+         * (e.g. a tenant identifier). An empty result is rejected
+         * rather than read as a shared partition, since a partition
+         * that silently collapses into a shared one is a silent
+         * cross-identity exposure.
+         *
+         * @generated from protobuf field: string eval = 4
+         */
+        eval: string;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * SemanticRouter selects the model of a request from what the
+ * request means rather than from what the downstream named. It is
+ * how a Service serves one logical endpoint (e.g. a `model` of
+ * "auto") while sending the difficult requests to an expensive model
+ * and the trivial ones to a cheap one, without every downstream
+ * application having to know which model exists or which one it
+ * ought to ask for.
+ *
+ * Each Route describes a class of requests, both in prose and by
+ * example, and both of those are embedded independently at
+ * configuration time. A request is routed by embedding its own
+ * semantic subject and taking the Route of the single
+ * highest-scoring description or example, which is why several
+ * short, concrete examples define a Route far more sharply than one
+ * long description: an example is a point of the space that the
+ * Route is claiming while a description is a summary of it. A Route
+ * whose best score is below its minimum similarity does not match at
+ * all, and a request that no Route matched is served the
+ * `fallbackModel`.
+ *
+ * The routed model is a default rather than an override: it
+ * overwrites the Configuration's own `model` field, since a Service
+ * that routes semantically is stating that the meaning of a request
+ * decides its model, but a Model Plugin whose Condition matches
+ * overwrites it in turn, since naming a model explicitly for a
+ * request is a more specific statement than routing it. Use the
+ * Plugin's own Condition in order to decide when routing applies at
+ * all, which is how a Service routes only the requests that asked
+ * for it (e.g. `ctx.request.llm.model == "auto"`) while serving every
+ * explicitly named model as it was asked for.
+ *
+ * Note that the semantic subject of a routing decision is what the
+ * downstream is asking for rather than the entire request: the
+ * Service's own inserted instructions are deliberately not embedded,
+ * since instructions that every request carries are a large
+ * component that every request shares and that therefore makes the
+ * Routes harder rather than easier to tell apart. That is the
+ * opposite of the SemanticCache, where those same instructions must
+ * participate in the exact context, and it is why this Plugin is
+ * invoked before the Prompt Plugins while the cache is invoked after
+ * them.
+ *
+ * Note that `ctx.request.llm.model` continues to carry the model
+ * that the downstream itself requested, exactly as it does for the
+ * Model Plugin, so the Policies keep deciding on what was asked for
+ * rather than on what the Service turned it into. The AccessLogs
+ * record the Route that matched, its similarity and the model that
+ * was selected.
+ *
+ * Note finally that this Plugin fails open as well: a request whose
+ * embedding could not be generated at all is served the
+ * `fallbackModel` rather than rejected.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticRouter
+ */
+export interface Service_Spec_Config_LLM_Plugin_SemanticRouter {
+    /**
+     * Embedding sets how the semantic subjects of the requests and of
+     * the Routes are embedded. It overwrites the Configuration's own
+     * `embedding` field for the requests whose Condition matches. Note
+     * that the Routes are embedded with it as well, so changing it
+     * re-embeds every Route.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding embedding = 1
+     */
+    embedding?: Service_Spec_Config_LLM_Embedding;
+    /**
+     * Routes is the list of the Routes
+     *
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticRouter.Route routes = 2
+     */
+    routes: Service_Spec_Config_LLM_Plugin_SemanticRouter_Route[];
+    /**
+     * MinSimilarity is the smallest cosine similarity at which a Route
+     * matches, for the Routes that set none of their own. Zero uses
+     * the default value. Note that a routing threshold is far lower
+     * than a caching one, since two requests of the same kind are not
+     * nearly as similar to one another as two ways of asking the same
+     * question, and that it has to be tuned against the embedding
+     * model that is actually used.
+     *
+     * @generated from protobuf field: float minSimilarity = 3
+     */
+    minSimilarity: number;
+    /**
+     * FallbackModel is the model that serves the requests that no
+     * Route matched. If not set, which is the default, such a request
+     * keeps the model that the downstream itself requested.
+     *
+     * @generated from protobuf field: string fallbackModel = 4
+     */
+    fallbackModel: string;
+}
+/**
+ * Route is a class of requests and the model that serves it
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticRouter.Route
+ */
+export interface Service_Spec_Config_LLM_Plugin_SemanticRouter_Route {
+    /**
+     * Name is the identity of the Route. It is unique within the
+     * Plugin and it is what the AccessLogs record.
+     *
+     * @generated from protobuf field: string name = 1
+     */
+    name: string;
+    /**
+     * Description describes the class of requests that this Route
+     * serves, in prose. It participates in the semantic matching.
+     *
+     * @generated from protobuf field: string description = 2
+     */
+    description: string;
+    /**
+     * Examples are representative requests of this Route (e.g.
+     * "Why is this Go program deadlocking?"). Each one is embedded
+     * and matched independently of the others and of the
+     * Description.
+     *
+     * @generated from protobuf field: repeated string examples = 3
+     */
+    examples: string[];
+    /**
+     * Model is the model that serves the requests that this Route
+     * matched
+     *
+     * @generated from protobuf field: string model = 4
+     */
+    model: string;
+    /**
+     * MinSimilarity is the smallest cosine similarity at which this
+     * Route matches. Zero uses the Plugin's own `minSimilarity`. It
+     * is how a Route that must not be entered by mistake (e.g. the
+     * one that selects the most expensive model) is held to a
+     * stricter standard than the rest.
+     *
+     * @generated from protobuf field: float minSimilarity = 5
+     */
+    minSimilarity: number;
+}
+/**
  * Protocol is the inference API protocol served by the Service.
  *
  * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol
@@ -3065,7 +5666,100 @@ export enum Service_Spec_Config_LLM_Protocol {
      *
      * @generated from protobuf enum value: ANTHROPIC = 2;
      */
-    ANTHROPIC = 2
+    ANTHROPIC = 2,
+    /**
+     * GEMINI is the Google Gemini API, which is the `/v1beta` generative
+     * language surface that the Google GenAI SDKs speak to the Gemini
+     * Developer API. Note that the model is named by the request path
+     * rather than by the request body, and that Vertex AI is not this
+     * protocol: it serves the same body shapes under project and
+     * location scoped paths and it authenticates differently.
+     *
+     * @generated from protobuf enum value: GEMINI = 3;
+     */
+    GEMINI = 3,
+    /**
+     * BEDROCK is the AWS Bedrock Runtime API. Its Converse operations
+     * are the inference surface that Octelium understands, while its
+     * InvokeModel operations are proxied without their bodies being
+     * parsed since those bodies are model-native rather than defined by
+     * the protocol. Note that the model is named by the request path
+     * rather than by the request body, and that the upstream
+     * authenticates with AWS Signature Version 4 which the `auth` field
+     * provides via its `sigv4` type.
+     *
+     * @generated from protobuf enum value: BEDROCK = 4;
+     */
+    BEDROCK = 4
+}
+/**
+ * Operation is the inference operation of a request, normalized across
+ * the protocols. It names what a request does rather than which route
+ * it arrived on, so a rule that matches the generation traffic of a
+ * Cluster is one term rather than a disjunction over every protocol
+ * that spells generation differently, and a rule written for one
+ * protocol keeps working for a Service that later serves another.
+ * The Protocol enum alongside it, and the request path, identify the
+ * exact route wherever that matters.
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.LLM.Operation
+ */
+export enum Service_Spec_Config_LLM_Operation {
+    /**
+     * OPERATION_UNSET is not used
+     *
+     * @generated from protobuf enum value: OPERATION_UNSET = 0;
+     */
+    OPERATION_UNSET = 0,
+    /**
+     * GENERATE generates model output from an input. It covers the
+     * conversational as well as the non-conversational text generation
+     * operations of every protocol.
+     *
+     * @generated from protobuf enum value: GENERATE = 1;
+     */
+    GENERATE = 1,
+    /**
+     * EMBED generates the vector embeddings of an input
+     *
+     * @generated from protobuf enum value: EMBED = 2;
+     */
+    EMBED = 2,
+    /**
+     * MODERATE classifies an input for safety
+     *
+     * @generated from protobuf enum value: MODERATE = 3;
+     */
+    MODERATE = 3,
+    /**
+     * COUNT_TOKENS counts the tokens of an input without generating any
+     * output
+     *
+     * @generated from protobuf enum value: COUNT_TOKENS = 4;
+     */
+    COUNT_TOKENS = 4,
+    /**
+     * LIST_MODELS lists the models served by the upstream
+     *
+     * @generated from protobuf enum value: LIST_MODELS = 5;
+     */
+    LIST_MODELS = 5,
+    /**
+     * GET_MODEL describes one model served by the upstream
+     *
+     * @generated from protobuf enum value: GET_MODEL = 6;
+     */
+    GET_MODEL = 6,
+    /**
+     * RAW_INFERENCE is an inference operation whose body is the native
+     * payload of the model that the request names rather than a shape
+     * that the protocol itself defines. Octelium does not parse it, so
+     * the fields that are read from a request body are unset for it and
+     * the inference-specific Plugins are a no-op.
+     *
+     * @generated from protobuf enum value: RAW_INFERENCE = 7;
+     */
+    RAW_INFERENCE = 7
 }
 /**
  * SSH sets the SSH-specific configuration
@@ -4733,7 +7427,13 @@ export enum Service_Spec_Mode {
      *
      * @generated from protobuf enum value: LLM = 14;
      */
-    LLM = 14
+    LLM = 14,
+    /**
+     * RDP is the RDP mode
+     *
+     * @generated from protobuf enum value: RDP = 15;
+     */
+    RDP = 15
 }
 /**
  * Status is the current status of the Service
@@ -9810,89 +12510,695 @@ export interface AccessLog_Entry_Info_LLM {
      */
     protocol: Service_Spec_Config_LLM_Protocol;
     /**
-     * Operation is the normalized inference operation of the request
+     * Operation is the inference operation of the request, normalized
+     * across the protocols
      *
-     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Operation operation = 4
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Operation operation = 4
      */
-    operation: AccessLog_Entry_Info_LLM_Operation;
+    operation: Service_Spec_Config_LLM_Operation;
     /**
-     * RequestedModel is the model name requested by the downstream. Note
-     * that it is read from the request itself and it is therefore also set
-     * for the requests that are eventually rejected by Octelium.
+     * Route is the canonical inference API route of the request. It names
+     * the exact surface that the request arrived on, which the Operation
+     * field deliberately does not.
      *
-     * @generated from protobuf field: string requestedModel = 5
+     * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.LLM.Route route = 5
      */
-    requestedModel: string;
+    route: RequestContext_Request_LLM_Route;
     /**
-     * Model is the model name reported by the upstream provider itself. It
-     * can differ from the RequestedModel whenever the request used an
-     * alias or an unpinned model name.
+     * Source is what produced the response
      *
-     * @generated from protobuf field: string model = 6
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Source source = 6
      */
-    model: string;
+    source: AccessLog_Entry_Info_LLM_Source;
+    /**
+     * IsUpstreamInvoked is set for the requests whose inference upstream
+     * actually responded. It is not the same fact as the Source field: a
+     * response that a Guardrail Plugin blocked has a Source of OCTELIUM
+     * and was still generated by the upstream, and therefore still cost
+     * whatever the Usage field reports. It is what separates the requests
+     * that were rejected before the upstream ran from the ones that were
+     * rejected after it did.
+     *
+     * @generated from protobuf field: bool isUpstreamInvoked = 7
+     */
+    isUpstreamInvoked: boolean;
+    /**
+     * Model shows which model the request named and which one served it
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Model model = 8
+     */
+    model?: AccessLog_Entry_Info_LLM_Model;
     /**
      * Stream is set for the requests that asked for a streamed response
      *
-     * @generated from protobuf field: bool stream = 7
+     * @generated from protobuf field: bool stream = 9
      */
     stream: boolean;
     /**
-     * Usage is the token usage of the request/response
+     * MaxOutputTokens is the maximum output token count that the
+     * downstream itself requested. It is zero whenever the request
+     * declares none.
      *
-     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage usage = 8
+     * @generated from protobuf field: uint64 maxOutputTokens = 10
      */
-    usage?: AccessLog_Entry_Info_LLM_Usage;
+    maxOutputTokens: number;
+    /**
+     * InputItemCount is the number of the input items (i.e. the messages
+     * or the embedding inputs) of the request
+     *
+     * @generated from protobuf field: uint32 inputItemCount = 11
+     */
+    inputItemCount: number;
+    /**
+     * HasImageInput is set for the requests that carry image input
+     *
+     * @generated from protobuf field: bool hasImageInput = 12
+     */
+    hasImageInput: boolean;
+    /**
+     * HasAudioInput is set for the requests that carry audio input
+     *
+     * @generated from protobuf field: bool hasAudioInput = 13
+     */
+    hasAudioInput: boolean;
     /**
      * EstimatedInputTokens is Octelium's own pre-flight input token
      * estimate. It is always set for the parsed inference requests
-     * regardless of the Usage field.
+     * regardless of the Usage field, and it must never be treated as a
+     * billing truth. Read the EstimateQuality field alongside it.
      *
-     * @generated from protobuf field: uint64 estimatedInputTokens = 9
+     * @generated from protobuf field: uint64 estimatedInputTokens = 14
      */
     estimatedInputTokens: number;
+    /**
+     * EstimateQuality shows whether the EstimatedInputTokens field
+     * accounted for the entire input of the request
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.LLM.EstimateQuality estimateQuality = 15
+     */
+    estimateQuality: RequestContext_Request_LLM_EstimateQuality;
+    /**
+     * Usage is the token usage reported by the upstream provider itself
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage usage = 16
+     */
+    usage?: AccessLog_Entry_Info_LLM_Usage;
     /**
      * ResponseID is the response identifier reported by the upstream
      * provider itself
      *
-     * @generated from protobuf field: string responseID = 10
+     * @generated from protobuf field: string responseID = 17
      */
     responseID: string;
     /**
-     * FinishReason is the completion status reported by the upstream
-     * provider itself (e.g. "stop", "length", "tool_calls")
+     * FinishReason is the completion status of the response, normalized
+     * across the providers
      *
-     * @generated from protobuf field: string finishReason = 11
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.FinishReason finishReason = 18
      */
-    finishReason: string;
+    finishReason: AccessLog_Entry_Info_LLM_FinishReason;
+    /**
+     * RawFinishReason is the completion status exactly as the upstream
+     * provider spelled it (e.g. "stop", "end_turn", "max_tokens"). It is
+     * kept alongside the normalized FinishReason field for the
+     * investigations that need the provider's own vocabulary.
+     *
+     * @generated from protobuf field: string rawFinishReason = 19
+     */
+    rawFinishReason: string;
     /**
      * TimeToFirstToken is the duration between accepting the request and
      * the first generated content of a streamed response
      *
-     * @generated from protobuf field: octelium.api.main.meta.v1.Duration timeToFirstToken = 12
+     * @generated from protobuf field: octelium.api.main.meta.v1.Duration timeToFirstToken = 20
      */
     timeToFirstToken?: Duration;
     /**
-     * EventCount is the number of the `text/event-stream` events of the
-     * response
+     * EventCount is the number of the events of a streamed response,
+     * whether they are the events of a `text/event-stream` or the messages
+     * of the AWS event stream that the BEDROCK protocol serves
      *
-     * @generated from protobuf field: uint64 eventCount = 13
+     * @generated from protobuf field: uint64 eventCount = 21
      */
     eventCount: number;
+    /**
+     * Reasoning is the reasoning configuration that the upstream was
+     * served
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Reasoning reasoning = 22
+     */
+    reasoning?: AccessLog_Entry_Info_LLM_Reasoning;
+    /**
+     * Tools is the tool surface that the request carried
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Tools tools = 23
+     */
+    tools?: AccessLog_Entry_Info_LLM_Tools;
+    /**
+     * Guardrails is the outcome of every Guardrail Plugin that was applied
+     * to the request, one entry per Plugin and leg
+     *
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Guardrail guardrails = 24
+     */
+    guardrails: AccessLog_Entry_Info_LLM_Guardrail[];
+    /**
+     * TokenRateLimit is the outcome of the token quota enforcement
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.TokenRateLimit tokenRateLimit = 25
+     */
+    tokenRateLimit?: AccessLog_Entry_Info_LLM_TokenRateLimit;
+    /**
+     * SemanticCache is the outcome of the SemanticCache Plugin
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticCache semanticCache = 26
+     */
+    semanticCache?: AccessLog_Entry_Info_LLM_SemanticCache;
+    /**
+     * SemanticRouter is the outcome of the SemanticRouter Plugin
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter semanticRouter = 27
+     */
+    semanticRouter?: AccessLog_Entry_Info_LLM_SemanticRouter;
+}
+/**
+ * Model shows which model the request named and which one served it
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Model
+ */
+export interface AccessLog_Entry_Info_LLM_Model {
+    /**
+     * Requested is the model name requested by the downstream, verbatim.
+     * It is set even for the requests that Octelium rejected, since it
+     * is read from the request itself.
+     *
+     * @generated from protobuf field: string requested = 1
+     */
+    requested: string;
+    /**
+     * Effective is the model name that Octelium proxied to the upstream.
+     * It differs from the Requested one exactly when the Source field is
+     * set, which is the record of the Service overriding what the
+     * downstream asked for.
+     *
+     * @generated from protobuf field: string effective = 2
+     */
+    effective: string;
+    /**
+     * Reported is the model name that the upstream provider itself named
+     * in its response. It resolves the aliases and the unpinned names
+     * that the Effective one can carry, and for a request that the
+     * SemanticCache served it is the model that generated the cached
+     * response rather than one that was invoked now.
+     *
+     * @generated from protobuf field: string reported = 3
+     */
+    reported: string;
+    /**
+     * Source is what decided the Effective model
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Model.Source source = 4
+     */
+    source: AccessLog_Entry_Info_LLM_Model_Source;
+    /**
+     * Plugin is the name of the Plugin that decided the Effective model.
+     * It is empty whenever the Source is not a Plugin.
+     *
+     * @generated from protobuf field: string plugin = 5
+     */
+    plugin: string;
+}
+/**
+ * Source is what decided the Effective model
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Model.Source
+ */
+export enum AccessLog_Entry_Info_LLM_Model_Source {
+    /**
+     * SOURCE_UNSET means that the model requested by the downstream
+     * was served as is
+     *
+     * @generated from protobuf enum value: SOURCE_UNSET = 0;
+     */
+    SOURCE_UNSET = 0,
+    /**
+     * CONFIG is the Service's own `model` field
+     *
+     * @generated from protobuf enum value: CONFIG = 1;
+     */
+    CONFIG = 1,
+    /**
+     * PLUGIN is a Model Plugin
+     *
+     * @generated from protobuf enum value: PLUGIN = 2;
+     */
+    PLUGIN = 2,
+    /**
+     * SEMANTIC_ROUTER is a SemanticRouter Plugin
+     *
+     * @generated from protobuf enum value: SEMANTIC_ROUTER = 3;
+     */
+    SEMANTIC_ROUTER = 3
+}
+/**
+ * Reasoning is the reasoning configuration that the upstream was
+ * actually served. It is only set for the requests whose reasoning
+ * configuration the Service itself decided, since Octelium does not
+ * read the one that a downstream sets for itself.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Reasoning
+ */
+export interface AccessLog_Entry_Info_LLM_Reasoning {
+    /**
+     * IsDisabled is set for the requests that were proxied with
+     * reasoning explicitly turned off
+     *
+     * @generated from protobuf field: bool isDisabled = 1
+     */
+    isDisabled: boolean;
+    /**
+     * Effort is the ordinal reasoning effort that was served to the
+     * upstream, verbatim. It is empty for the models that accept a
+     * numeric budget instead.
+     *
+     * @generated from protobuf field: string effort = 2
+     */
+    effort: string;
+    /**
+     * TokenBudget is the reasoning token budget that was served to the
+     * upstream. It is zero for the models that accept an ordinal effort
+     * instead.
+     *
+     * @generated from protobuf field: uint64 tokenBudget = 3
+     */
+    tokenBudget: number;
+}
+/**
+ * Tools is the tool surface that the request carried
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Tools
+ */
+export interface AccessLog_Entry_Info_LLM_Tools {
+    /**
+     * Count is the number of the tools that the upstream was offered,
+     * after every Tools Plugin was applied
+     *
+     * @generated from protobuf field: uint32 count = 1
+     */
+    count: number;
+    /**
+     * Names is the sorted list of the names of those tools. It is
+     * bounded, so a request that declares an unusually large number of
+     * them carries a sample rather than a complete list, which is
+     * visible as a Names list shorter than the Count field.
+     *
+     * @generated from protobuf field: repeated string names = 2
+     */
+    names: string[];
+    /**
+     * RemovedCount is the number of the tools that the downstream
+     * declared and that a Tools Plugin removed before the request was
+     * proxied
+     *
+     * @generated from protobuf field: uint32 removedCount = 3
+     */
+    removedCount: number;
+    /**
+     * RemovedNames is the sorted list of the names of those removed
+     * tools. It is the record of what the downstream tried to expose to
+     * the model and was not allowed to, which is the question that the
+     * RemovedCount field alone cannot answer. It is bounded in the same
+     * way as the Names field.
+     *
+     * @generated from protobuf field: repeated string removedNames = 4
+     */
+    removedNames: string[];
+    /**
+     * CalledNames is the sorted list of the distinct names of the tools
+     * that the model asked to invoke in its response. It is the record
+     * of what the model tried to do rather than of what it was allowed
+     * to do, which is why it is kept separately from the Names field.
+     * Note that it is a set of identities rather than a count of calls:
+     * read the CallCount field for the latter.
+     *
+     * @generated from protobuf field: repeated string calledNames = 5
+     */
+    calledNames: string[];
+    /**
+     * CallCount is the number of the tool calls that the response
+     * carried. It counts the calls rather than the distinct tools, so a
+     * response that invoked one tool twenty times has a CallCount of
+     * twenty and a single CalledNames entry.
+     *
+     * @generated from protobuf field: uint32 callCount = 6
+     */
+    callCount: number;
+    /**
+     * IsCalledNamesTruncated is set whenever the response carried more
+     * distinct tool identities than the CalledNames list can hold. It
+     * exists because the absence of a name from a bounded list is not
+     * evidence that the tool was not called, and a security dashboard
+     * that treated it as such would report a false negative.
+     *
+     * @generated from protobuf field: bool isCalledNamesTruncated = 7
+     */
+    isCalledNamesTruncated: boolean;
+}
+/**
+ * Guardrail is the outcome that one Guardrail Plugin reached on one
+ * leg of the exchange. A request carries one of them per applied
+ * Plugin and leg rather than a single summary, since a redaction that
+ * one Plugin performed is a security event in its own right and it
+ * would be lost by a record that only kept the strongest outcome of
+ * the request.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Guardrail
+ */
+export interface AccessLog_Entry_Info_LLM_Guardrail {
+    /**
+     * Result is the outcome that the Plugin reached on the leg
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Guardrail.Result result = 1
+     */
+    result: AccessLog_Entry_Info_LLM_Guardrail_Result;
+    /**
+     * Leg is the part of the exchange that the Plugin inspected in order
+     * to reach the Result
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Leg leg = 2
+     */
+    leg: Service_Spec_Config_LLM_Plugin_Guardrail_Leg;
+    /**
+     * Plugin is the name of the Guardrail Plugin
+     *
+     * @generated from protobuf field: string plugin = 3
+     */
+    plugin: string;
+}
+/**
+ * Result is the outcome that the Plugin reached on the leg
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Guardrail.Result
+ */
+export enum AccessLog_Entry_Info_LLM_Guardrail_Result {
+    /**
+     * RESULT_UNSET is not used
+     *
+     * @generated from protobuf enum value: RESULT_UNSET = 0;
+     */
+    RESULT_UNSET = 0,
+    /**
+     * PASS means that the Plugin inspected the content and left it
+     * unchanged
+     *
+     * @generated from protobuf enum value: PASS = 1;
+     */
+    PASS = 1,
+    /**
+     * MODIFIED means that the Plugin rewrote the content, which is the
+     * case for a redaction as well as for a replacement
+     *
+     * @generated from protobuf enum value: MODIFIED = 2;
+     */
+    MODIFIED = 2,
+    /**
+     * DENIED means that the Plugin rejected the exchange because the
+     * content matched a pattern whose action is to deny
+     *
+     * @generated from protobuf enum value: DENIED = 3;
+     */
+    DENIED = 3,
+    /**
+     * ERROR means that the Plugin could not reach a verdict at all
+     * (e.g. its patterns could not be built, or a response could not
+     * be decoded) and that the exchange was therefore rejected
+     * without any content having matched. It is deliberately distinct
+     * from DENIED, since a detector outage and a policy violation are
+     * different security events that a dashboard must not merge.
+     *
+     * @generated from protobuf enum value: ERROR = 4;
+     */
+    ERROR = 4
+}
+/**
+ * TokenRateLimit is the outcome of the token quota enforcement of the
+ * request. It is a single record rather than one per Plugin because
+ * the enforcement has a single outcome: every applied Plugin has to
+ * admit the request, so a denial is always the decision of exactly one
+ * of them and an admission is the decision of none of them in
+ * particular. The per-Plugin reservation and charge counts are
+ * deliberately not recorded, since they are quantities of separate
+ * quotas that cannot be summed into one number.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.TokenRateLimit
+ */
+export interface AccessLog_Entry_Info_LLM_TokenRateLimit {
+    /**
+     * Result is the outcome of the quota enforcement
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.TokenRateLimit.Result result = 1
+     */
+    result: AccessLog_Entry_Info_LLM_TokenRateLimit_Result;
+    /**
+     * Plugin is the name of the TokenRateLimit Plugin that denied the
+     * request. It is empty for an ALLOWED result, since no single
+     * Plugin decided it.
+     *
+     * @generated from protobuf field: string plugin = 2
+     */
+    plugin: string;
+    /**
+     * Scope is the token count that the denying Plugin meters. It is
+     * unset for an ALLOWED result.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit.Scope scope = 3
+     */
+    scope: Service_Spec_Config_LLM_Plugin_TokenRateLimit_Scope;
+}
+/**
+ * Result is the outcome of the quota enforcement
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.TokenRateLimit.Result
+ */
+export enum AccessLog_Entry_Info_LLM_TokenRateLimit_Result {
+    /**
+     * RESULT_UNSET means that no TokenRateLimit Plugin was applied to
+     * the request at all
+     *
+     * @generated from protobuf enum value: RESULT_UNSET = 0;
+     */
+    RESULT_UNSET = 0,
+    /**
+     * ALLOWED means that every applied Plugin admitted the request
+     *
+     * @generated from protobuf enum value: ALLOWED = 1;
+     */
+    ALLOWED = 1,
+    /**
+     * DENIED means that a Plugin rejected the request because its
+     * quota was already exhausted
+     *
+     * @generated from protobuf enum value: DENIED = 2;
+     */
+    DENIED = 2
+}
+/**
+ * SemanticCache is the outcome of the SemanticCache Plugin
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticCache
+ */
+export interface AccessLog_Entry_Info_LLM_SemanticCache {
+    /**
+     * Result is the outcome of the cache lookup
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticCache.Result result = 1
+     */
+    result: AccessLog_Entry_Info_LLM_SemanticCache_Result;
+    /**
+     * Similarity is the cosine similarity of the entry that was served.
+     * It is only set for a SEMANTIC_HIT.
+     *
+     * @generated from protobuf field: float similarity = 2
+     */
+    similarity: number;
+    /**
+     * IsStored is set for the requests whose response was stored in the
+     * cache
+     *
+     * @generated from protobuf field: bool isStored = 3
+     */
+    isStored: boolean;
+    /**
+     * Plugin is the name of the SemanticCache Plugin that was applied
+     *
+     * @generated from protobuf field: string plugin = 4
+     */
+    plugin: string;
+}
+/**
+ * Result is the outcome of the cache lookup
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticCache.Result
+ */
+export enum AccessLog_Entry_Info_LLM_SemanticCache_Result {
+    /**
+     * RESULT_UNSET means that no SemanticCache Plugin was applied to
+     * the request at all
+     *
+     * @generated from protobuf enum value: RESULT_UNSET = 0;
+     */
+    RESULT_UNSET = 0,
+    /**
+     * EXACT_HIT is a request that the cache served because the Service
+     * had already served an identical one
+     *
+     * @generated from protobuf enum value: EXACT_HIT = 1;
+     */
+    EXACT_HIT = 1,
+    /**
+     * SEMANTIC_HIT is a request that the cache served because the
+     * Service had already served one of the same meaning within the
+     * same exact execution context
+     *
+     * @generated from protobuf enum value: SEMANTIC_HIT = 2;
+     */
+    SEMANTIC_HIT = 2,
+    /**
+     * MISS is a request that the cache could not serve and that was
+     * therefore proxied to the upstream
+     *
+     * @generated from protobuf enum value: MISS = 3;
+     */
+    MISS = 3,
+    /**
+     * BYPASS is a request that the cache never looked up because it is
+     * not a cacheable request at all
+     *
+     * @generated from protobuf enum value: BYPASS = 4;
+     */
+    BYPASS = 4,
+    /**
+     * ERROR is a request that the cache could not look up because its
+     * embedding backend or its vector store failed. Such a request is
+     * proxied to the upstream rather than rejected, so it is
+     * deliberately distinct from a MISS: an outage that read as an
+     * ordinary miss would show as a hit rate that fell for no reason.
+     *
+     * @generated from protobuf enum value: ERROR = 5;
+     */
+    ERROR = 5
+}
+/**
+ * SemanticRouter is the outcome of the SemanticRouter Plugin. It is
+ * recorded separately from the Model field because a Model Plugin
+ * overwrites the model that the SemanticRouter selected, which would
+ * otherwise erase every trace that the request was routed at all.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter
+ */
+export interface AccessLog_Entry_Info_LLM_SemanticRouter {
+    /**
+     * Result is the outcome of the routing decision
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter.Result result = 1
+     */
+    result: AccessLog_Entry_Info_LLM_SemanticRouter_Result;
+    /**
+     * Route is the name of the Route of the Plugin that matched. It is
+     * only set for a MATCH. Note that it is unrelated to the LLM entry's
+     * own `route` field, which names the inference API surface instead.
+     *
+     * @generated from protobuf field: string route = 2
+     */
+    route: string;
+    /**
+     * Similarity is the cosine similarity at which the Route matched. It
+     * is only set for a MATCH.
+     *
+     * @generated from protobuf field: float similarity = 3
+     */
+    similarity: number;
+    /**
+     * Model is the model that the Plugin selected. Note that it is not
+     * necessarily the model that the request was eventually served with,
+     * since a Model Plugin overwrites it.
+     *
+     * @generated from protobuf field: string model = 4
+     */
+    model: string;
+    /**
+     * Plugin is the name of the SemanticRouter Plugin that reached the
+     * decision
+     *
+     * @generated from protobuf field: string plugin = 5
+     */
+    plugin: string;
+}
+/**
+ * Result is the outcome of the routing decision
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter.Result
+ */
+export enum AccessLog_Entry_Info_LLM_SemanticRouter_Result {
+    /**
+     * RESULT_UNSET means that no SemanticRouter Plugin was applied to
+     * the request at all
+     *
+     * @generated from protobuf enum value: RESULT_UNSET = 0;
+     */
+    RESULT_UNSET = 0,
+    /**
+     * MATCH is a request whose meaning reached the minimum similarity
+     * of a Route
+     *
+     * @generated from protobuf enum value: MATCH = 1;
+     */
+    MATCH = 1,
+    /**
+     * NO_MATCH is a request that reached the minimum similarity of no
+     * Route at all and that is therefore served the `fallbackModel`
+     *
+     * @generated from protobuf enum value: NO_MATCH = 2;
+     */
+    NO_MATCH = 2,
+    /**
+     * BYPASS is a request that the Plugin never classified because it
+     * is not a routable request at all (e.g. it carries no textual
+     * request to classify)
+     *
+     * @generated from protobuf enum value: BYPASS = 3;
+     */
+    BYPASS = 3,
+    /**
+     * ERROR is a request that the Plugin could not classify because
+     * its embedding backend failed or because its own Routes could not
+     * be embedded. Such a request is served the `fallbackModel` rather
+     * than rejected, so it is deliberately distinguished from a
+     * NO_MATCH in order to keep an outage from reading as a threshold
+     * that is set too high.
+     *
+     * @generated from protobuf enum value: ERROR = 4;
+     */
+    ERROR = 4
 }
 /**
  * Usage is the token usage of the request as reported by the upstream
- * provider
+ * provider itself. It is only set for the requests whose provider
+ * reported one at all, so it never carries an Octelium estimate and it
+ * is unset for a request that the SemanticCache served, which invoked
+ * no inference at all. Summing its counts is therefore a sum of the
+ * tokens that were really consumed rather than of a mixture of
+ * measurements and guesses. Read the EstimatedInputTokens field for
+ * the requests that carry no usage.
  *
  * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage
  */
 export interface AccessLog_Entry_Info_LLM_Usage {
     /**
-     * Source shows where the token counts came from
+     * State is whether the reported usage is the final one
      *
-     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.Source source = 1
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.State state = 1
      */
-    source: AccessLog_Entry_Info_LLM_Usage_Source;
+    state: AccessLog_Entry_Info_LLM_Usage_State;
     /**
      * InputTokens is the number of the input/prompt tokens
      *
@@ -9930,58 +13236,49 @@ export interface AccessLog_Entry_Info_LLM_Usage {
      */
     cacheReadInputTokens: number;
     /**
-     * CacheCreationInputTokens is the number of the input tokens that
-     * were written to the provider's prompt cache. It is only reported
-     * by the ANTHROPIC protocol and it is additive to the InputTokens
-     * field.
+     * CacheWriteInputTokens is the number of the input tokens that were
+     * written to the provider's prompt cache. It is only reported by the
+     * ANTHROPIC protocol and it is additive to the InputTokens field.
      *
-     * @generated from protobuf field: uint64 cacheCreationInputTokens = 6
+     * @generated from protobuf field: uint64 cacheWriteInputTokens = 6
      */
-    cacheCreationInputTokens: number;
+    cacheWriteInputTokens: number;
     /**
-     * ReasoningTokens is the number of the reasoning tokens. It is only
-     * reported by the OPENAI protocol where it is already included in
-     * the OutputTokens field.
+     * ReasoningOutputTokens is the number of the reasoning tokens. It is
+     * only reported by the OPENAI protocol where it is already included
+     * in the OutputTokens field.
      *
-     * @generated from protobuf field: uint64 reasoningTokens = 7
+     * @generated from protobuf field: uint64 reasoningOutputTokens = 7
      */
-    reasoningTokens: number;
+    reasoningOutputTokens: number;
 }
 /**
- * Source shows where the token counts came from
+ * State is whether the reported usage is the final one
  *
- * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.Source
+ * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.State
  */
-export enum AccessLog_Entry_Info_LLM_Usage_Source {
+export enum AccessLog_Entry_Info_LLM_Usage_State {
     /**
-     * SOURCE_UNSET means that no token usage could be determined at
-     * all
+     * STATE_UNSET is not used
      *
-     * @generated from protobuf enum value: SOURCE_UNSET = 0;
+     * @generated from protobuf enum value: STATE_UNSET = 0;
      */
-    SOURCE_UNSET = 0,
+    STATE_UNSET = 0,
     /**
-     * PROVIDER is the exact token usage reported by the upstream
-     * provider itself
+     * COMPLETE is the usage of a request whose provider reported its
+     * final counts
      *
-     * @generated from protobuf enum value: PROVIDER = 1;
+     * @generated from protobuf enum value: COMPLETE = 1;
      */
-    PROVIDER = 1,
+    COMPLETE = 1,
     /**
-     * ESTIMATED is Octelium's own pre-flight input token estimate. It
-     * is used whenever the provider reports no usage at all and it
-     * must never be treated as a billing truth.
+     * PARTIAL is the usage of a stream that ended before its final
+     * usage was received, so its counts are a floor rather than a
+     * total
      *
-     * @generated from protobuf enum value: ESTIMATED = 2;
+     * @generated from protobuf enum value: PARTIAL = 2;
      */
-    ESTIMATED = 2,
-    /**
-     * PARTIAL is the provider-reported token usage of a stream that
-     * ended before the final usage was received
-     *
-     * @generated from protobuf enum value: PARTIAL = 3;
-     */
-    PARTIAL = 3
+    PARTIAL = 2
 }
 /**
  * Type is the LLM-specific type of the entry
@@ -10015,71 +13312,97 @@ export enum AccessLog_Entry_Info_LLM_Type {
     STREAM_END = 3
 }
 /**
- * Operation is the normalized inference operation of the request
+ * Source is what produced the response
  *
- * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Operation
+ * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Source
  */
-export enum AccessLog_Entry_Info_LLM_Operation {
+export enum AccessLog_Entry_Info_LLM_Source {
     /**
-     * OPERATION_UNSET is not used
+     * SOURCE_UNSET means that no response was produced at all
      *
-     * @generated from protobuf enum value: OPERATION_UNSET = 0;
+     * @generated from protobuf enum value: SOURCE_UNSET = 0;
      */
-    OPERATION_UNSET = 0,
+    SOURCE_UNSET = 0,
     /**
-     * CHAT_COMPLETIONS is `POST /v1/chat/completions`
+     * UPSTREAM is a response generated by the upstream provider, which
+     * is the only Source that consumed inference tokens
      *
-     * @generated from protobuf enum value: CHAT_COMPLETIONS = 1;
+     * @generated from protobuf enum value: UPSTREAM = 1;
      */
-    CHAT_COMPLETIONS = 1,
+    UPSTREAM = 1,
     /**
-     * RESPONSES is `POST /v1/responses`
+     * SEMANTIC_CACHE is a response that the SemanticCache Plugin served
+     * from an earlier one. The upstream never saw the request.
      *
-     * @generated from protobuf enum value: RESPONSES = 2;
+     * @generated from protobuf enum value: SEMANTIC_CACHE = 2;
      */
-    RESPONSES = 2,
+    SEMANTIC_CACHE = 2,
     /**
-     * COMPLETIONS is the legacy `POST /v1/completions`
+     * OCTELIUM is a response that Octelium itself produced, which is the
+     * case for every rejected request
      *
-     * @generated from protobuf enum value: COMPLETIONS = 3;
+     * @generated from protobuf enum value: OCTELIUM = 3;
      */
-    COMPLETIONS = 3,
+    OCTELIUM = 3
+}
+/**
+ * FinishReason is the completion status of the response, normalized
+ * across the providers. The providers spell the same outcome
+ * differently (e.g. `stop`, `end_turn` and `STOP` all mean that the
+ * model finished on its own), so a chart that grouped on the raw value
+ * would split one outcome into one slice per protocol.
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.FinishReason
+ */
+export enum AccessLog_Entry_Info_LLM_FinishReason {
     /**
-     * EMBEDDINGS is `POST /v1/embeddings`
+     * FINISH_REASON_UNSET means that the response reported no completion
+     * status at all, which is the case for a request that never reached
+     * the upstream as well as for a stream that ended early
      *
-     * @generated from protobuf enum value: EMBEDDINGS = 4;
+     * @generated from protobuf enum value: FINISH_REASON_UNSET = 0;
      */
-    EMBEDDINGS = 4,
+    FINISH_REASON_UNSET = 0,
     /**
-     * MODERATIONS is `POST /v1/moderations`
+     * STOP means that the model finished on its own
      *
-     * @generated from protobuf enum value: MODERATIONS = 5;
+     * @generated from protobuf enum value: STOP = 1;
      */
-    MODERATIONS = 5,
+    STOP = 1,
     /**
-     * MODELS_LIST is `GET /v1/models`
+     * LENGTH means that the response was cut short by an output token
+     * limit
      *
-     * @generated from protobuf enum value: MODELS_LIST = 6;
+     * @generated from protobuf enum value: LENGTH = 2;
      */
-    MODELS_LIST = 6,
+    LENGTH = 2,
     /**
-     * MODELS_GET is `GET /v1/models/{model}`
+     * TOOL_CALL means that the model stopped in order to invoke a tool
      *
-     * @generated from protobuf enum value: MODELS_GET = 7;
+     * @generated from protobuf enum value: TOOL_CALL = 3;
      */
-    MODELS_GET = 7,
+    TOOL_CALL = 3,
     /**
-     * MESSAGES is `POST /v1/messages`
+     * CONTENT_FILTER means that the provider's own safety system stopped
+     * the response. Note that it is the provider's filter rather than an
+     * Octelium Guardrail, which is recorded in the `guardrails` field.
      *
-     * @generated from protobuf enum value: MESSAGES = 8;
+     * @generated from protobuf enum value: CONTENT_FILTER = 4;
      */
-    MESSAGES = 8,
+    CONTENT_FILTER = 4,
     /**
-     * COUNT_TOKENS is `POST /v1/messages/count_tokens`
+     * ERROR means that the provider reported the response as failed
      *
-     * @generated from protobuf enum value: COUNT_TOKENS = 9;
+     * @generated from protobuf enum value: ERROR = 5;
      */
-    COUNT_TOKENS = 9
+    ERROR = 5,
+    /**
+     * OTHER means that the provider reported a status that Octelium does
+     * not normalize. Read the RawFinishReason field for it.
+     *
+     * @generated from protobuf enum value: OTHER = 6;
+     */
+    OTHER = 6
 }
 /**
  * Common is the information that is common to every AccessLog entry
@@ -11948,6 +15271,12 @@ export interface ClusterConfig_Spec_Authenticator {
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO fido = 6
      */
     fido?: ClusterConfig_Spec_Authenticator_FIDO;
+    /**
+     * TPM sets the options of the TPM 2.0 Authenticators
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM tpm = 7
+     */
+    tpm?: ClusterConfig_Spec_Authenticator_TPM;
 }
 /**
  * EnforcementRule decides whether the Authenticator registration or
@@ -12070,6 +15399,14 @@ export interface ClusterConfig_Spec_Authenticator_FIDO {
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO.AttestationConveyancePreference attestationConveyancePreference = 1
      */
     attestationConveyancePreference: ClusterConfig_Spec_Authenticator_FIDO_AttestationConveyancePreference;
+    /**
+     * UserVerification is the WebAuthn User verification requirement that
+     * is used during the registration as well as the authentication of the
+     * FIDO Authenticators that are used as second factors
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO.UserVerification userVerification = 2
+     */
+    userVerification: ClusterConfig_Spec_Authenticator_FIDO_UserVerification;
 }
 /**
  * AttestationConveyancePreference is the WebAuthn attestation
@@ -12111,6 +15448,133 @@ export enum ClusterConfig_Spec_Authenticator_FIDO_AttestationConveyancePreferenc
      * @generated from protobuf enum value: ENTERPRISE = 4;
      */
     ENTERPRISE = 4
+}
+/**
+ * UserVerification is the WebAuthn User verification requirement that
+ * is used during the registration as well as the authentication of the
+ * FIDO Authenticators that are used as second factors. It does not
+ * apply to the Passkey login which always requires the User
+ * verification.
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO.UserVerification
+ */
+export enum ClusterConfig_Spec_Authenticator_FIDO_UserVerification {
+    /**
+     * USER_VERIFICATION_UNSET falls back to the default behavior which
+     * is PREFERRED
+     *
+     * @generated from protobuf enum value: USER_VERIFICATION_UNSET = 0;
+     */
+    USER_VERIFICATION_UNSET = 0,
+    /**
+     * REQUIRED rejects the registration as well as the authentication
+     * unless the Authenticator verifies the User (e.g. via a PIN or a
+     * biometric). Note that setting this mode rejects the
+     * authentication of the already registered Authenticators that are
+     * not capable of verifying the User.
+     *
+     * @generated from protobuf enum value: REQUIRED = 1;
+     */
+    REQUIRED = 1,
+    /**
+     * PREFERRED asks the Authenticator to verify the User whenever it is
+     * capable of doing so without rejecting the registration or the
+     * authentication otherwise
+     *
+     * @generated from protobuf enum value: PREFERRED = 2;
+     */
+    PREFERRED = 2,
+    /**
+     * DISCOURAGED asks the Authenticator not to verify the User
+     *
+     * @generated from protobuf enum value: DISCOURAGED = 3;
+     */
+    DISCOURAGED = 3
+}
+/**
+ * TPM sets the options of the TPM 2.0 Authenticators
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM
+ */
+export interface ClusterConfig_Spec_Authenticator_TPM {
+    /**
+     * EndorsementTrust controls the verification of the endorsement key
+     * certificates
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM.EndorsementTrust endorsementTrust = 1
+     */
+    endorsementTrust?: ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust;
+}
+/**
+ * EndorsementTrust controls how the endorsement key certificate
+ * presented by a TPM is verified upon registering an Authenticator
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM.EndorsementTrust
+ */
+export interface ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust {
+    /**
+     * Mode is the endorsement key certificate verification mode
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM.EndorsementTrust.Mode mode = 1
+     */
+    mode: ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust_Mode;
+    /**
+     * TrustedCAs is the list of the PEM-encoded root certificate
+     * authorities of the TPM manufacturers that are trusted to issue
+     * endorsement key certificates. Each entry must contain exactly one
+     * certificate.
+     *
+     * @generated from protobuf field: repeated string trustedCAs = 2
+     */
+    trustedCAs: string[];
+    /**
+     * IntermediateCAs is the list of the PEM-encoded intermediate
+     * certificate authorities that are used to build the certification
+     * path from an endorsement key certificate to a trustedCA. They are
+     * never trusted on their own. Each entry must contain exactly one
+     * certificate.
+     *
+     * @generated from protobuf field: repeated string intermediateCAs = 3
+     */
+    intermediateCAs: string[];
+}
+/**
+ * Mode is the endorsement key certificate verification mode
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM.EndorsementTrust.Mode
+ */
+export enum ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust_Mode {
+    /**
+     * MODE_UNKNOWN falls back to DISABLED
+     *
+     * @generated from protobuf enum value: MODE_UNKNOWN = 0;
+     */
+    MODE_UNKNOWN = 0,
+    /**
+     * DISABLED never rejects a registration because of its endorsement
+     * key certificate. A TPM that presents no certificate at all is
+     * accepted. Whenever trustedCAs are set, the certificate is still
+     * verified and the outcome is recorded in the Authenticator
+     * status, which makes this mode useful to survey the already
+     * registered Authenticators before enforcing the verification.
+     *
+     * @generated from protobuf enum value: DISABLED = 1;
+     */
+    DISABLED = 1,
+    /**
+     * VERIFY_IF_PRESENT accepts a TPM that presents no endorsement key
+     * certificate, but rejects a TPM whose certificate does not verify
+     *
+     * @generated from protobuf enum value: VERIFY_IF_PRESENT = 2;
+     */
+    VERIFY_IF_PRESENT = 2,
+    /**
+     * REQUIRE_VERIFIED requires every TPM to present an endorsement key
+     * certificate that verifies against the trustedCAs
+     *
+     * @generated from protobuf enum value: REQUIRE_VERIFIED = 3;
+     */
+    REQUIRE_VERIFIED = 3
 }
 /**
  * Authentication sets the Cluster-wide options of the authentication
@@ -13642,13 +17106,16 @@ export interface RequestContext_Request_LLM {
      */
     protocol: Service_Spec_Config_LLM_Protocol;
     /**
-     * Operation is the normalized inference operation of the request (e.g.
-     * `CHAT_COMPLETIONS`, `EMBEDDINGS`, `MESSAGES`). It is derived from the
-     * canonicalized request path and method.
+     * Operation is the inference operation of the request, normalized across
+     * the protocols (e.g. `GENERATE`, `EMBED`). It is what a rule reads in
+     * order to decide from what the request does rather than from the route
+     * that it arrived on, which keeps the rule working for a Service of
+     * another protocol. Read the Route field alongside it wherever two
+     * routes of the same protocol have to be told apart.
      *
-     * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.LLM.Operation operation = 3
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Operation operation = 3
      */
-    operation: RequestContext_Request_LLM_Operation;
+    operation: Service_Spec_Config_LLM_Operation;
     /**
      * Model is the model name requested by the downstream, verbatim. It is
      * empty for the operations that carry no model (e.g. `MODELS_LIST`).
@@ -13723,6 +17190,14 @@ export interface RequestContext_Request_LLM {
      * @generated from protobuf field: bool hasAudioInput = 14
      */
     hasAudioInput: boolean;
+    /**
+     * Route is the canonical inference API route of the request (e.g.
+     * `CHAT_COMPLETIONS`, `MESSAGES`). It is derived from the canonicalized
+     * request path and method.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.LLM.Route route = 15
+     */
+    route: RequestContext_Request_LLM_Route;
 }
 /**
  * EstimateQuality is whether the EstimatedInputTokens field accounted
@@ -13760,17 +17235,20 @@ export enum RequestContext_Request_LLM_EstimateQuality {
     UNAVAILABLE = 3
 }
 /**
- * Operation is the normalized inference operation of the request
+ * Route is the canonical inference API route of the request. It names
+ * the exact surface that the request arrived on, which the Operation
+ * field deliberately does not, so it is what a rule that has to
+ * distinguish two routes of the same protocol reads.
  *
- * @generated from protobuf enum octelium.api.main.core.v1.RequestContext.Request.LLM.Operation
+ * @generated from protobuf enum octelium.api.main.core.v1.RequestContext.Request.LLM.Route
  */
-export enum RequestContext_Request_LLM_Operation {
+export enum RequestContext_Request_LLM_Route {
     /**
-     * OPERATION_UNSET is not used
+     * ROUTE_UNSET is not used
      *
-     * @generated from protobuf enum value: OPERATION_UNSET = 0;
+     * @generated from protobuf enum value: ROUTE_UNSET = 0;
      */
-    OPERATION_UNSET = 0,
+    ROUTE_UNSET = 0,
     /**
      * CHAT_COMPLETIONS is `POST /v1/chat/completions`
      *
@@ -13820,11 +17298,46 @@ export enum RequestContext_Request_LLM_Operation {
      */
     MESSAGES = 8,
     /**
-     * COUNT_TOKENS is `POST /v1/messages/count_tokens`
+     * COUNT_TOKENS is `POST /v1/messages/count_tokens` for the ANTHROPIC
+     * protocol and `POST /v1beta/models/{model}:countTokens` for the
+     * GEMINI one
      *
      * @generated from protobuf enum value: COUNT_TOKENS = 9;
      */
-    COUNT_TOKENS = 9
+    COUNT_TOKENS = 9,
+    /**
+     * GENERATE_CONTENT is `POST /v1beta/models/{model}:generateContent`
+     * as well as its streaming form
+     * `POST /v1beta/models/{model}:streamGenerateContent`
+     *
+     * @generated from protobuf enum value: GENERATE_CONTENT = 10;
+     */
+    GENERATE_CONTENT = 10,
+    /**
+     * EMBED_CONTENT is `POST /v1beta/models/{model}:embedContent` as well
+     * as `POST /v1beta/models/{model}:batchEmbedContents`
+     *
+     * @generated from protobuf enum value: EMBED_CONTENT = 11;
+     */
+    EMBED_CONTENT = 11,
+    /**
+     * CONVERSE is `POST /model/{model}/converse` as well as its streaming
+     * form `POST /model/{model}/converse-stream`
+     *
+     * @generated from protobuf enum value: CONVERSE = 12;
+     */
+    CONVERSE = 12,
+    /**
+     * INVOKE_MODEL is `POST /model/{model}/invoke` as well as its
+     * streaming form `POST /model/{model}/invoke-with-response-stream`.
+     * Note that its body is the native payload of whichever model the
+     * request names rather than a shape that the protocol itself defines,
+     * so Octelium does not parse it and the inference-specific Plugins are
+     * a no-op for it.
+     *
+     * @generated from protobuf enum value: INVOKE_MODEL = 13;
+     */
+    INVOKE_MODEL = 13
 }
 /**
  * PolicyTrigger dynamically attaches a set of Policies to the requests that
@@ -14700,6 +18213,12 @@ export interface Authenticator_Status_Info_TPM {
      * @generated from protobuf field: bytes ekPublicKey = 3
      */
     ekPublicKey: Uint8Array;
+    /**
+     * Endorsement is the provenance of the TPM's endorsement key
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.Info.TPM.Endorsement endorsement = 4
+     */
+    endorsement?: Authenticator_Status_Info_TPM_Endorsement;
 }
 /**
  * AttestationParameters is the attestation of the TPM's attestation
@@ -14733,6 +18252,112 @@ export interface Authenticator_Status_Info_TPM_AttestationParameters {
      * @generated from protobuf field: bytes createSignature = 4
      */
     createSignature: Uint8Array;
+}
+/**
+ * Endorsement is the provenance of the TPM's endorsement key as it was
+ * established upon registering the Authenticator
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Authenticator.Status.Info.TPM.Endorsement
+ */
+export interface Authenticator_Status_Info_TPM_Endorsement {
+    /**
+     * Verification is the outcome of the verification of the endorsement
+     * key certificate
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Authenticator.Status.Info.TPM.Endorsement.Verification verification = 1
+     */
+    verification: Authenticator_Status_Info_TPM_Endorsement_Verification;
+    /**
+     * CertificateSHA256 is the SHA256 digest of the DER-encoded
+     * endorsement key certificate
+     *
+     * @generated from protobuf field: bytes certificateSHA256 = 2
+     */
+    certificateSHA256: Uint8Array;
+    /**
+     * TrustedCASHA256 is the SHA256 digest of the DER-encoded trusted CA
+     * that the endorsement key certificate chained to
+     *
+     * @generated from protobuf field: bytes trustedCASHA256 = 3
+     */
+    trustedCASHA256: Uint8Array;
+    /**
+     * ManufacturerID is the TCG vendor identifier of the TPM
+     * manufacturer
+     *
+     * @generated from protobuf field: uint32 manufacturerID = 4
+     */
+    manufacturerID: number;
+    /**
+     * Manufacturer is the human-readable name of the TPM manufacturer
+     *
+     * @generated from protobuf field: string manufacturer = 5
+     */
+    manufacturer: string;
+    /**
+     * Model is the model of the TPM
+     *
+     * @generated from protobuf field: string model = 6
+     */
+    model: string;
+    /**
+     * Version is the version of the TPM as stated by the endorsement key
+     * certificate. It is not the current firmware version of the TPM.
+     *
+     * @generated from protobuf field: string version = 7
+     */
+    version: string;
+    /**
+     * VerifiedAt is the timestamp at which the verification was performed
+     *
+     * @generated from protobuf field: google.protobuf.Timestamp verifiedAt = 8
+     */
+    verifiedAt?: Timestamp;
+}
+/**
+ * Verification is the outcome of the verification of the endorsement
+ * key certificate
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Authenticator.Status.Info.TPM.Endorsement.Verification
+ */
+export enum Authenticator_Status_Info_TPM_Endorsement_Verification {
+    /**
+     * VERIFICATION_UNKNOWN is not used. It is also the value of the
+     * Authenticators that were registered before the endorsement key
+     * certificate verification was introduced.
+     *
+     * @generated from protobuf enum value: VERIFICATION_UNKNOWN = 0;
+     */
+    VERIFICATION_UNKNOWN = 0,
+    /**
+     * VERIFIED means that the endorsement key certificate chained to a
+     * trusted CA
+     *
+     * @generated from protobuf enum value: VERIFIED = 1;
+     */
+    VERIFIED = 1,
+    /**
+     * FAILED means that the endorsement key certificate did not chain
+     * to a trusted CA. It is only ever recorded whenever the mode did
+     * not require the verification.
+     *
+     * @generated from protobuf enum value: FAILED = 2;
+     */
+    FAILED = 2,
+    /**
+     * NOT_ATTEMPTED means that an endorsement key certificate was
+     * presented while no trusted CAs were set
+     *
+     * @generated from protobuf enum value: NOT_ATTEMPTED = 3;
+     */
+    NOT_ATTEMPTED = 3,
+    /**
+     * NO_CERTIFICATE means that the TPM presented no endorsement key
+     * certificate at all
+     *
+     * @generated from protobuf enum value: NO_CERTIFICATE = 4;
+     */
+    NO_CERTIFICATE = 4
 }
 /**
  * AuthenticationAttempt is a single authentication attempt via the
@@ -19398,7 +23023,7 @@ class Service_Spec_Config_MCP$Type extends MessageType<Service_Spec_Config_MCP> 
             { no: 4, name: "auth", kind: "message", T: () => Service_Spec_Config_HTTP_Auth },
             { no: 5, name: "header", kind: "message", T: () => Service_Spec_Config_HTTP_Header },
             { no: 6, name: "path", kind: "message", T: () => Service_Spec_Config_HTTP_Path },
-            { no: 7, name: "plugins", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_HTTP_Plugin },
+            { no: 7, name: "plugins", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_MCP_Plugin },
             { no: 8, name: "isUpstreamHTTP2", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 9, name: "listenHTTP2", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 10, name: "visibility", kind: "message", T: () => Service_Spec_Config_MCP_Visibility },
@@ -19440,8 +23065,8 @@ class Service_Spec_Config_MCP$Type extends MessageType<Service_Spec_Config_MCP> 
                 case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Path path */ 6:
                     message.path = Service_Spec_Config_HTTP_Path.internalBinaryRead(reader, reader.uint32(), options, message.path);
                     break;
-                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin plugins */ 7:
-                    message.plugins.push(Service_Spec_Config_HTTP_Plugin.internalBinaryRead(reader, reader.uint32(), options));
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin plugins */ 7:
+                    message.plugins.push(Service_Spec_Config_MCP_Plugin.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 case /* bool isUpstreamHTTP2 */ 8:
                     message.isUpstreamHTTP2 = reader.bool();
@@ -19488,9 +23113,9 @@ class Service_Spec_Config_MCP$Type extends MessageType<Service_Spec_Config_MCP> 
         /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Path path = 6; */
         if (message.path)
             Service_Spec_Config_HTTP_Path.internalBinaryWrite(message.path, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
-        /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin plugins = 7; */
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin plugins = 7; */
         for (let i = 0; i < message.plugins.length; i++)
-            Service_Spec_Config_HTTP_Plugin.internalBinaryWrite(message.plugins[i], writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+            Service_Spec_Config_MCP_Plugin.internalBinaryWrite(message.plugins[i], writer.tag(7, WireType.LengthDelimited).fork(), options).join();
         /* bool isUpstreamHTTP2 = 8; */
         if (message.isUpstreamHTTP2 !== false)
             writer.tag(8, WireType.Varint).bool(message.isUpstreamHTTP2);
@@ -19738,6 +23363,226 @@ class Service_Spec_Config_MCP_Visibility$Type extends MessageType<Service_Spec_C
  */
 export const Service_Spec_Config_MCP_Visibility = new Service_Spec_Config_MCP_Visibility$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_MCP_Plugin$Type extends MessageType<Service_Spec_Config_MCP_Plugin> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "isDisabled", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "phase", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Phase", Service_Spec_Config_HTTP_Plugin_Phase] },
+            { no: 4, name: "condition", kind: "message", T: () => Condition },
+            { no: 5, name: "extProc", kind: "message", oneof: "type", T: () => Service_Spec_Config_HTTP_Plugin_ExtProc },
+            { no: 6, name: "lua", kind: "message", oneof: "type", T: () => Service_Spec_Config_HTTP_Plugin_Lua },
+            { no: 7, name: "direct", kind: "message", oneof: "type", T: () => Service_Spec_Config_HTTP_Plugin_Direct },
+            { no: 8, name: "rateLimit", kind: "message", oneof: "type", T: () => Service_Spec_Config_HTTP_Plugin_RateLimit },
+            { no: 10, name: "jsonSchema", kind: "message", oneof: "type", T: () => Service_Spec_Config_HTTP_Plugin_JSONSchema },
+            { no: 11, name: "path", kind: "message", oneof: "type", T: () => Service_Spec_Config_HTTP_Plugin_Path },
+            { no: 12, name: "guardrail", kind: "message", oneof: "type", T: () => Service_Spec_Config_MCP_Plugin_Guardrail }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_MCP_Plugin>): Service_Spec_Config_MCP_Plugin {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.name = "";
+        message.isDisabled = false;
+        message.phase = 0;
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_MCP_Plugin>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_MCP_Plugin): Service_Spec_Config_MCP_Plugin {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* bool isDisabled */ 2:
+                    message.isDisabled = reader.bool();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Phase phase */ 3:
+                    message.phase = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.Condition condition */ 4:
+                    message.condition = Condition.internalBinaryRead(reader, reader.uint32(), options, message.condition);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc extProc */ 5:
+                    message.type = {
+                        oneofKind: "extProc",
+                        extProc: Service_Spec_Config_HTTP_Plugin_ExtProc.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).extProc)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Lua lua */ 6:
+                    message.type = {
+                        oneofKind: "lua",
+                        lua: Service_Spec_Config_HTTP_Plugin_Lua.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).lua)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct direct */ 7:
+                    message.type = {
+                        oneofKind: "direct",
+                        direct: Service_Spec_Config_HTTP_Plugin_Direct.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).direct)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit rateLimit */ 8:
+                    message.type = {
+                        oneofKind: "rateLimit",
+                        rateLimit: Service_Spec_Config_HTTP_Plugin_RateLimit.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).rateLimit)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema jsonSchema */ 10:
+                    message.type = {
+                        oneofKind: "jsonSchema",
+                        jsonSchema: Service_Spec_Config_HTTP_Plugin_JSONSchema.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).jsonSchema)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Path path */ 11:
+                    message.type = {
+                        oneofKind: "path",
+                        path: Service_Spec_Config_HTTP_Plugin_Path.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).path)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail guardrail */ 12:
+                    message.type = {
+                        oneofKind: "guardrail",
+                        guardrail: Service_Spec_Config_MCP_Plugin_Guardrail.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).guardrail)
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_MCP_Plugin, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* bool isDisabled = 2; */
+        if (message.isDisabled !== false)
+            writer.tag(2, WireType.Varint).bool(message.isDisabled);
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Phase phase = 3; */
+        if (message.phase !== 0)
+            writer.tag(3, WireType.Varint).int32(message.phase);
+        /* octelium.api.main.core.v1.Condition condition = 4; */
+        if (message.condition)
+            Condition.internalBinaryWrite(message.condition, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc extProc = 5; */
+        if (message.type.oneofKind === "extProc")
+            Service_Spec_Config_HTTP_Plugin_ExtProc.internalBinaryWrite(message.type.extProc, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Lua lua = 6; */
+        if (message.type.oneofKind === "lua")
+            Service_Spec_Config_HTTP_Plugin_Lua.internalBinaryWrite(message.type.lua, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct direct = 7; */
+        if (message.type.oneofKind === "direct")
+            Service_Spec_Config_HTTP_Plugin_Direct.internalBinaryWrite(message.type.direct, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit rateLimit = 8; */
+        if (message.type.oneofKind === "rateLimit")
+            Service_Spec_Config_HTTP_Plugin_RateLimit.internalBinaryWrite(message.type.rateLimit, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema jsonSchema = 10; */
+        if (message.type.oneofKind === "jsonSchema")
+            Service_Spec_Config_HTTP_Plugin_JSONSchema.internalBinaryWrite(message.type.jsonSchema, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Path path = 11; */
+        if (message.type.oneofKind === "path")
+            Service_Spec_Config_HTTP_Plugin_Path.internalBinaryWrite(message.type.path, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail guardrail = 12; */
+        if (message.type.oneofKind === "guardrail")
+            Service_Spec_Config_MCP_Plugin_Guardrail.internalBinaryWrite(message.type.guardrail, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin
+ */
+export const Service_Spec_Config_MCP_Plugin = new Service_Spec_Config_MCP_Plugin$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_MCP_Plugin_Guardrail$Type extends MessageType<Service_Spec_Config_MCP_Plugin_Guardrail> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail", [
+            { no: 1, name: "leg", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail.Leg", Service_Spec_Config_MCP_Plugin_Guardrail_Leg] },
+            { no: 2, name: "scopes", kind: "enum", repeat: 1 /*RepeatType.PACKED*/, T: () => ["octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail.Scope", Service_Spec_Config_MCP_Plugin_Guardrail_Scope] },
+            { no: 3, name: "patterns", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_LLM_Plugin_Guardrail_Pattern },
+            { no: 4, name: "denyMessage", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_MCP_Plugin_Guardrail>): Service_Spec_Config_MCP_Plugin_Guardrail {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.leg = 0;
+        message.scopes = [];
+        message.patterns = [];
+        message.denyMessage = "";
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_MCP_Plugin_Guardrail>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_MCP_Plugin_Guardrail): Service_Spec_Config_MCP_Plugin_Guardrail {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail.Leg leg */ 1:
+                    message.leg = reader.int32();
+                    break;
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail.Scope scopes */ 2:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.scopes.push(reader.int32());
+                    else
+                        message.scopes.push(reader.int32());
+                    break;
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern patterns */ 3:
+                    message.patterns.push(Service_Spec_Config_LLM_Plugin_Guardrail_Pattern.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* string denyMessage */ 4:
+                    message.denyMessage = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_MCP_Plugin_Guardrail, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail.Leg leg = 1; */
+        if (message.leg !== 0)
+            writer.tag(1, WireType.Varint).int32(message.leg);
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail.Scope scopes = 2; */
+        if (message.scopes.length) {
+            writer.tag(2, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.scopes.length; i++)
+                writer.int32(message.scopes[i]);
+            writer.join();
+        }
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern patterns = 3; */
+        for (let i = 0; i < message.patterns.length; i++)
+            Service_Spec_Config_LLM_Plugin_Guardrail_Pattern.internalBinaryWrite(message.patterns[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* string denyMessage = 4; */
+        if (message.denyMessage !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.denyMessage);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.MCP.Plugin.Guardrail
+ */
+export const Service_Spec_Config_MCP_Plugin_Guardrail = new Service_Spec_Config_MCP_Plugin_Guardrail$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class Service_Spec_Config_LLM$Type extends MessageType<Service_Spec_Config_LLM> {
     constructor() {
         super("octelium.api.main.core.v1.Service.Spec.Config.LLM", [
@@ -19747,11 +23592,13 @@ class Service_Spec_Config_LLM$Type extends MessageType<Service_Spec_Config_LLM> 
             { no: 4, name: "auth", kind: "message", T: () => Service_Spec_Config_HTTP_Auth },
             { no: 5, name: "header", kind: "message", T: () => Service_Spec_Config_HTTP_Header },
             { no: 6, name: "path", kind: "message", T: () => Service_Spec_Config_HTTP_Path },
-            { no: 7, name: "plugins", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_HTTP_Plugin },
+            { no: 7, name: "plugins", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_LLM_Plugin },
             { no: 8, name: "isUpstreamHTTP2", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 9, name: "listenHTTP2", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 10, name: "visibility", kind: "message", T: () => Service_Spec_Config_LLM_Visibility },
-            { no: 11, name: "cors", kind: "message", T: () => Service_Spec_Config_HTTP_CORS }
+            { no: 11, name: "cors", kind: "message", T: () => Service_Spec_Config_HTTP_CORS },
+            { no: 12, name: "reasoning", kind: "message", T: () => Service_Spec_Config_LLM_Reasoning },
+            { no: 13, name: "embedding", kind: "message", T: () => Service_Spec_Config_LLM_Embedding }
         ]);
     }
     create(value?: PartialMessage<Service_Spec_Config_LLM>): Service_Spec_Config_LLM {
@@ -19787,8 +23634,8 @@ class Service_Spec_Config_LLM$Type extends MessageType<Service_Spec_Config_LLM> 
                 case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Path path */ 6:
                     message.path = Service_Spec_Config_HTTP_Path.internalBinaryRead(reader, reader.uint32(), options, message.path);
                     break;
-                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin plugins */ 7:
-                    message.plugins.push(Service_Spec_Config_HTTP_Plugin.internalBinaryRead(reader, reader.uint32(), options));
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin plugins */ 7:
+                    message.plugins.push(Service_Spec_Config_LLM_Plugin.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 case /* bool isUpstreamHTTP2 */ 8:
                     message.isUpstreamHTTP2 = reader.bool();
@@ -19801,6 +23648,12 @@ class Service_Spec_Config_LLM$Type extends MessageType<Service_Spec_Config_LLM> 
                     break;
                 case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.CORS cors */ 11:
                     message.cors = Service_Spec_Config_HTTP_CORS.internalBinaryRead(reader, reader.uint32(), options, message.cors);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning reasoning */ 12:
+                    message.reasoning = Service_Spec_Config_LLM_Reasoning.internalBinaryRead(reader, reader.uint32(), options, message.reasoning);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding embedding */ 13:
+                    message.embedding = Service_Spec_Config_LLM_Embedding.internalBinaryRead(reader, reader.uint32(), options, message.embedding);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -19832,9 +23685,9 @@ class Service_Spec_Config_LLM$Type extends MessageType<Service_Spec_Config_LLM> 
         /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Path path = 6; */
         if (message.path)
             Service_Spec_Config_HTTP_Path.internalBinaryWrite(message.path, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
-        /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin plugins = 7; */
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin plugins = 7; */
         for (let i = 0; i < message.plugins.length; i++)
-            Service_Spec_Config_HTTP_Plugin.internalBinaryWrite(message.plugins[i], writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+            Service_Spec_Config_LLM_Plugin.internalBinaryWrite(message.plugins[i], writer.tag(7, WireType.LengthDelimited).fork(), options).join();
         /* bool isUpstreamHTTP2 = 8; */
         if (message.isUpstreamHTTP2 !== false)
             writer.tag(8, WireType.Varint).bool(message.isUpstreamHTTP2);
@@ -19847,6 +23700,12 @@ class Service_Spec_Config_LLM$Type extends MessageType<Service_Spec_Config_LLM> 
         /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.CORS cors = 11; */
         if (message.cors)
             Service_Spec_Config_HTTP_CORS.internalBinaryWrite(message.cors, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning reasoning = 12; */
+        if (message.reasoning)
+            Service_Spec_Config_LLM_Reasoning.internalBinaryWrite(message.reasoning, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding embedding = 13; */
+        if (message.embedding)
+            Service_Spec_Config_LLM_Embedding.internalBinaryWrite(message.embedding, writer.tag(13, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -19862,7 +23721,8 @@ class Service_Spec_Config_LLM_Model$Type extends MessageType<Service_Spec_Config
     constructor() {
         super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Model", [
             { no: 1, name: "value", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "eval", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "eval", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "opa", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Service_Spec_Config_LLM_Model>): Service_Spec_Config_LLM_Model {
@@ -19889,6 +23749,12 @@ class Service_Spec_Config_LLM_Model$Type extends MessageType<Service_Spec_Config
                         eval: reader.string()
                     };
                     break;
+                case /* string opa */ 3:
+                    message.type = {
+                        oneofKind: "opa",
+                        opa: reader.string()
+                    };
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -19907,6 +23773,9 @@ class Service_Spec_Config_LLM_Model$Type extends MessageType<Service_Spec_Config
         /* string eval = 2; */
         if (message.type.oneofKind === "eval")
             writer.tag(2, WireType.LengthDelimited).string(message.type.eval);
+        /* string opa = 3; */
+        if (message.type.oneofKind === "opa")
+            writer.tag(3, WireType.LengthDelimited).string(message.type.opa);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -19918,6 +23787,280 @@ class Service_Spec_Config_LLM_Model$Type extends MessageType<Service_Spec_Config
  */
 export const Service_Spec_Config_LLM_Model = new Service_Spec_Config_LLM_Model$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Reasoning$Type extends MessageType<Service_Spec_Config_LLM_Reasoning> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning", [
+            { no: 1, name: "level", kind: "enum", oneof: "type", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning.Level", Service_Spec_Config_LLM_Reasoning_Level] },
+            { no: 2, name: "tokenBudget", kind: "scalar", oneof: "type", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 3, name: "eval", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "opa", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "effort", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Reasoning>): Service_Spec_Config_LLM_Reasoning {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Reasoning>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Reasoning): Service_Spec_Config_LLM_Reasoning {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning.Level level */ 1:
+                    message.type = {
+                        oneofKind: "level",
+                        level: reader.int32()
+                    };
+                    break;
+                case /* uint64 tokenBudget */ 2:
+                    message.type = {
+                        oneofKind: "tokenBudget",
+                        tokenBudget: reader.uint64().toNumber()
+                    };
+                    break;
+                case /* string eval */ 3:
+                    message.type = {
+                        oneofKind: "eval",
+                        eval: reader.string()
+                    };
+                    break;
+                case /* string opa */ 4:
+                    message.type = {
+                        oneofKind: "opa",
+                        opa: reader.string()
+                    };
+                    break;
+                case /* string effort */ 5:
+                    message.type = {
+                        oneofKind: "effort",
+                        effort: reader.string()
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Reasoning, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning.Level level = 1; */
+        if (message.type.oneofKind === "level")
+            writer.tag(1, WireType.Varint).int32(message.type.level);
+        /* uint64 tokenBudget = 2; */
+        if (message.type.oneofKind === "tokenBudget")
+            writer.tag(2, WireType.Varint).uint64(message.type.tokenBudget);
+        /* string eval = 3; */
+        if (message.type.oneofKind === "eval")
+            writer.tag(3, WireType.LengthDelimited).string(message.type.eval);
+        /* string opa = 4; */
+        if (message.type.oneofKind === "opa")
+            writer.tag(4, WireType.LengthDelimited).string(message.type.opa);
+        /* string effort = 5; */
+        if (message.type.oneofKind === "effort")
+            writer.tag(5, WireType.LengthDelimited).string(message.type.effort);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning
+ */
+export const Service_Spec_Config_LLM_Reasoning = new Service_Spec_Config_LLM_Reasoning$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Embedding$Type extends MessageType<Service_Spec_Config_LLM_Embedding> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding", [
+            { no: 1, name: "source", kind: "message", T: () => Service_Spec_Config_LLM_Embedding_Source },
+            { no: 2, name: "model", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "dimensions", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Embedding>): Service_Spec_Config_LLM_Embedding {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.model = "";
+        message.dimensions = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Embedding>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Embedding): Service_Spec_Config_LLM_Embedding {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding.Source source */ 1:
+                    message.source = Service_Spec_Config_LLM_Embedding_Source.internalBinaryRead(reader, reader.uint32(), options, message.source);
+                    break;
+                case /* string model */ 2:
+                    message.model = reader.string();
+                    break;
+                case /* uint32 dimensions */ 3:
+                    message.dimensions = reader.uint32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Embedding, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding.Source source = 1; */
+        if (message.source)
+            Service_Spec_Config_LLM_Embedding_Source.internalBinaryWrite(message.source, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string model = 2; */
+        if (message.model !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.model);
+        /* uint32 dimensions = 3; */
+        if (message.dimensions !== 0)
+            writer.tag(3, WireType.Varint).uint32(message.dimensions);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding
+ */
+export const Service_Spec_Config_LLM_Embedding = new Service_Spec_Config_LLM_Embedding$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Embedding_Source$Type extends MessageType<Service_Spec_Config_LLM_Embedding_Source> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding.Source", [
+            { no: 1, name: "currentUpstream", kind: "scalar", oneof: "type", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "upstream", kind: "message", oneof: "type", T: () => Service_Spec_Config_LLM_Embedding_Source_Upstream }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Embedding_Source>): Service_Spec_Config_LLM_Embedding_Source {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Embedding_Source>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Embedding_Source): Service_Spec_Config_LLM_Embedding_Source {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool currentUpstream */ 1:
+                    message.type = {
+                        oneofKind: "currentUpstream",
+                        currentUpstream: reader.bool()
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding.Source.Upstream upstream */ 2:
+                    message.type = {
+                        oneofKind: "upstream",
+                        upstream: Service_Spec_Config_LLM_Embedding_Source_Upstream.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).upstream)
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Embedding_Source, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool currentUpstream = 1; */
+        if (message.type.oneofKind === "currentUpstream")
+            writer.tag(1, WireType.Varint).bool(message.type.currentUpstream);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding.Source.Upstream upstream = 2; */
+        if (message.type.oneofKind === "upstream")
+            Service_Spec_Config_LLM_Embedding_Source_Upstream.internalBinaryWrite(message.type.upstream, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding.Source
+ */
+export const Service_Spec_Config_LLM_Embedding_Source = new Service_Spec_Config_LLM_Embedding_Source$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Embedding_Source_Upstream$Type extends MessageType<Service_Spec_Config_LLM_Embedding_Source_Upstream> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding.Source.Upstream", [
+            { no: 1, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "protocol", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol", Service_Spec_Config_LLM_Protocol] },
+            { no: 3, name: "auth", kind: "message", T: () => Service_Spec_Config_HTTP_Auth }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Embedding_Source_Upstream>): Service_Spec_Config_LLM_Embedding_Source_Upstream {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.url = "";
+        message.protocol = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Embedding_Source_Upstream>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Embedding_Source_Upstream): Service_Spec_Config_LLM_Embedding_Source_Upstream {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string url */ 1:
+                    message.url = reader.string();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol */ 2:
+                    message.protocol = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth auth */ 3:
+                    message.auth = Service_Spec_Config_HTTP_Auth.internalBinaryRead(reader, reader.uint32(), options, message.auth);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Embedding_Source_Upstream, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string url = 1; */
+        if (message.url !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.url);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol = 2; */
+        if (message.protocol !== 0)
+            writer.tag(2, WireType.Varint).int32(message.protocol);
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Auth auth = 3; */
+        if (message.auth)
+            Service_Spec_Config_HTTP_Auth.internalBinaryWrite(message.auth, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding.Source.Upstream
+ */
+export const Service_Spec_Config_LLM_Embedding_Source_Upstream = new Service_Spec_Config_LLM_Embedding_Source_Upstream$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class Service_Spec_Config_LLM_Limits$Type extends MessageType<Service_Spec_Config_LLM_Limits> {
     constructor() {
         super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Limits", [
@@ -19925,7 +24068,8 @@ class Service_Spec_Config_LLM_Limits$Type extends MessageType<Service_Spec_Confi
             { no: 2, name: "maxStreamEventBytes", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 3, name: "maxEstimatedInputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
             { no: 4, name: "maxOutputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
-            { no: 5, name: "maxTools", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+            { no: 5, name: "maxTools", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 6, name: "maxToolSchemaBytes", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
     create(value?: PartialMessage<Service_Spec_Config_LLM_Limits>): Service_Spec_Config_LLM_Limits {
@@ -19935,6 +24079,7 @@ class Service_Spec_Config_LLM_Limits$Type extends MessageType<Service_Spec_Confi
         message.maxEstimatedInputTokens = 0;
         message.maxOutputTokens = 0;
         message.maxTools = 0;
+        message.maxToolSchemaBytes = 0;
         if (value !== undefined)
             reflectionMergePartial<Service_Spec_Config_LLM_Limits>(this, message, value);
         return message;
@@ -19958,6 +24103,9 @@ class Service_Spec_Config_LLM_Limits$Type extends MessageType<Service_Spec_Confi
                     break;
                 case /* uint32 maxTools */ 5:
                     message.maxTools = reader.uint32();
+                    break;
+                case /* uint32 maxToolSchemaBytes */ 6:
+                    message.maxToolSchemaBytes = reader.uint32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -19986,6 +24134,9 @@ class Service_Spec_Config_LLM_Limits$Type extends MessageType<Service_Spec_Confi
         /* uint32 maxTools = 5; */
         if (message.maxTools !== 0)
             writer.tag(5, WireType.Varint).uint32(message.maxTools);
+        /* uint32 maxToolSchemaBytes = 6; */
+        if (message.maxToolSchemaBytes !== 0)
+            writer.tag(6, WireType.Varint).uint32(message.maxToolSchemaBytes);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -20115,6 +24266,1452 @@ class Service_Spec_Config_LLM_Visibility$Type extends MessageType<Service_Spec_C
  * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Visibility
  */
 export const Service_Spec_Config_LLM_Visibility = new Service_Spec_Config_LLM_Visibility$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin$Type extends MessageType<Service_Spec_Config_LLM_Plugin> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "isDisabled", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "phase", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Phase", Service_Spec_Config_HTTP_Plugin_Phase] },
+            { no: 4, name: "condition", kind: "message", T: () => Condition },
+            { no: 5, name: "extProc", kind: "message", oneof: "type", T: () => Service_Spec_Config_HTTP_Plugin_ExtProc },
+            { no: 6, name: "lua", kind: "message", oneof: "type", T: () => Service_Spec_Config_HTTP_Plugin_Lua },
+            { no: 7, name: "direct", kind: "message", oneof: "type", T: () => Service_Spec_Config_HTTP_Plugin_Direct },
+            { no: 8, name: "rateLimit", kind: "message", oneof: "type", T: () => Service_Spec_Config_HTTP_Plugin_RateLimit },
+            { no: 10, name: "jsonSchema", kind: "message", oneof: "type", T: () => Service_Spec_Config_HTTP_Plugin_JSONSchema },
+            { no: 11, name: "path", kind: "message", oneof: "type", T: () => Service_Spec_Config_HTTP_Plugin_Path },
+            { no: 12, name: "prompt", kind: "message", oneof: "type", T: () => Service_Spec_Config_LLM_Plugin_Prompt },
+            { no: 13, name: "tools", kind: "message", oneof: "type", T: () => Service_Spec_Config_LLM_Plugin_Tools },
+            { no: 14, name: "guardrail", kind: "message", oneof: "type", T: () => Service_Spec_Config_LLM_Plugin_Guardrail },
+            { no: 15, name: "model", kind: "message", oneof: "type", T: () => Service_Spec_Config_LLM_Model },
+            { no: 16, name: "reasoning", kind: "message", oneof: "type", T: () => Service_Spec_Config_LLM_Reasoning },
+            { no: 17, name: "tokenRateLimit", kind: "message", oneof: "type", T: () => Service_Spec_Config_LLM_Plugin_TokenRateLimit },
+            { no: 18, name: "semanticCache", kind: "message", oneof: "type", T: () => Service_Spec_Config_LLM_Plugin_SemanticCache },
+            { no: 19, name: "semanticRouter", kind: "message", oneof: "type", T: () => Service_Spec_Config_LLM_Plugin_SemanticRouter }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin>): Service_Spec_Config_LLM_Plugin {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.name = "";
+        message.isDisabled = false;
+        message.phase = 0;
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin): Service_Spec_Config_LLM_Plugin {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* bool isDisabled */ 2:
+                    message.isDisabled = reader.bool();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Phase phase */ 3:
+                    message.phase = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.Condition condition */ 4:
+                    message.condition = Condition.internalBinaryRead(reader, reader.uint32(), options, message.condition);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc extProc */ 5:
+                    message.type = {
+                        oneofKind: "extProc",
+                        extProc: Service_Spec_Config_HTTP_Plugin_ExtProc.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).extProc)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Lua lua */ 6:
+                    message.type = {
+                        oneofKind: "lua",
+                        lua: Service_Spec_Config_HTTP_Plugin_Lua.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).lua)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct direct */ 7:
+                    message.type = {
+                        oneofKind: "direct",
+                        direct: Service_Spec_Config_HTTP_Plugin_Direct.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).direct)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit rateLimit */ 8:
+                    message.type = {
+                        oneofKind: "rateLimit",
+                        rateLimit: Service_Spec_Config_HTTP_Plugin_RateLimit.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).rateLimit)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema jsonSchema */ 10:
+                    message.type = {
+                        oneofKind: "jsonSchema",
+                        jsonSchema: Service_Spec_Config_HTTP_Plugin_JSONSchema.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).jsonSchema)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Path path */ 11:
+                    message.type = {
+                        oneofKind: "path",
+                        path: Service_Spec_Config_HTTP_Plugin_Path.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).path)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt prompt */ 12:
+                    message.type = {
+                        oneofKind: "prompt",
+                        prompt: Service_Spec_Config_LLM_Plugin_Prompt.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).prompt)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools tools */ 13:
+                    message.type = {
+                        oneofKind: "tools",
+                        tools: Service_Spec_Config_LLM_Plugin_Tools.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).tools)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail guardrail */ 14:
+                    message.type = {
+                        oneofKind: "guardrail",
+                        guardrail: Service_Spec_Config_LLM_Plugin_Guardrail.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).guardrail)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Model model */ 15:
+                    message.type = {
+                        oneofKind: "model",
+                        model: Service_Spec_Config_LLM_Model.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).model)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning reasoning */ 16:
+                    message.type = {
+                        oneofKind: "reasoning",
+                        reasoning: Service_Spec_Config_LLM_Reasoning.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).reasoning)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit tokenRateLimit */ 17:
+                    message.type = {
+                        oneofKind: "tokenRateLimit",
+                        tokenRateLimit: Service_Spec_Config_LLM_Plugin_TokenRateLimit.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).tokenRateLimit)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticCache semanticCache */ 18:
+                    message.type = {
+                        oneofKind: "semanticCache",
+                        semanticCache: Service_Spec_Config_LLM_Plugin_SemanticCache.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).semanticCache)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticRouter semanticRouter */ 19:
+                    message.type = {
+                        oneofKind: "semanticRouter",
+                        semanticRouter: Service_Spec_Config_LLM_Plugin_SemanticRouter.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).semanticRouter)
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* bool isDisabled = 2; */
+        if (message.isDisabled !== false)
+            writer.tag(2, WireType.Varint).bool(message.isDisabled);
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Phase phase = 3; */
+        if (message.phase !== 0)
+            writer.tag(3, WireType.Varint).int32(message.phase);
+        /* octelium.api.main.core.v1.Condition condition = 4; */
+        if (message.condition)
+            Condition.internalBinaryWrite(message.condition, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.ExtProc extProc = 5; */
+        if (message.type.oneofKind === "extProc")
+            Service_Spec_Config_HTTP_Plugin_ExtProc.internalBinaryWrite(message.type.extProc, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Lua lua = 6; */
+        if (message.type.oneofKind === "lua")
+            Service_Spec_Config_HTTP_Plugin_Lua.internalBinaryWrite(message.type.lua, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Direct direct = 7; */
+        if (message.type.oneofKind === "direct")
+            Service_Spec_Config_HTTP_Plugin_Direct.internalBinaryWrite(message.type.direct, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit rateLimit = 8; */
+        if (message.type.oneofKind === "rateLimit")
+            Service_Spec_Config_HTTP_Plugin_RateLimit.internalBinaryWrite(message.type.rateLimit, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.JSONSchema jsonSchema = 10; */
+        if (message.type.oneofKind === "jsonSchema")
+            Service_Spec_Config_HTTP_Plugin_JSONSchema.internalBinaryWrite(message.type.jsonSchema, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.Path path = 11; */
+        if (message.type.oneofKind === "path")
+            Service_Spec_Config_HTTP_Plugin_Path.internalBinaryWrite(message.type.path, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt prompt = 12; */
+        if (message.type.oneofKind === "prompt")
+            Service_Spec_Config_LLM_Plugin_Prompt.internalBinaryWrite(message.type.prompt, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools tools = 13; */
+        if (message.type.oneofKind === "tools")
+            Service_Spec_Config_LLM_Plugin_Tools.internalBinaryWrite(message.type.tools, writer.tag(13, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail guardrail = 14; */
+        if (message.type.oneofKind === "guardrail")
+            Service_Spec_Config_LLM_Plugin_Guardrail.internalBinaryWrite(message.type.guardrail, writer.tag(14, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Model model = 15; */
+        if (message.type.oneofKind === "model")
+            Service_Spec_Config_LLM_Model.internalBinaryWrite(message.type.model, writer.tag(15, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Reasoning reasoning = 16; */
+        if (message.type.oneofKind === "reasoning")
+            Service_Spec_Config_LLM_Reasoning.internalBinaryWrite(message.type.reasoning, writer.tag(16, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit tokenRateLimit = 17; */
+        if (message.type.oneofKind === "tokenRateLimit")
+            Service_Spec_Config_LLM_Plugin_TokenRateLimit.internalBinaryWrite(message.type.tokenRateLimit, writer.tag(17, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticCache semanticCache = 18; */
+        if (message.type.oneofKind === "semanticCache")
+            Service_Spec_Config_LLM_Plugin_SemanticCache.internalBinaryWrite(message.type.semanticCache, writer.tag(18, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticRouter semanticRouter = 19; */
+        if (message.type.oneofKind === "semanticRouter")
+            Service_Spec_Config_LLM_Plugin_SemanticRouter.internalBinaryWrite(message.type.semanticRouter, writer.tag(19, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin
+ */
+export const Service_Spec_Config_LLM_Plugin = new Service_Spec_Config_LLM_Plugin$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_Prompt$Type extends MessageType<Service_Spec_Config_LLM_Plugin_Prompt> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt", [
+            { no: 1, name: "system", kind: "message", oneof: "type", T: () => Service_Spec_Config_LLM_Plugin_Prompt_System },
+            { no: 2, name: "message", kind: "message", oneof: "type", T: () => Service_Spec_Config_LLM_Plugin_Prompt_Message }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_Prompt>): Service_Spec_Config_LLM_Plugin_Prompt {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_Prompt>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_Prompt): Service_Spec_Config_LLM_Plugin_Prompt {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.System system */ 1:
+                    message.type = {
+                        oneofKind: "system",
+                        system: Service_Spec_Config_LLM_Plugin_Prompt_System.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).system)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message message */ 2:
+                    message.type = {
+                        oneofKind: "message",
+                        message: Service_Spec_Config_LLM_Plugin_Prompt_Message.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).message)
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_Prompt, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.System system = 1; */
+        if (message.type.oneofKind === "system")
+            Service_Spec_Config_LLM_Plugin_Prompt_System.internalBinaryWrite(message.type.system, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message message = 2; */
+        if (message.type.oneofKind === "message")
+            Service_Spec_Config_LLM_Plugin_Prompt_Message.internalBinaryWrite(message.type.message, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt
+ */
+export const Service_Spec_Config_LLM_Plugin_Prompt = new Service_Spec_Config_LLM_Plugin_Prompt$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_Prompt_Content$Type extends MessageType<Service_Spec_Config_LLM_Plugin_Prompt_Content> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Content", [
+            { no: 1, name: "value", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "eval", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "opa", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_Prompt_Content>): Service_Spec_Config_LLM_Plugin_Prompt_Content {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_Prompt_Content>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_Prompt_Content): Service_Spec_Config_LLM_Plugin_Prompt_Content {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string value */ 1:
+                    message.type = {
+                        oneofKind: "value",
+                        value: reader.string()
+                    };
+                    break;
+                case /* string eval */ 2:
+                    message.type = {
+                        oneofKind: "eval",
+                        eval: reader.string()
+                    };
+                    break;
+                case /* string opa */ 3:
+                    message.type = {
+                        oneofKind: "opa",
+                        opa: reader.string()
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_Prompt_Content, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string value = 1; */
+        if (message.type.oneofKind === "value")
+            writer.tag(1, WireType.LengthDelimited).string(message.type.value);
+        /* string eval = 2; */
+        if (message.type.oneofKind === "eval")
+            writer.tag(2, WireType.LengthDelimited).string(message.type.eval);
+        /* string opa = 3; */
+        if (message.type.oneofKind === "opa")
+            writer.tag(3, WireType.LengthDelimited).string(message.type.opa);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Content
+ */
+export const Service_Spec_Config_LLM_Plugin_Prompt_Content = new Service_Spec_Config_LLM_Plugin_Prompt_Content$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_Prompt_System$Type extends MessageType<Service_Spec_Config_LLM_Plugin_Prompt_System> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.System", [
+            { no: 1, name: "mode", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.System.Mode", Service_Spec_Config_LLM_Plugin_Prompt_System_Mode] },
+            { no: 2, name: "content", kind: "message", T: () => Service_Spec_Config_LLM_Plugin_Prompt_Content }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_Prompt_System>): Service_Spec_Config_LLM_Plugin_Prompt_System {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.mode = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_Prompt_System>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_Prompt_System): Service_Spec_Config_LLM_Plugin_Prompt_System {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.System.Mode mode */ 1:
+                    message.mode = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Content content */ 2:
+                    message.content = Service_Spec_Config_LLM_Plugin_Prompt_Content.internalBinaryRead(reader, reader.uint32(), options, message.content);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_Prompt_System, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.System.Mode mode = 1; */
+        if (message.mode !== 0)
+            writer.tag(1, WireType.Varint).int32(message.mode);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Content content = 2; */
+        if (message.content)
+            Service_Spec_Config_LLM_Plugin_Prompt_Content.internalBinaryWrite(message.content, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.System
+ */
+export const Service_Spec_Config_LLM_Plugin_Prompt_System = new Service_Spec_Config_LLM_Plugin_Prompt_System$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_Prompt_Message$Type extends MessageType<Service_Spec_Config_LLM_Plugin_Prompt_Message> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message", [
+            { no: 1, name: "role", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Role", Service_Spec_Config_LLM_Plugin_Prompt_Message_Role] },
+            { no: 2, name: "position", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Position", Service_Spec_Config_LLM_Plugin_Prompt_Message_Position] },
+            { no: 3, name: "selector", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Selector", Service_Spec_Config_LLM_Plugin_Prompt_Message_Selector] },
+            { no: 4, name: "content", kind: "message", T: () => Service_Spec_Config_LLM_Plugin_Prompt_Content }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_Prompt_Message>): Service_Spec_Config_LLM_Plugin_Prompt_Message {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.role = 0;
+        message.position = 0;
+        message.selector = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_Prompt_Message>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_Prompt_Message): Service_Spec_Config_LLM_Plugin_Prompt_Message {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Role role */ 1:
+                    message.role = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Position position */ 2:
+                    message.position = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Selector selector */ 3:
+                    message.selector = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Content content */ 4:
+                    message.content = Service_Spec_Config_LLM_Plugin_Prompt_Content.internalBinaryRead(reader, reader.uint32(), options, message.content);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_Prompt_Message, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Role role = 1; */
+        if (message.role !== 0)
+            writer.tag(1, WireType.Varint).int32(message.role);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Position position = 2; */
+        if (message.position !== 0)
+            writer.tag(2, WireType.Varint).int32(message.position);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message.Selector selector = 3; */
+        if (message.selector !== 0)
+            writer.tag(3, WireType.Varint).int32(message.selector);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Content content = 4; */
+        if (message.content)
+            Service_Spec_Config_LLM_Plugin_Prompt_Content.internalBinaryWrite(message.content, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Prompt.Message
+ */
+export const Service_Spec_Config_LLM_Plugin_Prompt_Message = new Service_Spec_Config_LLM_Plugin_Prompt_Message$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_Tools$Type extends MessageType<Service_Spec_Config_LLM_Plugin_Tools> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools", [
+            { no: 1, name: "filters", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_LLM_Plugin_Tools_Filter },
+            { no: 2, name: "tools", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_LLM_Plugin_Tools_Tool },
+            { no: 3, name: "choice", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Choice", Service_Spec_Config_LLM_Plugin_Tools_Choice] },
+            { no: 4, name: "denyMessage", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_Tools>): Service_Spec_Config_LLM_Plugin_Tools {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.filters = [];
+        message.tools = [];
+        message.choice = 0;
+        message.denyMessage = "";
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_Tools>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_Tools): Service_Spec_Config_LLM_Plugin_Tools {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter filters */ 1:
+                    message.filters.push(Service_Spec_Config_LLM_Plugin_Tools_Filter.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Tool tools */ 2:
+                    message.tools.push(Service_Spec_Config_LLM_Plugin_Tools_Tool.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Choice choice */ 3:
+                    message.choice = reader.int32();
+                    break;
+                case /* string denyMessage */ 4:
+                    message.denyMessage = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_Tools, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter filters = 1; */
+        for (let i = 0; i < message.filters.length; i++)
+            Service_Spec_Config_LLM_Plugin_Tools_Filter.internalBinaryWrite(message.filters[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Tool tools = 2; */
+        for (let i = 0; i < message.tools.length; i++)
+            Service_Spec_Config_LLM_Plugin_Tools_Tool.internalBinaryWrite(message.tools[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Choice choice = 3; */
+        if (message.choice !== 0)
+            writer.tag(3, WireType.Varint).int32(message.choice);
+        /* string denyMessage = 4; */
+        if (message.denyMessage !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.denyMessage);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools
+ */
+export const Service_Spec_Config_LLM_Plugin_Tools = new Service_Spec_Config_LLM_Plugin_Tools$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_Tools_Filter$Type extends MessageType<Service_Spec_Config_LLM_Plugin_Tools_Filter> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter", [
+            { no: 1, name: "name", kind: "scalar", oneof: "match", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "type", kind: "scalar", oneof: "match", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "decision", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter.Decision", Service_Spec_Config_LLM_Plugin_Tools_Filter_Decision] },
+            { no: 4, name: "replace", kind: "message", T: () => Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_Tools_Filter>): Service_Spec_Config_LLM_Plugin_Tools_Filter {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.match = { oneofKind: undefined };
+        message.decision = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_Tools_Filter>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_Tools_Filter): Service_Spec_Config_LLM_Plugin_Tools_Filter {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.match = {
+                        oneofKind: "name",
+                        name: reader.string()
+                    };
+                    break;
+                case /* string type */ 2:
+                    message.match = {
+                        oneofKind: "type",
+                        type: reader.string()
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter.Decision decision */ 3:
+                    message.decision = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter.Replace replace */ 4:
+                    message.replace = Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace.internalBinaryRead(reader, reader.uint32(), options, message.replace);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_Tools_Filter, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.match.oneofKind === "name")
+            writer.tag(1, WireType.LengthDelimited).string(message.match.name);
+        /* string type = 2; */
+        if (message.match.oneofKind === "type")
+            writer.tag(2, WireType.LengthDelimited).string(message.match.type);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter.Decision decision = 3; */
+        if (message.decision !== 0)
+            writer.tag(3, WireType.Varint).int32(message.decision);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter.Replace replace = 4; */
+        if (message.replace)
+            Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace.internalBinaryWrite(message.replace, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter
+ */
+export const Service_Spec_Config_LLM_Plugin_Tools_Filter = new Service_Spec_Config_LLM_Plugin_Tools_Filter$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace$Type extends MessageType<Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter.Replace", [
+            { no: 1, name: "value", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "eval", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "opa", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace>): Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace): Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string value */ 1:
+                    message.type = {
+                        oneofKind: "value",
+                        value: reader.string()
+                    };
+                    break;
+                case /* string eval */ 2:
+                    message.type = {
+                        oneofKind: "eval",
+                        eval: reader.string()
+                    };
+                    break;
+                case /* string opa */ 3:
+                    message.type = {
+                        oneofKind: "opa",
+                        opa: reader.string()
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string value = 1; */
+        if (message.type.oneofKind === "value")
+            writer.tag(1, WireType.LengthDelimited).string(message.type.value);
+        /* string eval = 2; */
+        if (message.type.oneofKind === "eval")
+            writer.tag(2, WireType.LengthDelimited).string(message.type.eval);
+        /* string opa = 3; */
+        if (message.type.oneofKind === "opa")
+            writer.tag(3, WireType.LengthDelimited).string(message.type.opa);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Filter.Replace
+ */
+export const Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace = new Service_Spec_Config_LLM_Plugin_Tools_Filter_Replace$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_Tools_Tool$Type extends MessageType<Service_Spec_Config_LLM_Plugin_Tools_Tool> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Tool", [
+            { no: 1, name: "value", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "eval", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "opa", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "position", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Tool.Position", Service_Spec_Config_LLM_Plugin_Tools_Tool_Position] }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_Tools_Tool>): Service_Spec_Config_LLM_Plugin_Tools_Tool {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        message.position = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_Tools_Tool>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_Tools_Tool): Service_Spec_Config_LLM_Plugin_Tools_Tool {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string value */ 1:
+                    message.type = {
+                        oneofKind: "value",
+                        value: reader.string()
+                    };
+                    break;
+                case /* string eval */ 2:
+                    message.type = {
+                        oneofKind: "eval",
+                        eval: reader.string()
+                    };
+                    break;
+                case /* string opa */ 3:
+                    message.type = {
+                        oneofKind: "opa",
+                        opa: reader.string()
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Tool.Position position */ 4:
+                    message.position = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_Tools_Tool, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string value = 1; */
+        if (message.type.oneofKind === "value")
+            writer.tag(1, WireType.LengthDelimited).string(message.type.value);
+        /* string eval = 2; */
+        if (message.type.oneofKind === "eval")
+            writer.tag(2, WireType.LengthDelimited).string(message.type.eval);
+        /* string opa = 3; */
+        if (message.type.oneofKind === "opa")
+            writer.tag(3, WireType.LengthDelimited).string(message.type.opa);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Tool.Position position = 4; */
+        if (message.position !== 0)
+            writer.tag(4, WireType.Varint).int32(message.position);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Tools.Tool
+ */
+export const Service_Spec_Config_LLM_Plugin_Tools_Tool = new Service_Spec_Config_LLM_Plugin_Tools_Tool$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_Guardrail$Type extends MessageType<Service_Spec_Config_LLM_Plugin_Guardrail> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail", [
+            { no: 1, name: "leg", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Leg", Service_Spec_Config_LLM_Plugin_Guardrail_Leg] },
+            { no: 2, name: "scopes", kind: "enum", repeat: 1 /*RepeatType.PACKED*/, T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Scope", Service_Spec_Config_LLM_Plugin_Guardrail_Scope] },
+            { no: 3, name: "patterns", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_LLM_Plugin_Guardrail_Pattern },
+            { no: 4, name: "denyMessage", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_Guardrail>): Service_Spec_Config_LLM_Plugin_Guardrail {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.leg = 0;
+        message.scopes = [];
+        message.patterns = [];
+        message.denyMessage = "";
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_Guardrail>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_Guardrail): Service_Spec_Config_LLM_Plugin_Guardrail {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Leg leg */ 1:
+                    message.leg = reader.int32();
+                    break;
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Scope scopes */ 2:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.scopes.push(reader.int32());
+                    else
+                        message.scopes.push(reader.int32());
+                    break;
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern patterns */ 3:
+                    message.patterns.push(Service_Spec_Config_LLM_Plugin_Guardrail_Pattern.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* string denyMessage */ 4:
+                    message.denyMessage = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_Guardrail, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Leg leg = 1; */
+        if (message.leg !== 0)
+            writer.tag(1, WireType.Varint).int32(message.leg);
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Scope scopes = 2; */
+        if (message.scopes.length) {
+            writer.tag(2, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.scopes.length; i++)
+                writer.int32(message.scopes[i]);
+            writer.join();
+        }
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern patterns = 3; */
+        for (let i = 0; i < message.patterns.length; i++)
+            Service_Spec_Config_LLM_Plugin_Guardrail_Pattern.internalBinaryWrite(message.patterns[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* string denyMessage = 4; */
+        if (message.denyMessage !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.denyMessage);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail
+ */
+export const Service_Spec_Config_LLM_Plugin_Guardrail = new Service_Spec_Config_LLM_Plugin_Guardrail$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_Guardrail_Pattern$Type extends MessageType<Service_Spec_Config_LLM_Plugin_Guardrail_Pattern> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern", [
+            { no: 1, name: "regex", kind: "scalar", oneof: "match", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "type", kind: "enum", oneof: "match", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Type", Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Type] },
+            { no: 3, name: "secrets", kind: "message", oneof: "match", T: () => Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets },
+            { no: 4, name: "action", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Action", Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Action] },
+            { no: 5, name: "replace", kind: "message", T: () => Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_Guardrail_Pattern>): Service_Spec_Config_LLM_Plugin_Guardrail_Pattern {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.match = { oneofKind: undefined };
+        message.action = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_Guardrail_Pattern>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_Guardrail_Pattern): Service_Spec_Config_LLM_Plugin_Guardrail_Pattern {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string regex */ 1:
+                    message.match = {
+                        oneofKind: "regex",
+                        regex: reader.string()
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Type type */ 2:
+                    message.match = {
+                        oneofKind: "type",
+                        type: reader.int32()
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Secrets secrets */ 3:
+                    message.match = {
+                        oneofKind: "secrets",
+                        secrets: Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets.internalBinaryRead(reader, reader.uint32(), options, (message.match as any).secrets)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Action action */ 4:
+                    message.action = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Replace replace */ 5:
+                    message.replace = Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace.internalBinaryRead(reader, reader.uint32(), options, message.replace);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_Guardrail_Pattern, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string regex = 1; */
+        if (message.match.oneofKind === "regex")
+            writer.tag(1, WireType.LengthDelimited).string(message.match.regex);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Type type = 2; */
+        if (message.match.oneofKind === "type")
+            writer.tag(2, WireType.Varint).int32(message.match.type);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Secrets secrets = 3; */
+        if (message.match.oneofKind === "secrets")
+            Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets.internalBinaryWrite(message.match.secrets, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Action action = 4; */
+        if (message.action !== 0)
+            writer.tag(4, WireType.Varint).int32(message.action);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Replace replace = 5; */
+        if (message.replace)
+            Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace.internalBinaryWrite(message.replace, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern
+ */
+export const Service_Spec_Config_LLM_Plugin_Guardrail_Pattern = new Service_Spec_Config_LLM_Plugin_Guardrail_Pattern$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace$Type extends MessageType<Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Replace", [
+            { no: 1, name: "value", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "eval", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "opa", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace>): Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace): Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string value */ 1:
+                    message.type = {
+                        oneofKind: "value",
+                        value: reader.string()
+                    };
+                    break;
+                case /* string eval */ 2:
+                    message.type = {
+                        oneofKind: "eval",
+                        eval: reader.string()
+                    };
+                    break;
+                case /* string opa */ 3:
+                    message.type = {
+                        oneofKind: "opa",
+                        opa: reader.string()
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string value = 1; */
+        if (message.type.oneofKind === "value")
+            writer.tag(1, WireType.LengthDelimited).string(message.type.value);
+        /* string eval = 2; */
+        if (message.type.oneofKind === "eval")
+            writer.tag(2, WireType.LengthDelimited).string(message.type.eval);
+        /* string opa = 3; */
+        if (message.type.oneofKind === "opa")
+            writer.tag(3, WireType.LengthDelimited).string(message.type.opa);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Replace
+ */
+export const Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace = new Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Replace$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets$Type extends MessageType<Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Secrets", [
+            { no: 1, name: "excludeRules", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets>): Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.excludeRules = [];
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets): Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated string excludeRules */ 1:
+                    message.excludeRules.push(reader.string());
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated string excludeRules = 1; */
+        for (let i = 0; i < message.excludeRules.length; i++)
+            writer.tag(1, WireType.LengthDelimited).string(message.excludeRules[i]);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Pattern.Secrets
+ */
+export const Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets = new Service_Spec_Config_LLM_Plugin_Guardrail_Pattern_Secrets$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_TokenRateLimit$Type extends MessageType<Service_Spec_Config_LLM_Plugin_TokenRateLimit> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit", [
+            { no: 1, name: "scope", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit.Scope", Service_Spec_Config_LLM_Plugin_TokenRateLimit_Scope] },
+            { no: 2, name: "key", kind: "message", T: () => Service_Spec_Config_HTTP_Plugin_RateLimit_Key },
+            { no: 3, name: "limit", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 4, name: "window", kind: "message", T: () => Duration },
+            { no: 5, name: "defaultOutputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 6, name: "denyMessage", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "headers", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_TokenRateLimit>): Service_Spec_Config_LLM_Plugin_TokenRateLimit {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.scope = 0;
+        message.limit = 0;
+        message.defaultOutputTokens = 0;
+        message.denyMessage = "";
+        message.headers = [];
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_TokenRateLimit>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_TokenRateLimit): Service_Spec_Config_LLM_Plugin_TokenRateLimit {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit.Scope scope */ 1:
+                    message.scope = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.Key key */ 2:
+                    message.key = Service_Spec_Config_HTTP_Plugin_RateLimit_Key.internalBinaryRead(reader, reader.uint32(), options, message.key);
+                    break;
+                case /* int64 limit */ 3:
+                    message.limit = reader.int64().toNumber();
+                    break;
+                case /* octelium.api.main.meta.v1.Duration window */ 4:
+                    message.window = Duration.internalBinaryRead(reader, reader.uint32(), options, message.window);
+                    break;
+                case /* uint64 defaultOutputTokens */ 5:
+                    message.defaultOutputTokens = reader.uint64().toNumber();
+                    break;
+                case /* string denyMessage */ 6:
+                    message.denyMessage = reader.string();
+                    break;
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.KeyValue headers */ 7:
+                    message.headers.push(Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_TokenRateLimit, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit.Scope scope = 1; */
+        if (message.scope !== 0)
+            writer.tag(1, WireType.Varint).int32(message.scope);
+        /* octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.Key key = 2; */
+        if (message.key)
+            Service_Spec_Config_HTTP_Plugin_RateLimit_Key.internalBinaryWrite(message.key, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* int64 limit = 3; */
+        if (message.limit !== 0)
+            writer.tag(3, WireType.Varint).int64(message.limit);
+        /* octelium.api.main.meta.v1.Duration window = 4; */
+        if (message.window)
+            Duration.internalBinaryWrite(message.window, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* uint64 defaultOutputTokens = 5; */
+        if (message.defaultOutputTokens !== 0)
+            writer.tag(5, WireType.Varint).uint64(message.defaultOutputTokens);
+        /* string denyMessage = 6; */
+        if (message.denyMessage !== "")
+            writer.tag(6, WireType.LengthDelimited).string(message.denyMessage);
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.HTTP.Plugin.RateLimit.KeyValue headers = 7; */
+        for (let i = 0; i < message.headers.length; i++)
+            Service_Spec_Config_HTTP_Plugin_RateLimit_KeyValue.internalBinaryWrite(message.headers[i], writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit
+ */
+export const Service_Spec_Config_LLM_Plugin_TokenRateLimit = new Service_Spec_Config_LLM_Plugin_TokenRateLimit$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_SemanticCache$Type extends MessageType<Service_Spec_Config_LLM_Plugin_SemanticCache> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticCache", [
+            { no: 1, name: "embedding", kind: "message", T: () => Service_Spec_Config_LLM_Embedding },
+            { no: 2, name: "scope", kind: "message", T: () => Service_Spec_Config_LLM_Plugin_SemanticCache_Scope },
+            { no: 3, name: "minSimilarity", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 4, name: "ttl", kind: "message", T: () => Duration },
+            { no: 5, name: "maxSize", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 6, name: "useXCacheHeader", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_SemanticCache>): Service_Spec_Config_LLM_Plugin_SemanticCache {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.minSimilarity = 0;
+        message.maxSize = 0;
+        message.useXCacheHeader = false;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_SemanticCache>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_SemanticCache): Service_Spec_Config_LLM_Plugin_SemanticCache {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding embedding */ 1:
+                    message.embedding = Service_Spec_Config_LLM_Embedding.internalBinaryRead(reader, reader.uint32(), options, message.embedding);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticCache.Scope scope */ 2:
+                    message.scope = Service_Spec_Config_LLM_Plugin_SemanticCache_Scope.internalBinaryRead(reader, reader.uint32(), options, message.scope);
+                    break;
+                case /* float minSimilarity */ 3:
+                    message.minSimilarity = reader.float();
+                    break;
+                case /* octelium.api.main.meta.v1.Duration ttl */ 4:
+                    message.ttl = Duration.internalBinaryRead(reader, reader.uint32(), options, message.ttl);
+                    break;
+                case /* uint64 maxSize */ 5:
+                    message.maxSize = reader.uint64().toNumber();
+                    break;
+                case /* bool useXCacheHeader */ 6:
+                    message.useXCacheHeader = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_SemanticCache, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding embedding = 1; */
+        if (message.embedding)
+            Service_Spec_Config_LLM_Embedding.internalBinaryWrite(message.embedding, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticCache.Scope scope = 2; */
+        if (message.scope)
+            Service_Spec_Config_LLM_Plugin_SemanticCache_Scope.internalBinaryWrite(message.scope, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* float minSimilarity = 3; */
+        if (message.minSimilarity !== 0)
+            writer.tag(3, WireType.Bit32).float(message.minSimilarity);
+        /* octelium.api.main.meta.v1.Duration ttl = 4; */
+        if (message.ttl)
+            Duration.internalBinaryWrite(message.ttl, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* uint64 maxSize = 5; */
+        if (message.maxSize !== 0)
+            writer.tag(5, WireType.Varint).uint64(message.maxSize);
+        /* bool useXCacheHeader = 6; */
+        if (message.useXCacheHeader !== false)
+            writer.tag(6, WireType.Varint).bool(message.useXCacheHeader);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticCache
+ */
+export const Service_Spec_Config_LLM_Plugin_SemanticCache = new Service_Spec_Config_LLM_Plugin_SemanticCache$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_SemanticCache_Scope$Type extends MessageType<Service_Spec_Config_LLM_Plugin_SemanticCache_Scope> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticCache.Scope", [
+            { no: 1, name: "perUser", kind: "scalar", oneof: "type", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "perSession", kind: "scalar", oneof: "type", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "shared", kind: "scalar", oneof: "type", T: 8 /*ScalarType.BOOL*/ },
+            { no: 4, name: "eval", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_SemanticCache_Scope>): Service_Spec_Config_LLM_Plugin_SemanticCache_Scope {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_SemanticCache_Scope>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_SemanticCache_Scope): Service_Spec_Config_LLM_Plugin_SemanticCache_Scope {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool perUser */ 1:
+                    message.type = {
+                        oneofKind: "perUser",
+                        perUser: reader.bool()
+                    };
+                    break;
+                case /* bool perSession */ 2:
+                    message.type = {
+                        oneofKind: "perSession",
+                        perSession: reader.bool()
+                    };
+                    break;
+                case /* bool shared */ 3:
+                    message.type = {
+                        oneofKind: "shared",
+                        shared: reader.bool()
+                    };
+                    break;
+                case /* string eval */ 4:
+                    message.type = {
+                        oneofKind: "eval",
+                        eval: reader.string()
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_SemanticCache_Scope, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool perUser = 1; */
+        if (message.type.oneofKind === "perUser")
+            writer.tag(1, WireType.Varint).bool(message.type.perUser);
+        /* bool perSession = 2; */
+        if (message.type.oneofKind === "perSession")
+            writer.tag(2, WireType.Varint).bool(message.type.perSession);
+        /* bool shared = 3; */
+        if (message.type.oneofKind === "shared")
+            writer.tag(3, WireType.Varint).bool(message.type.shared);
+        /* string eval = 4; */
+        if (message.type.oneofKind === "eval")
+            writer.tag(4, WireType.LengthDelimited).string(message.type.eval);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticCache.Scope
+ */
+export const Service_Spec_Config_LLM_Plugin_SemanticCache_Scope = new Service_Spec_Config_LLM_Plugin_SemanticCache_Scope$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_SemanticRouter$Type extends MessageType<Service_Spec_Config_LLM_Plugin_SemanticRouter> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticRouter", [
+            { no: 1, name: "embedding", kind: "message", T: () => Service_Spec_Config_LLM_Embedding },
+            { no: 2, name: "routes", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Service_Spec_Config_LLM_Plugin_SemanticRouter_Route },
+            { no: 3, name: "minSimilarity", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 4, name: "fallbackModel", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_SemanticRouter>): Service_Spec_Config_LLM_Plugin_SemanticRouter {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.routes = [];
+        message.minSimilarity = 0;
+        message.fallbackModel = "";
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_SemanticRouter>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_SemanticRouter): Service_Spec_Config_LLM_Plugin_SemanticRouter {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding embedding */ 1:
+                    message.embedding = Service_Spec_Config_LLM_Embedding.internalBinaryRead(reader, reader.uint32(), options, message.embedding);
+                    break;
+                case /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticRouter.Route routes */ 2:
+                    message.routes.push(Service_Spec_Config_LLM_Plugin_SemanticRouter_Route.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* float minSimilarity */ 3:
+                    message.minSimilarity = reader.float();
+                    break;
+                case /* string fallbackModel */ 4:
+                    message.fallbackModel = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_SemanticRouter, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding embedding = 1; */
+        if (message.embedding)
+            Service_Spec_Config_LLM_Embedding.internalBinaryWrite(message.embedding, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* repeated octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticRouter.Route routes = 2; */
+        for (let i = 0; i < message.routes.length; i++)
+            Service_Spec_Config_LLM_Plugin_SemanticRouter_Route.internalBinaryWrite(message.routes[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* float minSimilarity = 3; */
+        if (message.minSimilarity !== 0)
+            writer.tag(3, WireType.Bit32).float(message.minSimilarity);
+        /* string fallbackModel = 4; */
+        if (message.fallbackModel !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.fallbackModel);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticRouter
+ */
+export const Service_Spec_Config_LLM_Plugin_SemanticRouter = new Service_Spec_Config_LLM_Plugin_SemanticRouter$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Plugin_SemanticRouter_Route$Type extends MessageType<Service_Spec_Config_LLM_Plugin_SemanticRouter_Route> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticRouter.Route", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "examples", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "model", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "minSimilarity", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Plugin_SemanticRouter_Route>): Service_Spec_Config_LLM_Plugin_SemanticRouter_Route {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.name = "";
+        message.description = "";
+        message.examples = [];
+        message.model = "";
+        message.minSimilarity = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Plugin_SemanticRouter_Route>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Plugin_SemanticRouter_Route): Service_Spec_Config_LLM_Plugin_SemanticRouter_Route {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* string description */ 2:
+                    message.description = reader.string();
+                    break;
+                case /* repeated string examples */ 3:
+                    message.examples.push(reader.string());
+                    break;
+                case /* string model */ 4:
+                    message.model = reader.string();
+                    break;
+                case /* float minSimilarity */ 5:
+                    message.minSimilarity = reader.float();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Plugin_SemanticRouter_Route, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* string description = 2; */
+        if (message.description !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.description);
+        /* repeated string examples = 3; */
+        for (let i = 0; i < message.examples.length; i++)
+            writer.tag(3, WireType.LengthDelimited).string(message.examples[i]);
+        /* string model = 4; */
+        if (message.model !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.model);
+        /* float minSimilarity = 5; */
+        if (message.minSimilarity !== 0)
+            writer.tag(5, WireType.Bit32).float(message.minSimilarity);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.SemanticRouter.Route
+ */
+export const Service_Spec_Config_LLM_Plugin_SemanticRouter_Route = new Service_Spec_Config_LLM_Plugin_SemanticRouter_Route$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Service_Spec_Config_SSH$Type extends MessageType<Service_Spec_Config_SSH> {
     constructor() {
@@ -31602,16 +37199,30 @@ class AccessLog_Entry_Info_LLM$Type extends MessageType<AccessLog_Entry_Info_LLM
             { no: 1, name: "http", kind: "message", T: () => AccessLog_Entry_Info_HTTP },
             { no: 2, name: "type", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Type", AccessLog_Entry_Info_LLM_Type] },
             { no: 3, name: "protocol", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol", Service_Spec_Config_LLM_Protocol] },
-            { no: 4, name: "operation", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Operation", AccessLog_Entry_Info_LLM_Operation] },
-            { no: 5, name: "requestedModel", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "model", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 7, name: "stream", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 8, name: "usage", kind: "message", T: () => AccessLog_Entry_Info_LLM_Usage },
-            { no: 9, name: "estimatedInputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
-            { no: 10, name: "responseID", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 11, name: "finishReason", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 12, name: "timeToFirstToken", kind: "message", T: () => Duration },
-            { no: 13, name: "eventCount", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ }
+            { no: 4, name: "operation", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Operation", Service_Spec_Config_LLM_Operation] },
+            { no: 5, name: "route", kind: "enum", T: () => ["octelium.api.main.core.v1.RequestContext.Request.LLM.Route", RequestContext_Request_LLM_Route] },
+            { no: 6, name: "source", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Source", AccessLog_Entry_Info_LLM_Source] },
+            { no: 7, name: "isUpstreamInvoked", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 8, name: "model", kind: "message", T: () => AccessLog_Entry_Info_LLM_Model },
+            { no: 9, name: "stream", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 10, name: "maxOutputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 11, name: "inputItemCount", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 12, name: "hasImageInput", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 13, name: "hasAudioInput", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 14, name: "estimatedInputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 15, name: "estimateQuality", kind: "enum", T: () => ["octelium.api.main.core.v1.RequestContext.Request.LLM.EstimateQuality", RequestContext_Request_LLM_EstimateQuality] },
+            { no: 16, name: "usage", kind: "message", T: () => AccessLog_Entry_Info_LLM_Usage },
+            { no: 17, name: "responseID", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 18, name: "finishReason", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.FinishReason", AccessLog_Entry_Info_LLM_FinishReason] },
+            { no: 19, name: "rawFinishReason", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 20, name: "timeToFirstToken", kind: "message", T: () => Duration },
+            { no: 21, name: "eventCount", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 22, name: "reasoning", kind: "message", T: () => AccessLog_Entry_Info_LLM_Reasoning },
+            { no: 23, name: "tools", kind: "message", T: () => AccessLog_Entry_Info_LLM_Tools },
+            { no: 24, name: "guardrails", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => AccessLog_Entry_Info_LLM_Guardrail },
+            { no: 25, name: "tokenRateLimit", kind: "message", T: () => AccessLog_Entry_Info_LLM_TokenRateLimit },
+            { no: 26, name: "semanticCache", kind: "message", T: () => AccessLog_Entry_Info_LLM_SemanticCache },
+            { no: 27, name: "semanticRouter", kind: "message", T: () => AccessLog_Entry_Info_LLM_SemanticRouter }
         ]);
     }
     create(value?: PartialMessage<AccessLog_Entry_Info_LLM>): AccessLog_Entry_Info_LLM {
@@ -31619,13 +37230,21 @@ class AccessLog_Entry_Info_LLM$Type extends MessageType<AccessLog_Entry_Info_LLM
         message.type = 0;
         message.protocol = 0;
         message.operation = 0;
-        message.requestedModel = "";
-        message.model = "";
+        message.route = 0;
+        message.source = 0;
+        message.isUpstreamInvoked = false;
         message.stream = false;
+        message.maxOutputTokens = 0;
+        message.inputItemCount = 0;
+        message.hasImageInput = false;
+        message.hasAudioInput = false;
         message.estimatedInputTokens = 0;
+        message.estimateQuality = 0;
         message.responseID = "";
-        message.finishReason = "";
+        message.finishReason = 0;
+        message.rawFinishReason = "";
         message.eventCount = 0;
+        message.guardrails = [];
         if (value !== undefined)
             reflectionMergePartial<AccessLog_Entry_Info_LLM>(this, message, value);
         return message;
@@ -31644,35 +37263,77 @@ class AccessLog_Entry_Info_LLM$Type extends MessageType<AccessLog_Entry_Info_LLM
                 case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol */ 3:
                     message.protocol = reader.int32();
                     break;
-                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Operation operation */ 4:
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Operation operation */ 4:
                     message.operation = reader.int32();
                     break;
-                case /* string requestedModel */ 5:
-                    message.requestedModel = reader.string();
+                case /* octelium.api.main.core.v1.RequestContext.Request.LLM.Route route */ 5:
+                    message.route = reader.int32();
                     break;
-                case /* string model */ 6:
-                    message.model = reader.string();
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Source source */ 6:
+                    message.source = reader.int32();
                     break;
-                case /* bool stream */ 7:
+                case /* bool isUpstreamInvoked */ 7:
+                    message.isUpstreamInvoked = reader.bool();
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Model model */ 8:
+                    message.model = AccessLog_Entry_Info_LLM_Model.internalBinaryRead(reader, reader.uint32(), options, message.model);
+                    break;
+                case /* bool stream */ 9:
                     message.stream = reader.bool();
                     break;
-                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage usage */ 8:
-                    message.usage = AccessLog_Entry_Info_LLM_Usage.internalBinaryRead(reader, reader.uint32(), options, message.usage);
+                case /* uint64 maxOutputTokens */ 10:
+                    message.maxOutputTokens = reader.uint64().toNumber();
                     break;
-                case /* uint64 estimatedInputTokens */ 9:
+                case /* uint32 inputItemCount */ 11:
+                    message.inputItemCount = reader.uint32();
+                    break;
+                case /* bool hasImageInput */ 12:
+                    message.hasImageInput = reader.bool();
+                    break;
+                case /* bool hasAudioInput */ 13:
+                    message.hasAudioInput = reader.bool();
+                    break;
+                case /* uint64 estimatedInputTokens */ 14:
                     message.estimatedInputTokens = reader.uint64().toNumber();
                     break;
-                case /* string responseID */ 10:
+                case /* octelium.api.main.core.v1.RequestContext.Request.LLM.EstimateQuality estimateQuality */ 15:
+                    message.estimateQuality = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage usage */ 16:
+                    message.usage = AccessLog_Entry_Info_LLM_Usage.internalBinaryRead(reader, reader.uint32(), options, message.usage);
+                    break;
+                case /* string responseID */ 17:
                     message.responseID = reader.string();
                     break;
-                case /* string finishReason */ 11:
-                    message.finishReason = reader.string();
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.FinishReason finishReason */ 18:
+                    message.finishReason = reader.int32();
                     break;
-                case /* octelium.api.main.meta.v1.Duration timeToFirstToken */ 12:
+                case /* string rawFinishReason */ 19:
+                    message.rawFinishReason = reader.string();
+                    break;
+                case /* octelium.api.main.meta.v1.Duration timeToFirstToken */ 20:
                     message.timeToFirstToken = Duration.internalBinaryRead(reader, reader.uint32(), options, message.timeToFirstToken);
                     break;
-                case /* uint64 eventCount */ 13:
+                case /* uint64 eventCount */ 21:
                     message.eventCount = reader.uint64().toNumber();
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Reasoning reasoning */ 22:
+                    message.reasoning = AccessLog_Entry_Info_LLM_Reasoning.internalBinaryRead(reader, reader.uint32(), options, message.reasoning);
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Tools tools */ 23:
+                    message.tools = AccessLog_Entry_Info_LLM_Tools.internalBinaryRead(reader, reader.uint32(), options, message.tools);
+                    break;
+                case /* repeated octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Guardrail guardrails */ 24:
+                    message.guardrails.push(AccessLog_Entry_Info_LLM_Guardrail.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.TokenRateLimit tokenRateLimit */ 25:
+                    message.tokenRateLimit = AccessLog_Entry_Info_LLM_TokenRateLimit.internalBinaryRead(reader, reader.uint32(), options, message.tokenRateLimit);
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticCache semanticCache */ 26:
+                    message.semanticCache = AccessLog_Entry_Info_LLM_SemanticCache.internalBinaryRead(reader, reader.uint32(), options, message.semanticCache);
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter semanticRouter */ 27:
+                    message.semanticRouter = AccessLog_Entry_Info_LLM_SemanticRouter.internalBinaryRead(reader, reader.uint32(), options, message.semanticRouter);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -31695,36 +37356,78 @@ class AccessLog_Entry_Info_LLM$Type extends MessageType<AccessLog_Entry_Info_LLM
         /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol = 3; */
         if (message.protocol !== 0)
             writer.tag(3, WireType.Varint).int32(message.protocol);
-        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Operation operation = 4; */
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Operation operation = 4; */
         if (message.operation !== 0)
             writer.tag(4, WireType.Varint).int32(message.operation);
-        /* string requestedModel = 5; */
-        if (message.requestedModel !== "")
-            writer.tag(5, WireType.LengthDelimited).string(message.requestedModel);
-        /* string model = 6; */
-        if (message.model !== "")
-            writer.tag(6, WireType.LengthDelimited).string(message.model);
-        /* bool stream = 7; */
+        /* octelium.api.main.core.v1.RequestContext.Request.LLM.Route route = 5; */
+        if (message.route !== 0)
+            writer.tag(5, WireType.Varint).int32(message.route);
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Source source = 6; */
+        if (message.source !== 0)
+            writer.tag(6, WireType.Varint).int32(message.source);
+        /* bool isUpstreamInvoked = 7; */
+        if (message.isUpstreamInvoked !== false)
+            writer.tag(7, WireType.Varint).bool(message.isUpstreamInvoked);
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Model model = 8; */
+        if (message.model)
+            AccessLog_Entry_Info_LLM_Model.internalBinaryWrite(message.model, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* bool stream = 9; */
         if (message.stream !== false)
-            writer.tag(7, WireType.Varint).bool(message.stream);
-        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage usage = 8; */
-        if (message.usage)
-            AccessLog_Entry_Info_LLM_Usage.internalBinaryWrite(message.usage, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
-        /* uint64 estimatedInputTokens = 9; */
+            writer.tag(9, WireType.Varint).bool(message.stream);
+        /* uint64 maxOutputTokens = 10; */
+        if (message.maxOutputTokens !== 0)
+            writer.tag(10, WireType.Varint).uint64(message.maxOutputTokens);
+        /* uint32 inputItemCount = 11; */
+        if (message.inputItemCount !== 0)
+            writer.tag(11, WireType.Varint).uint32(message.inputItemCount);
+        /* bool hasImageInput = 12; */
+        if (message.hasImageInput !== false)
+            writer.tag(12, WireType.Varint).bool(message.hasImageInput);
+        /* bool hasAudioInput = 13; */
+        if (message.hasAudioInput !== false)
+            writer.tag(13, WireType.Varint).bool(message.hasAudioInput);
+        /* uint64 estimatedInputTokens = 14; */
         if (message.estimatedInputTokens !== 0)
-            writer.tag(9, WireType.Varint).uint64(message.estimatedInputTokens);
-        /* string responseID = 10; */
+            writer.tag(14, WireType.Varint).uint64(message.estimatedInputTokens);
+        /* octelium.api.main.core.v1.RequestContext.Request.LLM.EstimateQuality estimateQuality = 15; */
+        if (message.estimateQuality !== 0)
+            writer.tag(15, WireType.Varint).int32(message.estimateQuality);
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage usage = 16; */
+        if (message.usage)
+            AccessLog_Entry_Info_LLM_Usage.internalBinaryWrite(message.usage, writer.tag(16, WireType.LengthDelimited).fork(), options).join();
+        /* string responseID = 17; */
         if (message.responseID !== "")
-            writer.tag(10, WireType.LengthDelimited).string(message.responseID);
-        /* string finishReason = 11; */
-        if (message.finishReason !== "")
-            writer.tag(11, WireType.LengthDelimited).string(message.finishReason);
-        /* octelium.api.main.meta.v1.Duration timeToFirstToken = 12; */
+            writer.tag(17, WireType.LengthDelimited).string(message.responseID);
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.FinishReason finishReason = 18; */
+        if (message.finishReason !== 0)
+            writer.tag(18, WireType.Varint).int32(message.finishReason);
+        /* string rawFinishReason = 19; */
+        if (message.rawFinishReason !== "")
+            writer.tag(19, WireType.LengthDelimited).string(message.rawFinishReason);
+        /* octelium.api.main.meta.v1.Duration timeToFirstToken = 20; */
         if (message.timeToFirstToken)
-            Duration.internalBinaryWrite(message.timeToFirstToken, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
-        /* uint64 eventCount = 13; */
+            Duration.internalBinaryWrite(message.timeToFirstToken, writer.tag(20, WireType.LengthDelimited).fork(), options).join();
+        /* uint64 eventCount = 21; */
         if (message.eventCount !== 0)
-            writer.tag(13, WireType.Varint).uint64(message.eventCount);
+            writer.tag(21, WireType.Varint).uint64(message.eventCount);
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Reasoning reasoning = 22; */
+        if (message.reasoning)
+            AccessLog_Entry_Info_LLM_Reasoning.internalBinaryWrite(message.reasoning, writer.tag(22, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Tools tools = 23; */
+        if (message.tools)
+            AccessLog_Entry_Info_LLM_Tools.internalBinaryWrite(message.tools, writer.tag(23, WireType.LengthDelimited).fork(), options).join();
+        /* repeated octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Guardrail guardrails = 24; */
+        for (let i = 0; i < message.guardrails.length; i++)
+            AccessLog_Entry_Info_LLM_Guardrail.internalBinaryWrite(message.guardrails[i], writer.tag(24, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.TokenRateLimit tokenRateLimit = 25; */
+        if (message.tokenRateLimit)
+            AccessLog_Entry_Info_LLM_TokenRateLimit.internalBinaryWrite(message.tokenRateLimit, writer.tag(25, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticCache semanticCache = 26; */
+        if (message.semanticCache)
+            AccessLog_Entry_Info_LLM_SemanticCache.internalBinaryWrite(message.semanticCache, writer.tag(26, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter semanticRouter = 27; */
+        if (message.semanticRouter)
+            AccessLog_Entry_Info_LLM_SemanticRouter.internalBinaryWrite(message.semanticRouter, writer.tag(27, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -31736,27 +37439,540 @@ class AccessLog_Entry_Info_LLM$Type extends MessageType<AccessLog_Entry_Info_LLM
  */
 export const AccessLog_Entry_Info_LLM = new AccessLog_Entry_Info_LLM$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class AccessLog_Entry_Info_LLM_Model$Type extends MessageType<AccessLog_Entry_Info_LLM_Model> {
+    constructor() {
+        super("octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Model", [
+            { no: 1, name: "requested", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "effective", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "reported", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "source", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Model.Source", AccessLog_Entry_Info_LLM_Model_Source] },
+            { no: 5, name: "plugin", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<AccessLog_Entry_Info_LLM_Model>): AccessLog_Entry_Info_LLM_Model {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.requested = "";
+        message.effective = "";
+        message.reported = "";
+        message.source = 0;
+        message.plugin = "";
+        if (value !== undefined)
+            reflectionMergePartial<AccessLog_Entry_Info_LLM_Model>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AccessLog_Entry_Info_LLM_Model): AccessLog_Entry_Info_LLM_Model {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string requested */ 1:
+                    message.requested = reader.string();
+                    break;
+                case /* string effective */ 2:
+                    message.effective = reader.string();
+                    break;
+                case /* string reported */ 3:
+                    message.reported = reader.string();
+                    break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Model.Source source */ 4:
+                    message.source = reader.int32();
+                    break;
+                case /* string plugin */ 5:
+                    message.plugin = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AccessLog_Entry_Info_LLM_Model, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string requested = 1; */
+        if (message.requested !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.requested);
+        /* string effective = 2; */
+        if (message.effective !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.effective);
+        /* string reported = 3; */
+        if (message.reported !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.reported);
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Model.Source source = 4; */
+        if (message.source !== 0)
+            writer.tag(4, WireType.Varint).int32(message.source);
+        /* string plugin = 5; */
+        if (message.plugin !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.plugin);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Model
+ */
+export const AccessLog_Entry_Info_LLM_Model = new AccessLog_Entry_Info_LLM_Model$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AccessLog_Entry_Info_LLM_Reasoning$Type extends MessageType<AccessLog_Entry_Info_LLM_Reasoning> {
+    constructor() {
+        super("octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Reasoning", [
+            { no: 1, name: "isDisabled", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "effort", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "tokenBudget", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ }
+        ]);
+    }
+    create(value?: PartialMessage<AccessLog_Entry_Info_LLM_Reasoning>): AccessLog_Entry_Info_LLM_Reasoning {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.isDisabled = false;
+        message.effort = "";
+        message.tokenBudget = 0;
+        if (value !== undefined)
+            reflectionMergePartial<AccessLog_Entry_Info_LLM_Reasoning>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AccessLog_Entry_Info_LLM_Reasoning): AccessLog_Entry_Info_LLM_Reasoning {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool isDisabled */ 1:
+                    message.isDisabled = reader.bool();
+                    break;
+                case /* string effort */ 2:
+                    message.effort = reader.string();
+                    break;
+                case /* uint64 tokenBudget */ 3:
+                    message.tokenBudget = reader.uint64().toNumber();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AccessLog_Entry_Info_LLM_Reasoning, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool isDisabled = 1; */
+        if (message.isDisabled !== false)
+            writer.tag(1, WireType.Varint).bool(message.isDisabled);
+        /* string effort = 2; */
+        if (message.effort !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.effort);
+        /* uint64 tokenBudget = 3; */
+        if (message.tokenBudget !== 0)
+            writer.tag(3, WireType.Varint).uint64(message.tokenBudget);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Reasoning
+ */
+export const AccessLog_Entry_Info_LLM_Reasoning = new AccessLog_Entry_Info_LLM_Reasoning$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AccessLog_Entry_Info_LLM_Tools$Type extends MessageType<AccessLog_Entry_Info_LLM_Tools> {
+    constructor() {
+        super("octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Tools", [
+            { no: 1, name: "count", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 2, name: "names", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "removedCount", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 4, name: "removedNames", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "calledNames", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "callCount", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 7, name: "isCalledNamesTruncated", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<AccessLog_Entry_Info_LLM_Tools>): AccessLog_Entry_Info_LLM_Tools {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.count = 0;
+        message.names = [];
+        message.removedCount = 0;
+        message.removedNames = [];
+        message.calledNames = [];
+        message.callCount = 0;
+        message.isCalledNamesTruncated = false;
+        if (value !== undefined)
+            reflectionMergePartial<AccessLog_Entry_Info_LLM_Tools>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AccessLog_Entry_Info_LLM_Tools): AccessLog_Entry_Info_LLM_Tools {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* uint32 count */ 1:
+                    message.count = reader.uint32();
+                    break;
+                case /* repeated string names */ 2:
+                    message.names.push(reader.string());
+                    break;
+                case /* uint32 removedCount */ 3:
+                    message.removedCount = reader.uint32();
+                    break;
+                case /* repeated string removedNames */ 4:
+                    message.removedNames.push(reader.string());
+                    break;
+                case /* repeated string calledNames */ 5:
+                    message.calledNames.push(reader.string());
+                    break;
+                case /* uint32 callCount */ 6:
+                    message.callCount = reader.uint32();
+                    break;
+                case /* bool isCalledNamesTruncated */ 7:
+                    message.isCalledNamesTruncated = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AccessLog_Entry_Info_LLM_Tools, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* uint32 count = 1; */
+        if (message.count !== 0)
+            writer.tag(1, WireType.Varint).uint32(message.count);
+        /* repeated string names = 2; */
+        for (let i = 0; i < message.names.length; i++)
+            writer.tag(2, WireType.LengthDelimited).string(message.names[i]);
+        /* uint32 removedCount = 3; */
+        if (message.removedCount !== 0)
+            writer.tag(3, WireType.Varint).uint32(message.removedCount);
+        /* repeated string removedNames = 4; */
+        for (let i = 0; i < message.removedNames.length; i++)
+            writer.tag(4, WireType.LengthDelimited).string(message.removedNames[i]);
+        /* repeated string calledNames = 5; */
+        for (let i = 0; i < message.calledNames.length; i++)
+            writer.tag(5, WireType.LengthDelimited).string(message.calledNames[i]);
+        /* uint32 callCount = 6; */
+        if (message.callCount !== 0)
+            writer.tag(6, WireType.Varint).uint32(message.callCount);
+        /* bool isCalledNamesTruncated = 7; */
+        if (message.isCalledNamesTruncated !== false)
+            writer.tag(7, WireType.Varint).bool(message.isCalledNamesTruncated);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Tools
+ */
+export const AccessLog_Entry_Info_LLM_Tools = new AccessLog_Entry_Info_LLM_Tools$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AccessLog_Entry_Info_LLM_Guardrail$Type extends MessageType<AccessLog_Entry_Info_LLM_Guardrail> {
+    constructor() {
+        super("octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Guardrail", [
+            { no: 1, name: "result", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Guardrail.Result", AccessLog_Entry_Info_LLM_Guardrail_Result] },
+            { no: 2, name: "leg", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Leg", Service_Spec_Config_LLM_Plugin_Guardrail_Leg] },
+            { no: 3, name: "plugin", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<AccessLog_Entry_Info_LLM_Guardrail>): AccessLog_Entry_Info_LLM_Guardrail {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.result = 0;
+        message.leg = 0;
+        message.plugin = "";
+        if (value !== undefined)
+            reflectionMergePartial<AccessLog_Entry_Info_LLM_Guardrail>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AccessLog_Entry_Info_LLM_Guardrail): AccessLog_Entry_Info_LLM_Guardrail {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Guardrail.Result result */ 1:
+                    message.result = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Leg leg */ 2:
+                    message.leg = reader.int32();
+                    break;
+                case /* string plugin */ 3:
+                    message.plugin = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AccessLog_Entry_Info_LLM_Guardrail, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Guardrail.Result result = 1; */
+        if (message.result !== 0)
+            writer.tag(1, WireType.Varint).int32(message.result);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.Guardrail.Leg leg = 2; */
+        if (message.leg !== 0)
+            writer.tag(2, WireType.Varint).int32(message.leg);
+        /* string plugin = 3; */
+        if (message.plugin !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.plugin);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Guardrail
+ */
+export const AccessLog_Entry_Info_LLM_Guardrail = new AccessLog_Entry_Info_LLM_Guardrail$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AccessLog_Entry_Info_LLM_TokenRateLimit$Type extends MessageType<AccessLog_Entry_Info_LLM_TokenRateLimit> {
+    constructor() {
+        super("octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.TokenRateLimit", [
+            { no: 1, name: "result", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.TokenRateLimit.Result", AccessLog_Entry_Info_LLM_TokenRateLimit_Result] },
+            { no: 2, name: "plugin", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "scope", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit.Scope", Service_Spec_Config_LLM_Plugin_TokenRateLimit_Scope] }
+        ]);
+    }
+    create(value?: PartialMessage<AccessLog_Entry_Info_LLM_TokenRateLimit>): AccessLog_Entry_Info_LLM_TokenRateLimit {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.result = 0;
+        message.plugin = "";
+        message.scope = 0;
+        if (value !== undefined)
+            reflectionMergePartial<AccessLog_Entry_Info_LLM_TokenRateLimit>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AccessLog_Entry_Info_LLM_TokenRateLimit): AccessLog_Entry_Info_LLM_TokenRateLimit {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.TokenRateLimit.Result result */ 1:
+                    message.result = reader.int32();
+                    break;
+                case /* string plugin */ 2:
+                    message.plugin = reader.string();
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit.Scope scope */ 3:
+                    message.scope = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AccessLog_Entry_Info_LLM_TokenRateLimit, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.TokenRateLimit.Result result = 1; */
+        if (message.result !== 0)
+            writer.tag(1, WireType.Varint).int32(message.result);
+        /* string plugin = 2; */
+        if (message.plugin !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.plugin);
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Plugin.TokenRateLimit.Scope scope = 3; */
+        if (message.scope !== 0)
+            writer.tag(3, WireType.Varint).int32(message.scope);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.TokenRateLimit
+ */
+export const AccessLog_Entry_Info_LLM_TokenRateLimit = new AccessLog_Entry_Info_LLM_TokenRateLimit$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AccessLog_Entry_Info_LLM_SemanticCache$Type extends MessageType<AccessLog_Entry_Info_LLM_SemanticCache> {
+    constructor() {
+        super("octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticCache", [
+            { no: 1, name: "result", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticCache.Result", AccessLog_Entry_Info_LLM_SemanticCache_Result] },
+            { no: 2, name: "similarity", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 3, name: "isStored", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 4, name: "plugin", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<AccessLog_Entry_Info_LLM_SemanticCache>): AccessLog_Entry_Info_LLM_SemanticCache {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.result = 0;
+        message.similarity = 0;
+        message.isStored = false;
+        message.plugin = "";
+        if (value !== undefined)
+            reflectionMergePartial<AccessLog_Entry_Info_LLM_SemanticCache>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AccessLog_Entry_Info_LLM_SemanticCache): AccessLog_Entry_Info_LLM_SemanticCache {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticCache.Result result */ 1:
+                    message.result = reader.int32();
+                    break;
+                case /* float similarity */ 2:
+                    message.similarity = reader.float();
+                    break;
+                case /* bool isStored */ 3:
+                    message.isStored = reader.bool();
+                    break;
+                case /* string plugin */ 4:
+                    message.plugin = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AccessLog_Entry_Info_LLM_SemanticCache, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticCache.Result result = 1; */
+        if (message.result !== 0)
+            writer.tag(1, WireType.Varint).int32(message.result);
+        /* float similarity = 2; */
+        if (message.similarity !== 0)
+            writer.tag(2, WireType.Bit32).float(message.similarity);
+        /* bool isStored = 3; */
+        if (message.isStored !== false)
+            writer.tag(3, WireType.Varint).bool(message.isStored);
+        /* string plugin = 4; */
+        if (message.plugin !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.plugin);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticCache
+ */
+export const AccessLog_Entry_Info_LLM_SemanticCache = new AccessLog_Entry_Info_LLM_SemanticCache$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AccessLog_Entry_Info_LLM_SemanticRouter$Type extends MessageType<AccessLog_Entry_Info_LLM_SemanticRouter> {
+    constructor() {
+        super("octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter", [
+            { no: 1, name: "result", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter.Result", AccessLog_Entry_Info_LLM_SemanticRouter_Result] },
+            { no: 2, name: "route", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "similarity", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 4, name: "model", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "plugin", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<AccessLog_Entry_Info_LLM_SemanticRouter>): AccessLog_Entry_Info_LLM_SemanticRouter {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.result = 0;
+        message.route = "";
+        message.similarity = 0;
+        message.model = "";
+        message.plugin = "";
+        if (value !== undefined)
+            reflectionMergePartial<AccessLog_Entry_Info_LLM_SemanticRouter>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AccessLog_Entry_Info_LLM_SemanticRouter): AccessLog_Entry_Info_LLM_SemanticRouter {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter.Result result */ 1:
+                    message.result = reader.int32();
+                    break;
+                case /* string route */ 2:
+                    message.route = reader.string();
+                    break;
+                case /* float similarity */ 3:
+                    message.similarity = reader.float();
+                    break;
+                case /* string model */ 4:
+                    message.model = reader.string();
+                    break;
+                case /* string plugin */ 5:
+                    message.plugin = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AccessLog_Entry_Info_LLM_SemanticRouter, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter.Result result = 1; */
+        if (message.result !== 0)
+            writer.tag(1, WireType.Varint).int32(message.result);
+        /* string route = 2; */
+        if (message.route !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.route);
+        /* float similarity = 3; */
+        if (message.similarity !== 0)
+            writer.tag(3, WireType.Bit32).float(message.similarity);
+        /* string model = 4; */
+        if (message.model !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.model);
+        /* string plugin = 5; */
+        if (message.plugin !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.plugin);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter
+ */
+export const AccessLog_Entry_Info_LLM_SemanticRouter = new AccessLog_Entry_Info_LLM_SemanticRouter$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class AccessLog_Entry_Info_LLM_Usage$Type extends MessageType<AccessLog_Entry_Info_LLM_Usage> {
     constructor() {
         super("octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage", [
-            { no: 1, name: "source", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.Source", AccessLog_Entry_Info_LLM_Usage_Source] },
+            { no: 1, name: "state", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.State", AccessLog_Entry_Info_LLM_Usage_State] },
             { no: 2, name: "inputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
             { no: 3, name: "outputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
             { no: 4, name: "totalTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
             { no: 5, name: "cacheReadInputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
-            { no: 6, name: "cacheCreationInputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
-            { no: 7, name: "reasoningTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ }
+            { no: 6, name: "cacheWriteInputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 7, name: "reasoningOutputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ }
         ]);
     }
     create(value?: PartialMessage<AccessLog_Entry_Info_LLM_Usage>): AccessLog_Entry_Info_LLM_Usage {
         const message = globalThis.Object.create((this.messagePrototype!));
-        message.source = 0;
+        message.state = 0;
         message.inputTokens = 0;
         message.outputTokens = 0;
         message.totalTokens = 0;
         message.cacheReadInputTokens = 0;
-        message.cacheCreationInputTokens = 0;
-        message.reasoningTokens = 0;
+        message.cacheWriteInputTokens = 0;
+        message.reasoningOutputTokens = 0;
         if (value !== undefined)
             reflectionMergePartial<AccessLog_Entry_Info_LLM_Usage>(this, message, value);
         return message;
@@ -31766,8 +37982,8 @@ class AccessLog_Entry_Info_LLM_Usage$Type extends MessageType<AccessLog_Entry_In
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.Source source */ 1:
-                    message.source = reader.int32();
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.State state */ 1:
+                    message.state = reader.int32();
                     break;
                 case /* uint64 inputTokens */ 2:
                     message.inputTokens = reader.uint64().toNumber();
@@ -31781,11 +37997,11 @@ class AccessLog_Entry_Info_LLM_Usage$Type extends MessageType<AccessLog_Entry_In
                 case /* uint64 cacheReadInputTokens */ 5:
                     message.cacheReadInputTokens = reader.uint64().toNumber();
                     break;
-                case /* uint64 cacheCreationInputTokens */ 6:
-                    message.cacheCreationInputTokens = reader.uint64().toNumber();
+                case /* uint64 cacheWriteInputTokens */ 6:
+                    message.cacheWriteInputTokens = reader.uint64().toNumber();
                     break;
-                case /* uint64 reasoningTokens */ 7:
-                    message.reasoningTokens = reader.uint64().toNumber();
+                case /* uint64 reasoningOutputTokens */ 7:
+                    message.reasoningOutputTokens = reader.uint64().toNumber();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -31799,9 +38015,9 @@ class AccessLog_Entry_Info_LLM_Usage$Type extends MessageType<AccessLog_Entry_In
         return message;
     }
     internalBinaryWrite(message: AccessLog_Entry_Info_LLM_Usage, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.Source source = 1; */
-        if (message.source !== 0)
-            writer.tag(1, WireType.Varint).int32(message.source);
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Usage.State state = 1; */
+        if (message.state !== 0)
+            writer.tag(1, WireType.Varint).int32(message.state);
         /* uint64 inputTokens = 2; */
         if (message.inputTokens !== 0)
             writer.tag(2, WireType.Varint).uint64(message.inputTokens);
@@ -31814,12 +38030,12 @@ class AccessLog_Entry_Info_LLM_Usage$Type extends MessageType<AccessLog_Entry_In
         /* uint64 cacheReadInputTokens = 5; */
         if (message.cacheReadInputTokens !== 0)
             writer.tag(5, WireType.Varint).uint64(message.cacheReadInputTokens);
-        /* uint64 cacheCreationInputTokens = 6; */
-        if (message.cacheCreationInputTokens !== 0)
-            writer.tag(6, WireType.Varint).uint64(message.cacheCreationInputTokens);
-        /* uint64 reasoningTokens = 7; */
-        if (message.reasoningTokens !== 0)
-            writer.tag(7, WireType.Varint).uint64(message.reasoningTokens);
+        /* uint64 cacheWriteInputTokens = 6; */
+        if (message.cacheWriteInputTokens !== 0)
+            writer.tag(6, WireType.Varint).uint64(message.cacheWriteInputTokens);
+        /* uint64 reasoningOutputTokens = 7; */
+        if (message.reasoningOutputTokens !== 0)
+            writer.tag(7, WireType.Varint).uint64(message.reasoningOutputTokens);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -35281,7 +41497,8 @@ class ClusterConfig_Spec_Authenticator$Type extends MessageType<ClusterConfig_Sp
             { no: 3, name: "postAuthenticationRules", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => ClusterConfig_Spec_Authenticator_Rule },
             { no: 4, name: "enablePasskeyLogin", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 5, name: "defaultState", kind: "enum", T: () => ["octelium.api.main.core.v1.Authenticator.Spec.State", Authenticator_Spec_State] },
-            { no: 6, name: "fido", kind: "message", T: () => ClusterConfig_Spec_Authenticator_FIDO }
+            { no: 6, name: "fido", kind: "message", T: () => ClusterConfig_Spec_Authenticator_FIDO },
+            { no: 7, name: "tpm", kind: "message", T: () => ClusterConfig_Spec_Authenticator_TPM }
         ]);
     }
     create(value?: PartialMessage<ClusterConfig_Spec_Authenticator>): ClusterConfig_Spec_Authenticator {
@@ -35318,6 +41535,9 @@ class ClusterConfig_Spec_Authenticator$Type extends MessageType<ClusterConfig_Sp
                 case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO fido */ 6:
                     message.fido = ClusterConfig_Spec_Authenticator_FIDO.internalBinaryRead(reader, reader.uint32(), options, message.fido);
                     break;
+                case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM tpm */ 7:
+                    message.tpm = ClusterConfig_Spec_Authenticator_TPM.internalBinaryRead(reader, reader.uint32(), options, message.tpm);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -35348,6 +41568,9 @@ class ClusterConfig_Spec_Authenticator$Type extends MessageType<ClusterConfig_Sp
         /* octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO fido = 6; */
         if (message.fido)
             ClusterConfig_Spec_Authenticator_FIDO.internalBinaryWrite(message.fido, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM tpm = 7; */
+        if (message.tpm)
+            ClusterConfig_Spec_Authenticator_TPM.internalBinaryWrite(message.tpm, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -35478,12 +41701,14 @@ export const ClusterConfig_Spec_Authenticator_Rule = new ClusterConfig_Spec_Auth
 class ClusterConfig_Spec_Authenticator_FIDO$Type extends MessageType<ClusterConfig_Spec_Authenticator_FIDO> {
     constructor() {
         super("octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO", [
-            { no: 1, name: "attestationConveyancePreference", kind: "enum", T: () => ["octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO.AttestationConveyancePreference", ClusterConfig_Spec_Authenticator_FIDO_AttestationConveyancePreference] }
+            { no: 1, name: "attestationConveyancePreference", kind: "enum", T: () => ["octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO.AttestationConveyancePreference", ClusterConfig_Spec_Authenticator_FIDO_AttestationConveyancePreference] },
+            { no: 2, name: "userVerification", kind: "enum", T: () => ["octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO.UserVerification", ClusterConfig_Spec_Authenticator_FIDO_UserVerification] }
         ]);
     }
     create(value?: PartialMessage<ClusterConfig_Spec_Authenticator_FIDO>): ClusterConfig_Spec_Authenticator_FIDO {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.attestationConveyancePreference = 0;
+        message.userVerification = 0;
         if (value !== undefined)
             reflectionMergePartial<ClusterConfig_Spec_Authenticator_FIDO>(this, message, value);
         return message;
@@ -35495,6 +41720,9 @@ class ClusterConfig_Spec_Authenticator_FIDO$Type extends MessageType<ClusterConf
             switch (fieldNo) {
                 case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO.AttestationConveyancePreference attestationConveyancePreference */ 1:
                     message.attestationConveyancePreference = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO.UserVerification userVerification */ 2:
+                    message.userVerification = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -35511,6 +41739,9 @@ class ClusterConfig_Spec_Authenticator_FIDO$Type extends MessageType<ClusterConf
         /* octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO.AttestationConveyancePreference attestationConveyancePreference = 1; */
         if (message.attestationConveyancePreference !== 0)
             writer.tag(1, WireType.Varint).int32(message.attestationConveyancePreference);
+        /* octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO.UserVerification userVerification = 2; */
+        if (message.userVerification !== 0)
+            writer.tag(2, WireType.Varint).int32(message.userVerification);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -35521,6 +41752,115 @@ class ClusterConfig_Spec_Authenticator_FIDO$Type extends MessageType<ClusterConf
  * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.FIDO
  */
 export const ClusterConfig_Spec_Authenticator_FIDO = new ClusterConfig_Spec_Authenticator_FIDO$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Authenticator_TPM$Type extends MessageType<ClusterConfig_Spec_Authenticator_TPM> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM", [
+            { no: 1, name: "endorsementTrust", kind: "message", T: () => ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Authenticator_TPM>): ClusterConfig_Spec_Authenticator_TPM {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Authenticator_TPM>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Authenticator_TPM): ClusterConfig_Spec_Authenticator_TPM {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM.EndorsementTrust endorsementTrust */ 1:
+                    message.endorsementTrust = ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust.internalBinaryRead(reader, reader.uint32(), options, message.endorsementTrust);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Authenticator_TPM, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM.EndorsementTrust endorsementTrust = 1; */
+        if (message.endorsementTrust)
+            ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust.internalBinaryWrite(message.endorsementTrust, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM
+ */
+export const ClusterConfig_Spec_Authenticator_TPM = new ClusterConfig_Spec_Authenticator_TPM$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust$Type extends MessageType<ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust> {
+    constructor() {
+        super("octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM.EndorsementTrust", [
+            { no: 1, name: "mode", kind: "enum", T: () => ["octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM.EndorsementTrust.Mode", ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust_Mode] },
+            { no: 2, name: "trustedCAs", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "intermediateCAs", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust>): ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.mode = 0;
+        message.trustedCAs = [];
+        message.intermediateCAs = [];
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust): ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM.EndorsementTrust.Mode mode */ 1:
+                    message.mode = reader.int32();
+                    break;
+                case /* repeated string trustedCAs */ 2:
+                    message.trustedCAs.push(reader.string());
+                    break;
+                case /* repeated string intermediateCAs */ 3:
+                    message.intermediateCAs.push(reader.string());
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM.EndorsementTrust.Mode mode = 1; */
+        if (message.mode !== 0)
+            writer.tag(1, WireType.Varint).int32(message.mode);
+        /* repeated string trustedCAs = 2; */
+        for (let i = 0; i < message.trustedCAs.length; i++)
+            writer.tag(2, WireType.LengthDelimited).string(message.trustedCAs[i]);
+        /* repeated string intermediateCAs = 3; */
+        for (let i = 0; i < message.intermediateCAs.length; i++)
+            writer.tag(3, WireType.LengthDelimited).string(message.intermediateCAs[i]);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.ClusterConfig.Spec.Authenticator.TPM.EndorsementTrust
+ */
+export const ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust = new ClusterConfig_Spec_Authenticator_TPM_EndorsementTrust$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class ClusterConfig_Spec_Authentication$Type extends MessageType<ClusterConfig_Spec_Authentication> {
     constructor() {
@@ -38626,7 +44966,7 @@ class RequestContext_Request_LLM$Type extends MessageType<RequestContext_Request
         super("octelium.api.main.core.v1.RequestContext.Request.LLM", [
             { no: 1, name: "http", kind: "message", T: () => RequestContext_Request_HTTP },
             { no: 2, name: "protocol", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol", Service_Spec_Config_LLM_Protocol] },
-            { no: 3, name: "operation", kind: "enum", T: () => ["octelium.api.main.core.v1.RequestContext.Request.LLM.Operation", RequestContext_Request_LLM_Operation] },
+            { no: 3, name: "operation", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Operation", Service_Spec_Config_LLM_Operation] },
             { no: 4, name: "model", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "stream", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 6, name: "estimatedInputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
@@ -38637,7 +44977,8 @@ class RequestContext_Request_LLM$Type extends MessageType<RequestContext_Request
             { no: 11, name: "toolNames", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 12, name: "inputItemCount", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 13, name: "hasImageInput", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 14, name: "hasAudioInput", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 14, name: "hasAudioInput", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 15, name: "route", kind: "enum", T: () => ["octelium.api.main.core.v1.RequestContext.Request.LLM.Route", RequestContext_Request_LLM_Route] }
         ]);
     }
     create(value?: PartialMessage<RequestContext_Request_LLM>): RequestContext_Request_LLM {
@@ -38655,6 +44996,7 @@ class RequestContext_Request_LLM$Type extends MessageType<RequestContext_Request
         message.inputItemCount = 0;
         message.hasImageInput = false;
         message.hasAudioInput = false;
+        message.route = 0;
         if (value !== undefined)
             reflectionMergePartial<RequestContext_Request_LLM>(this, message, value);
         return message;
@@ -38670,7 +45012,7 @@ class RequestContext_Request_LLM$Type extends MessageType<RequestContext_Request
                 case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol */ 2:
                     message.protocol = reader.int32();
                     break;
-                case /* octelium.api.main.core.v1.RequestContext.Request.LLM.Operation operation */ 3:
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Operation operation */ 3:
                     message.operation = reader.int32();
                     break;
                 case /* string model */ 4:
@@ -38706,6 +45048,9 @@ class RequestContext_Request_LLM$Type extends MessageType<RequestContext_Request
                 case /* bool hasAudioInput */ 14:
                     message.hasAudioInput = reader.bool();
                     break;
+                case /* octelium.api.main.core.v1.RequestContext.Request.LLM.Route route */ 15:
+                    message.route = reader.int32();
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -38724,7 +45069,7 @@ class RequestContext_Request_LLM$Type extends MessageType<RequestContext_Request
         /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol = 2; */
         if (message.protocol !== 0)
             writer.tag(2, WireType.Varint).int32(message.protocol);
-        /* octelium.api.main.core.v1.RequestContext.Request.LLM.Operation operation = 3; */
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Operation operation = 3; */
         if (message.operation !== 0)
             writer.tag(3, WireType.Varint).int32(message.operation);
         /* string model = 4; */
@@ -38760,6 +45105,9 @@ class RequestContext_Request_LLM$Type extends MessageType<RequestContext_Request
         /* bool hasAudioInput = 14; */
         if (message.hasAudioInput !== false)
             writer.tag(14, WireType.Varint).bool(message.hasAudioInput);
+        /* octelium.api.main.core.v1.RequestContext.Request.LLM.Route route = 15; */
+        if (message.route !== 0)
+            writer.tag(15, WireType.Varint).int32(message.route);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -40149,7 +46497,8 @@ class Authenticator_Status_Info_TPM$Type extends MessageType<Authenticator_Statu
         super("octelium.api.main.core.v1.Authenticator.Status.Info.TPM", [
             { no: 1, name: "akBytes", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "attestationParameters", kind: "message", T: () => Authenticator_Status_Info_TPM_AttestationParameters },
-            { no: 3, name: "ekPublicKey", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+            { no: 3, name: "ekPublicKey", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 4, name: "endorsement", kind: "message", T: () => Authenticator_Status_Info_TPM_Endorsement }
         ]);
     }
     create(value?: PartialMessage<Authenticator_Status_Info_TPM>): Authenticator_Status_Info_TPM {
@@ -40174,6 +46523,9 @@ class Authenticator_Status_Info_TPM$Type extends MessageType<Authenticator_Statu
                 case /* bytes ekPublicKey */ 3:
                     message.ekPublicKey = reader.bytes();
                     break;
+                case /* octelium.api.main.core.v1.Authenticator.Status.Info.TPM.Endorsement endorsement */ 4:
+                    message.endorsement = Authenticator_Status_Info_TPM_Endorsement.internalBinaryRead(reader, reader.uint32(), options, message.endorsement);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -40195,6 +46547,9 @@ class Authenticator_Status_Info_TPM$Type extends MessageType<Authenticator_Statu
         /* bytes ekPublicKey = 3; */
         if (message.ekPublicKey.length)
             writer.tag(3, WireType.LengthDelimited).bytes(message.ekPublicKey);
+        /* octelium.api.main.core.v1.Authenticator.Status.Info.TPM.Endorsement endorsement = 4; */
+        if (message.endorsement)
+            Authenticator_Status_Info_TPM_Endorsement.internalBinaryWrite(message.endorsement, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -40276,6 +46631,108 @@ class Authenticator_Status_Info_TPM_AttestationParameters$Type extends MessageTy
  * @generated MessageType for protobuf message octelium.api.main.core.v1.Authenticator.Status.Info.TPM.AttestationParameters
  */
 export const Authenticator_Status_Info_TPM_AttestationParameters = new Authenticator_Status_Info_TPM_AttestationParameters$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Authenticator_Status_Info_TPM_Endorsement$Type extends MessageType<Authenticator_Status_Info_TPM_Endorsement> {
+    constructor() {
+        super("octelium.api.main.core.v1.Authenticator.Status.Info.TPM.Endorsement", [
+            { no: 1, name: "verification", kind: "enum", T: () => ["octelium.api.main.core.v1.Authenticator.Status.Info.TPM.Endorsement.Verification", Authenticator_Status_Info_TPM_Endorsement_Verification] },
+            { no: 2, name: "certificateSHA256", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 3, name: "trustedCASHA256", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 4, name: "manufacturerID", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 5, name: "manufacturer", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "model", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "verifiedAt", kind: "message", T: () => Timestamp }
+        ]);
+    }
+    create(value?: PartialMessage<Authenticator_Status_Info_TPM_Endorsement>): Authenticator_Status_Info_TPM_Endorsement {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.verification = 0;
+        message.certificateSHA256 = new Uint8Array(0);
+        message.trustedCASHA256 = new Uint8Array(0);
+        message.manufacturerID = 0;
+        message.manufacturer = "";
+        message.model = "";
+        message.version = "";
+        if (value !== undefined)
+            reflectionMergePartial<Authenticator_Status_Info_TPM_Endorsement>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Authenticator_Status_Info_TPM_Endorsement): Authenticator_Status_Info_TPM_Endorsement {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Authenticator.Status.Info.TPM.Endorsement.Verification verification */ 1:
+                    message.verification = reader.int32();
+                    break;
+                case /* bytes certificateSHA256 */ 2:
+                    message.certificateSHA256 = reader.bytes();
+                    break;
+                case /* bytes trustedCASHA256 */ 3:
+                    message.trustedCASHA256 = reader.bytes();
+                    break;
+                case /* uint32 manufacturerID */ 4:
+                    message.manufacturerID = reader.uint32();
+                    break;
+                case /* string manufacturer */ 5:
+                    message.manufacturer = reader.string();
+                    break;
+                case /* string model */ 6:
+                    message.model = reader.string();
+                    break;
+                case /* string version */ 7:
+                    message.version = reader.string();
+                    break;
+                case /* google.protobuf.Timestamp verifiedAt */ 8:
+                    message.verifiedAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.verifiedAt);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Authenticator_Status_Info_TPM_Endorsement, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Authenticator.Status.Info.TPM.Endorsement.Verification verification = 1; */
+        if (message.verification !== 0)
+            writer.tag(1, WireType.Varint).int32(message.verification);
+        /* bytes certificateSHA256 = 2; */
+        if (message.certificateSHA256.length)
+            writer.tag(2, WireType.LengthDelimited).bytes(message.certificateSHA256);
+        /* bytes trustedCASHA256 = 3; */
+        if (message.trustedCASHA256.length)
+            writer.tag(3, WireType.LengthDelimited).bytes(message.trustedCASHA256);
+        /* uint32 manufacturerID = 4; */
+        if (message.manufacturerID !== 0)
+            writer.tag(4, WireType.Varint).uint32(message.manufacturerID);
+        /* string manufacturer = 5; */
+        if (message.manufacturer !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.manufacturer);
+        /* string model = 6; */
+        if (message.model !== "")
+            writer.tag(6, WireType.LengthDelimited).string(message.model);
+        /* string version = 7; */
+        if (message.version !== "")
+            writer.tag(7, WireType.LengthDelimited).string(message.version);
+        /* google.protobuf.Timestamp verifiedAt = 8; */
+        if (message.verifiedAt)
+            Timestamp.internalBinaryWrite(message.verifiedAt, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Authenticator.Status.Info.TPM.Endorsement
+ */
+export const Authenticator_Status_Info_TPM_Endorsement = new Authenticator_Status_Info_TPM_Endorsement$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Authenticator_Status_AuthenticationAttempt$Type extends MessageType<Authenticator_Status_AuthenticationAttempt> {
     constructor() {

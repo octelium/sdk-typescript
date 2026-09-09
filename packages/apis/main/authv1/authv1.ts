@@ -559,6 +559,10 @@ export interface RegisterAuthenticatorBeginRequest_PreChallenge_TPM {
     } | {
         oneofKind: undefined;
     };
+    /**
+     * @generated from protobuf field: repeated bytes ekCertificateIntermediatesDER = 5
+     */
+    ekCertificateIntermediatesDER: Uint8Array[];
 }
 /**
  * @generated from protobuf message octelium.api.main.auth.v1.RegisterAuthenticatorBeginRequest.PreChallenge.TPM.AttestationParameters
@@ -2722,13 +2726,15 @@ class RegisterAuthenticatorBeginRequest_PreChallenge_TPM$Type extends MessageTyp
             { no: 1, name: "akBytes", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "attestationParameters", kind: "message", T: () => RegisterAuthenticatorBeginRequest_PreChallenge_TPM_AttestationParameters },
             { no: 3, name: "ekCertificateDER", kind: "scalar", oneof: "ekType", T: 12 /*ScalarType.BYTES*/ },
-            { no: 4, name: "ekPublicKey", kind: "scalar", oneof: "ekType", T: 12 /*ScalarType.BYTES*/ }
+            { no: 4, name: "ekPublicKey", kind: "scalar", oneof: "ekType", T: 12 /*ScalarType.BYTES*/ },
+            { no: 5, name: "ekCertificateIntermediatesDER", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
     create(value?: PartialMessage<RegisterAuthenticatorBeginRequest_PreChallenge_TPM>): RegisterAuthenticatorBeginRequest_PreChallenge_TPM {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.akBytes = new Uint8Array(0);
         message.ekType = { oneofKind: undefined };
+        message.ekCertificateIntermediatesDER = [];
         if (value !== undefined)
             reflectionMergePartial<RegisterAuthenticatorBeginRequest_PreChallenge_TPM>(this, message, value);
         return message;
@@ -2756,6 +2762,9 @@ class RegisterAuthenticatorBeginRequest_PreChallenge_TPM$Type extends MessageTyp
                         ekPublicKey: reader.bytes()
                     };
                     break;
+                case /* repeated bytes ekCertificateIntermediatesDER */ 5:
+                    message.ekCertificateIntermediatesDER.push(reader.bytes());
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -2780,6 +2789,9 @@ class RegisterAuthenticatorBeginRequest_PreChallenge_TPM$Type extends MessageTyp
         /* bytes ekPublicKey = 4; */
         if (message.ekType.oneofKind === "ekPublicKey")
             writer.tag(4, WireType.LengthDelimited).bytes(message.ekType.ekPublicKey);
+        /* repeated bytes ekCertificateIntermediatesDER = 5; */
+        for (let i = 0; i < message.ekCertificateIntermediatesDER.length; i++)
+            writer.tag(5, WireType.LengthDelimited).bytes(message.ekCertificateIntermediatesDER[i]);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

@@ -844,7 +844,11 @@ export enum Service_Spec_Type {
     /**
      * @generated from protobuf enum value: LLM = 14;
      */
-    LLM = 14
+    LLM = 14,
+    /**
+     * @generated from protobuf enum value: RDP = 15;
+     */
+    RDP = 15
 }
 /**
  * @generated from protobuf message octelium.api.main.user.v1.Service.Status

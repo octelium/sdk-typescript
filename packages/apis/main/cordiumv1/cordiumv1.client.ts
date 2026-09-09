@@ -90,113 +90,168 @@ import type { Secret } from "./cordiumv1.js";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
+ * MainService is the primary Cordium API that is used by the Users (i.e. via
+ * the `cordium` CLI, the web portal and the SDKs) to manage their Spaces,
+ * Templates, Workspaces, Memberships, Secrets, UserSecrets, GitProviders and
+ * their UserConfig. Every method is executed on behalf of the authenticated
+ * Octelium User and is authorized against that User's ownership of the
+ * resource and/or their Membership role in the resource's Space.
+ *
  * @generated from protobuf service octelium.api.main.cordium.v1.MainService
  */
 export interface IMainServiceClient {
     /**
-     * CreateSecret creates a Secret
+     * CreateSecret creates a Secret inside a Space. The caller must be at least
+     * an ADMIN Member of the Space. The Secret data is never returned back by
+     * the Cluster once the Secret is created.
      *
      * @generated from protobuf rpc: CreateSecret
      */
     createSecret(input: Secret, options?: RpcOptions): UnaryCall<Secret, Secret>;
     /**
-     * ListSecret lists Secrets
+     * ListSecret lists the Secrets of a Space. The Secrets' data is not
+     * included in the response.
      *
      * @generated from protobuf rpc: ListSecret
      */
     listSecret(input: ListSecretOptions, options?: RpcOptions): UnaryCall<ListSecretOptions, SecretList>;
     /**
-     * DeleteWorkspace deletes a Workspace
+     * DeleteSecret deletes a Secret. The caller must be at least an ADMIN Member
+     * of the Secret's Space.
      *
      * @generated from protobuf rpc: DeleteSecret
      */
     deleteSecret(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult>;
     /**
-     * GetWorkspace retrieves a specific Workspace
+     * GetSecret retrieves a specific Secret. The Secret data is not included in
+     * the response.
      *
      * @generated from protobuf rpc: GetSecret
      */
     getSecret(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Secret>;
     /**
-     * CreateTemplate creates a Template owned by the User.
+     * CreateTemplate creates a Template inside a Space. The caller must be at
+     * least an ADMIN Member of the Space.
      *
      * @generated from protobuf rpc: CreateTemplate
      */
     createTemplate(input: Template, options?: RpcOptions): UnaryCall<Template, Template>;
     /**
-     * UpdateTemplate updates a Template owned by the User.
+     * UpdateTemplate updates a Template. The caller must be at least an ADMIN
+     * Member of the Template's Space.
      *
      * @generated from protobuf rpc: UpdateTemplate
      */
     updateTemplate(input: Template, options?: RpcOptions): UnaryCall<Template, Template>;
     /**
-     * DeleteTemplate deletes a Template owned by the User.
+     * DeleteTemplate deletes a Template. The default Template of a Space cannot
+     * be deleted.
      *
      * @generated from protobuf rpc: DeleteTemplate
      */
     deleteTemplate(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult>;
     /**
+     * BuildTemplate starts a pre-build for a Template. A pre-build runs a
+     * hidden build Workspace whose storage is snapshotted once it successfully
+     * completes so that the subsequent Workspaces of the Template can be
+     * restored from that snapshot instead of being initialized from scratch. A
+     * Template can only have one running pre-build at a time. Starting a new
+     * pre-build cancels the currently running one, if any.
+     *
      * @generated from protobuf rpc: BuildTemplate
      */
     buildTemplate(input: BuildTemplateRequest, options?: RpcOptions): UnaryCall<BuildTemplateRequest, Template>;
     /**
+     * CancelBuildTemplate cancels the currently running pre-build of a Template,
+     * if any, and returns the updated Template.
+     *
      * @generated from protobuf rpc: CancelBuildTemplate
      */
     cancelBuildTemplate(input: CancelBuildTemplateRequest, options?: RpcOptions): UnaryCall<CancelBuildTemplateRequest, Template>;
     /**
-     * CreateTemplate creates a Template owned by the User.
+     * CreateSpace creates a Space owned by the User. Whether a User is allowed
+     * to own a Space is controlled by the Space ownership rules of the
+     * ClusterConfig. A default Membership and a default Template are
+     * automatically created along with the Space.
      *
      * @generated from protobuf rpc: CreateSpace
      */
     createSpace(input: Space, options?: RpcOptions): UnaryCall<Space, Space>;
     /**
-     * UpdateTemplate updates a Template owned by the User.
+     * UpdateSpace updates a Space. The caller must be the Space creator or an
+     * OWNER Member of the Space.
      *
      * @generated from protobuf rpc: UpdateSpace
      */
     updateSpace(input: Space, options?: RpcOptions): UnaryCall<Space, Space>;
     /**
-     * DeleteTemplate deletes a Template owned by the User.
+     * DeleteSpace deletes a Space as well as all of its Memberships, Templates,
+     * Secrets and GitProviders.
      *
      * @generated from protobuf rpc: DeleteSpace
      */
     deleteSpace(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult>;
     /**
+     * CreateMembership adds a User as a Member to a Space. The caller must be at
+     * least an ADMIN Member of the Space. Members can currently only be added to
+     * ORGANIZATION Spaces.
+     *
      * @generated from protobuf rpc: CreateMembership
      */
     createMembership(input: CreateMembershipRequest, options?: RpcOptions): UnaryCall<CreateMembershipRequest, Membership>;
     /**
+     * DeleteMembership removes a Member from a Space. The caller must be at
+     * least an ADMIN Member of the Space. Space creators cannot be removed.
+     *
      * @generated from protobuf rpc: DeleteMembership
      */
     deleteMembership(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult>;
     /**
+     * GetSpaceMembership retrieves the Membership of the calling User in a
+     * specific Space.
+     *
      * @generated from protobuf rpc: GetSpaceMembership
      */
     getSpaceMembership(input: GetSpaceMembershipRequest, options?: RpcOptions): UnaryCall<GetSpaceMembershipRequest, Membership>;
     /**
+     * UpdateMembership updates a Membership (i.e. its Role). The caller must be
+     * at least an ADMIN Member of the Space. Setting a Role to OWNER
+     * additionally requires the caller to be an OWNER.
+     *
      * @generated from protobuf rpc: UpdateMembership
      */
     updateMembership(input: Membership, options?: RpcOptions): UnaryCall<Membership, Membership>;
     /**
+     * CreateGitProvider creates a GitProvider inside a Space. The caller must be
+     * at least an ADMIN Member of the Space.
+     *
      * @generated from protobuf rpc: CreateGitProvider
      */
     createGitProvider(input: GitProvider, options?: RpcOptions): UnaryCall<GitProvider, GitProvider>;
     /**
+     * UpdateGitProvider updates a GitProvider.
+     *
      * @generated from protobuf rpc: UpdateGitProvider
      */
     updateGitProvider(input: GitProvider, options?: RpcOptions): UnaryCall<GitProvider, GitProvider>;
     /**
+     * DeleteGitProvider deletes a GitProvider.
+     *
      * @generated from protobuf rpc: DeleteGitProvider
      */
     deleteGitProvider(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult>;
     /**
-     * CreateWorkspace creates a Workspace owned by the User.
+     * CreateWorkspace creates a Workspace owned by the User. The Workspace is
+     * created in the STOPPED state and it is assigned a short randomly generated
+     * name by the Cluster. If no Template is set in the request's
+     * `status.templateRef`, the User's default Template is used.
      *
      * @generated from protobuf rpc: CreateWorkspace
      */
     createWorkspace(input: Workspace, options?: RpcOptions): UnaryCall<Workspace, Workspace>;
     /**
-     * UpdateWorkspace updates a Workspace owned by the User.
+     * UpdateWorkspace updates a Workspace owned by the User. Only the
+     * Workspace's displayName and spec can be updated.
      *
      * @generated from protobuf rpc: UpdateWorkspace
      */
@@ -214,107 +269,177 @@ export interface IMainServiceClient {
      */
     listWorkspace(input: ListWorkspaceOptions, options?: RpcOptions): UnaryCall<ListWorkspaceOptions, WorkspaceList>;
     /**
+     * StartWorkspace starts a stopped Workspace. The Cluster creates a dedicated
+     * Octelium Session for the run and moves the Workspace to the INIT_REQUEST
+     * state. The actual initialization is asynchronous and can be followed via
+     * the WatchWorkspace method.
+     *
      * @generated from protobuf rpc: StartWorkspace
      */
     startWorkspace(input: StartWorkspaceRequest, options?: RpcOptions): UnaryCall<StartWorkspaceRequest, StartWorkspaceResponse>;
     /**
+     * StopWorkspace requests a graceful stop of a running Workspace. The
+     * Workspace moves to the STOPPING_REQUEST state and the stoppage itself is
+     * asynchronous.
+     *
      * @generated from protobuf rpc: StopWorkspace
      */
     stopWorkspace(input: StopWorkspaceRequest, options?: RpcOptions): UnaryCall<StopWorkspaceRequest, StopWorkspaceResponse>;
     /**
+     * ShareWorkspacePort shares a named Application of a Workspace with other
+     * Users so that they can access it via the Workspace's public hostname.
+     *
      * @generated from protobuf rpc: ShareWorkspacePort
      */
     shareWorkspacePort(input: ShareWorkspacePortRequest, options?: RpcOptions): UnaryCall<ShareWorkspacePortRequest, ShareWorkspacePortResponse>;
     /**
+     * UnshareWorkspacePort stops sharing a previously shared named Application
+     * of a Workspace.
+     *
      * @generated from protobuf rpc: UnshareWorkspacePort
      */
     unshareWorkspacePort(input: UnshareWorkspacePortRequest, options?: RpcOptions): UnaryCall<UnshareWorkspacePortRequest, UnshareWorkspacePortResponse>;
     /**
+     * ListSpace lists the Spaces that are either created by the User or where
+     * the User is a Member depending on the requested mode.
+     *
      * @generated from protobuf rpc: ListSpace
      */
     listSpace(input: ListSpaceOptions, options?: RpcOptions): UnaryCall<ListSpaceOptions, SpaceList>;
     /**
+     * ListTemplate lists the Templates of a Space that the User is a Member of.
+     *
      * @generated from protobuf rpc: ListTemplate
      */
     listTemplate(input: ListTemplateOptions, options?: RpcOptions): UnaryCall<ListTemplateOptions, TemplateList>;
     /**
+     * ListMembership lists the Memberships of a Space that the User is a Member
+     * of.
+     *
      * @generated from protobuf rpc: ListMembership
      */
     listMembership(input: ListMembershipOptions, options?: RpcOptions): UnaryCall<ListMembershipOptions, MembershipList>;
     /**
+     * ListGitProvider lists the GitProviders of a Space that the User is a
+     * Member of.
+     *
      * @generated from protobuf rpc: ListGitProvider
      */
     listGitProvider(input: ListGitProviderOptions, options?: RpcOptions): UnaryCall<ListGitProviderOptions, GitProviderList>;
     /**
+     * GetSpace retrieves a specific Space. The caller must be a Member of the
+     * Space.
+     *
      * @generated from protobuf rpc: GetSpace
      */
     getSpace(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Space>;
     /**
+     * GetWorkspace retrieves a specific Workspace owned by the User.
+     *
      * @generated from protobuf rpc: GetWorkspace
      */
     getWorkspace(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Workspace>;
     /**
+     * GetTemplate retrieves a specific Template. The caller must be a Member of
+     * the Template's Space.
+     *
      * @generated from protobuf rpc: GetTemplate
      */
     getTemplate(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Template>;
     /**
+     * GetGitProvider retrieves a specific GitProvider. The caller must be a
+     * Member of the GitProvider's Space.
+     *
      * @generated from protobuf rpc: GetGitProvider
      */
     getGitProvider(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, GitProvider>;
     /**
+     * GetMembership retrieves a specific Membership. The caller must be a Member
+     * of the Membership's Space.
+     *
      * @generated from protobuf rpc: GetMembership
      */
     getMembership(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Membership>;
     /**
+     * LeaveSpace removes the calling User's own Membership from a Space. Space
+     * creators cannot leave their own Spaces, they can only delete them.
+     *
      * @generated from protobuf rpc: LeaveSpace
      */
     leaveSpace(input: LeaveSpaceRequest, options?: RpcOptions): UnaryCall<LeaveSpaceRequest, LeaveSpaceResponse>;
     /**
-     * CreateWorkspace creates a Workspace owned by the User.
+     * CreateUserSecret creates a UserSecret owned by the User. UserSecrets of
+     * the SSH_KEY type have their key pair generated by the Cluster. The
+     * UserSecret data is never returned back by the Cluster.
      *
      * @generated from protobuf rpc: CreateUserSecret
      */
     createUserSecret(input: UserSecret, options?: RpcOptions): UnaryCall<UserSecret, UserSecret>;
     /**
-     * UpdateWorkspace updates a Workspace owned by the User.
+     * UpdateUserSecret updates a UserSecret owned by the User.
      *
      * @generated from protobuf rpc: UpdateUserSecret
      */
     updateUserSecret(input: UserSecret, options?: RpcOptions): UnaryCall<UserSecret, UserSecret>;
     /**
-     * DeleteWorkspace deletes a Workspace owned by the User.
+     * DeleteUserSecret deletes a UserSecret owned by the User.
      *
      * @generated from protobuf rpc: DeleteUserSecret
      */
     deleteUserSecret(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult>;
     /**
-     * ListWorkspace lists the Workspaces owned by the User.
+     * ListUserSecret lists the UserSecrets owned by the User. The UserSecrets'
+     * data is not included in the response.
      *
      * @generated from protobuf rpc: ListUserSecret
      */
     listUserSecret(input: ListUserSecretOptions, options?: RpcOptions): UnaryCall<ListUserSecretOptions, UserSecretList>;
     /**
+     * GetUserSecret retrieves a specific UserSecret owned by the User. The
+     * UserSecret data is not included in the response.
+     *
      * @generated from protobuf rpc: GetUserSecret
      */
     getUserSecret(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, UserSecret>;
     /**
+     * GetUserConfig retrieves the calling User's UserConfig. The UserConfig is
+     * automatically created by the Cluster upon the first call.
+     *
      * @generated from protobuf rpc: GetUserConfig
      */
     getUserConfig(input: GetUserConfigRequest, options?: RpcOptions): UnaryCall<GetUserConfigRequest, UserConfig>;
     /**
+     * UpdateUserConfig updates the calling User's UserConfig.
+     *
      * @generated from protobuf rpc: UpdateUserConfig
      */
     updateUserConfig(input: UserConfig, options?: RpcOptions): UnaryCall<UserConfig, UserConfig>;
     /**
+     * ListRegion lists the Regions of the Cluster that are enabled to host
+     * Workspaces.
+     *
      * @generated from protobuf rpc: ListRegion
      */
     listRegion(input: ListRegionOptions, options?: RpcOptions): UnaryCall<ListRegionOptions, RegionList>;
     /**
+     * WatchWorkspace opens a server-side stream that publishes the create,
+     * update and delete events of the User's Workspaces. If a workspaceRef is
+     * set in the request, only the events of that specific Workspace are
+     * published. It is the recommended way to follow a Workspace's state
+     * throughout its lifecycle.
+     *
      * @generated from protobuf rpc: WatchWorkspace
      */
     watchWorkspace(input: WatchWorkspaceRequest, options?: RpcOptions): ServerStreamingCall<WatchWorkspaceRequest, WatchWorkspaceResponse>;
 }
 /**
+ * MainService is the primary Cordium API that is used by the Users (i.e. via
+ * the `cordium` CLI, the web portal and the SDKs) to manage their Spaces,
+ * Templates, Workspaces, Memberships, Secrets, UserSecrets, GitProviders and
+ * their UserConfig. Every method is executed on behalf of the authenticated
+ * Octelium User and is authorized against that User's ownership of the
+ * resource and/or their Membership role in the resource's Space.
+ *
  * @generated from protobuf service octelium.api.main.cordium.v1.MainService
  */
 export class MainServiceClient implements IMainServiceClient, ServiceInfo {
@@ -324,7 +449,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * CreateSecret creates a Secret
+     * CreateSecret creates a Secret inside a Space. The caller must be at least
+     * an ADMIN Member of the Space. The Secret data is never returned back by
+     * the Cluster once the Secret is created.
      *
      * @generated from protobuf rpc: CreateSecret
      */
@@ -333,7 +460,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<Secret, Secret>("unary", this._transport, method, opt, input);
     }
     /**
-     * ListSecret lists Secrets
+     * ListSecret lists the Secrets of a Space. The Secrets' data is not
+     * included in the response.
      *
      * @generated from protobuf rpc: ListSecret
      */
@@ -342,7 +470,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<ListSecretOptions, SecretList>("unary", this._transport, method, opt, input);
     }
     /**
-     * DeleteWorkspace deletes a Workspace
+     * DeleteSecret deletes a Secret. The caller must be at least an ADMIN Member
+     * of the Secret's Space.
      *
      * @generated from protobuf rpc: DeleteSecret
      */
@@ -351,7 +480,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<DeleteOptions, OperationResult>("unary", this._transport, method, opt, input);
     }
     /**
-     * GetWorkspace retrieves a specific Workspace
+     * GetSecret retrieves a specific Secret. The Secret data is not included in
+     * the response.
      *
      * @generated from protobuf rpc: GetSecret
      */
@@ -360,7 +490,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GetOptions, Secret>("unary", this._transport, method, opt, input);
     }
     /**
-     * CreateTemplate creates a Template owned by the User.
+     * CreateTemplate creates a Template inside a Space. The caller must be at
+     * least an ADMIN Member of the Space.
      *
      * @generated from protobuf rpc: CreateTemplate
      */
@@ -369,7 +500,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<Template, Template>("unary", this._transport, method, opt, input);
     }
     /**
-     * UpdateTemplate updates a Template owned by the User.
+     * UpdateTemplate updates a Template. The caller must be at least an ADMIN
+     * Member of the Template's Space.
      *
      * @generated from protobuf rpc: UpdateTemplate
      */
@@ -378,7 +510,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<Template, Template>("unary", this._transport, method, opt, input);
     }
     /**
-     * DeleteTemplate deletes a Template owned by the User.
+     * DeleteTemplate deletes a Template. The default Template of a Space cannot
+     * be deleted.
      *
      * @generated from protobuf rpc: DeleteTemplate
      */
@@ -387,6 +520,13 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<DeleteOptions, OperationResult>("unary", this._transport, method, opt, input);
     }
     /**
+     * BuildTemplate starts a pre-build for a Template. A pre-build runs a
+     * hidden build Workspace whose storage is snapshotted once it successfully
+     * completes so that the subsequent Workspaces of the Template can be
+     * restored from that snapshot instead of being initialized from scratch. A
+     * Template can only have one running pre-build at a time. Starting a new
+     * pre-build cancels the currently running one, if any.
+     *
      * @generated from protobuf rpc: BuildTemplate
      */
     buildTemplate(input: BuildTemplateRequest, options?: RpcOptions): UnaryCall<BuildTemplateRequest, Template> {
@@ -394,6 +534,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<BuildTemplateRequest, Template>("unary", this._transport, method, opt, input);
     }
     /**
+     * CancelBuildTemplate cancels the currently running pre-build of a Template,
+     * if any, and returns the updated Template.
+     *
      * @generated from protobuf rpc: CancelBuildTemplate
      */
     cancelBuildTemplate(input: CancelBuildTemplateRequest, options?: RpcOptions): UnaryCall<CancelBuildTemplateRequest, Template> {
@@ -401,7 +544,10 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<CancelBuildTemplateRequest, Template>("unary", this._transport, method, opt, input);
     }
     /**
-     * CreateTemplate creates a Template owned by the User.
+     * CreateSpace creates a Space owned by the User. Whether a User is allowed
+     * to own a Space is controlled by the Space ownership rules of the
+     * ClusterConfig. A default Membership and a default Template are
+     * automatically created along with the Space.
      *
      * @generated from protobuf rpc: CreateSpace
      */
@@ -410,7 +556,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<Space, Space>("unary", this._transport, method, opt, input);
     }
     /**
-     * UpdateTemplate updates a Template owned by the User.
+     * UpdateSpace updates a Space. The caller must be the Space creator or an
+     * OWNER Member of the Space.
      *
      * @generated from protobuf rpc: UpdateSpace
      */
@@ -419,7 +566,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<Space, Space>("unary", this._transport, method, opt, input);
     }
     /**
-     * DeleteTemplate deletes a Template owned by the User.
+     * DeleteSpace deletes a Space as well as all of its Memberships, Templates,
+     * Secrets and GitProviders.
      *
      * @generated from protobuf rpc: DeleteSpace
      */
@@ -428,6 +576,10 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<DeleteOptions, OperationResult>("unary", this._transport, method, opt, input);
     }
     /**
+     * CreateMembership adds a User as a Member to a Space. The caller must be at
+     * least an ADMIN Member of the Space. Members can currently only be added to
+     * ORGANIZATION Spaces.
+     *
      * @generated from protobuf rpc: CreateMembership
      */
     createMembership(input: CreateMembershipRequest, options?: RpcOptions): UnaryCall<CreateMembershipRequest, Membership> {
@@ -435,6 +587,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<CreateMembershipRequest, Membership>("unary", this._transport, method, opt, input);
     }
     /**
+     * DeleteMembership removes a Member from a Space. The caller must be at
+     * least an ADMIN Member of the Space. Space creators cannot be removed.
+     *
      * @generated from protobuf rpc: DeleteMembership
      */
     deleteMembership(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult> {
@@ -442,6 +597,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<DeleteOptions, OperationResult>("unary", this._transport, method, opt, input);
     }
     /**
+     * GetSpaceMembership retrieves the Membership of the calling User in a
+     * specific Space.
+     *
      * @generated from protobuf rpc: GetSpaceMembership
      */
     getSpaceMembership(input: GetSpaceMembershipRequest, options?: RpcOptions): UnaryCall<GetSpaceMembershipRequest, Membership> {
@@ -449,6 +607,10 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GetSpaceMembershipRequest, Membership>("unary", this._transport, method, opt, input);
     }
     /**
+     * UpdateMembership updates a Membership (i.e. its Role). The caller must be
+     * at least an ADMIN Member of the Space. Setting a Role to OWNER
+     * additionally requires the caller to be an OWNER.
+     *
      * @generated from protobuf rpc: UpdateMembership
      */
     updateMembership(input: Membership, options?: RpcOptions): UnaryCall<Membership, Membership> {
@@ -456,6 +618,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<Membership, Membership>("unary", this._transport, method, opt, input);
     }
     /**
+     * CreateGitProvider creates a GitProvider inside a Space. The caller must be
+     * at least an ADMIN Member of the Space.
+     *
      * @generated from protobuf rpc: CreateGitProvider
      */
     createGitProvider(input: GitProvider, options?: RpcOptions): UnaryCall<GitProvider, GitProvider> {
@@ -463,6 +628,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GitProvider, GitProvider>("unary", this._transport, method, opt, input);
     }
     /**
+     * UpdateGitProvider updates a GitProvider.
+     *
      * @generated from protobuf rpc: UpdateGitProvider
      */
     updateGitProvider(input: GitProvider, options?: RpcOptions): UnaryCall<GitProvider, GitProvider> {
@@ -470,6 +637,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GitProvider, GitProvider>("unary", this._transport, method, opt, input);
     }
     /**
+     * DeleteGitProvider deletes a GitProvider.
+     *
      * @generated from protobuf rpc: DeleteGitProvider
      */
     deleteGitProvider(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult> {
@@ -477,7 +646,10 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<DeleteOptions, OperationResult>("unary", this._transport, method, opt, input);
     }
     /**
-     * CreateWorkspace creates a Workspace owned by the User.
+     * CreateWorkspace creates a Workspace owned by the User. The Workspace is
+     * created in the STOPPED state and it is assigned a short randomly generated
+     * name by the Cluster. If no Template is set in the request's
+     * `status.templateRef`, the User's default Template is used.
      *
      * @generated from protobuf rpc: CreateWorkspace
      */
@@ -486,7 +658,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<Workspace, Workspace>("unary", this._transport, method, opt, input);
     }
     /**
-     * UpdateWorkspace updates a Workspace owned by the User.
+     * UpdateWorkspace updates a Workspace owned by the User. Only the
+     * Workspace's displayName and spec can be updated.
      *
      * @generated from protobuf rpc: UpdateWorkspace
      */
@@ -513,6 +686,11 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<ListWorkspaceOptions, WorkspaceList>("unary", this._transport, method, opt, input);
     }
     /**
+     * StartWorkspace starts a stopped Workspace. The Cluster creates a dedicated
+     * Octelium Session for the run and moves the Workspace to the INIT_REQUEST
+     * state. The actual initialization is asynchronous and can be followed via
+     * the WatchWorkspace method.
+     *
      * @generated from protobuf rpc: StartWorkspace
      */
     startWorkspace(input: StartWorkspaceRequest, options?: RpcOptions): UnaryCall<StartWorkspaceRequest, StartWorkspaceResponse> {
@@ -520,6 +698,10 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<StartWorkspaceRequest, StartWorkspaceResponse>("unary", this._transport, method, opt, input);
     }
     /**
+     * StopWorkspace requests a graceful stop of a running Workspace. The
+     * Workspace moves to the STOPPING_REQUEST state and the stoppage itself is
+     * asynchronous.
+     *
      * @generated from protobuf rpc: StopWorkspace
      */
     stopWorkspace(input: StopWorkspaceRequest, options?: RpcOptions): UnaryCall<StopWorkspaceRequest, StopWorkspaceResponse> {
@@ -527,6 +709,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<StopWorkspaceRequest, StopWorkspaceResponse>("unary", this._transport, method, opt, input);
     }
     /**
+     * ShareWorkspacePort shares a named Application of a Workspace with other
+     * Users so that they can access it via the Workspace's public hostname.
+     *
      * @generated from protobuf rpc: ShareWorkspacePort
      */
     shareWorkspacePort(input: ShareWorkspacePortRequest, options?: RpcOptions): UnaryCall<ShareWorkspacePortRequest, ShareWorkspacePortResponse> {
@@ -534,6 +719,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<ShareWorkspacePortRequest, ShareWorkspacePortResponse>("unary", this._transport, method, opt, input);
     }
     /**
+     * UnshareWorkspacePort stops sharing a previously shared named Application
+     * of a Workspace.
+     *
      * @generated from protobuf rpc: UnshareWorkspacePort
      */
     unshareWorkspacePort(input: UnshareWorkspacePortRequest, options?: RpcOptions): UnaryCall<UnshareWorkspacePortRequest, UnshareWorkspacePortResponse> {
@@ -541,6 +729,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<UnshareWorkspacePortRequest, UnshareWorkspacePortResponse>("unary", this._transport, method, opt, input);
     }
     /**
+     * ListSpace lists the Spaces that are either created by the User or where
+     * the User is a Member depending on the requested mode.
+     *
      * @generated from protobuf rpc: ListSpace
      */
     listSpace(input: ListSpaceOptions, options?: RpcOptions): UnaryCall<ListSpaceOptions, SpaceList> {
@@ -548,6 +739,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<ListSpaceOptions, SpaceList>("unary", this._transport, method, opt, input);
     }
     /**
+     * ListTemplate lists the Templates of a Space that the User is a Member of.
+     *
      * @generated from protobuf rpc: ListTemplate
      */
     listTemplate(input: ListTemplateOptions, options?: RpcOptions): UnaryCall<ListTemplateOptions, TemplateList> {
@@ -555,6 +748,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<ListTemplateOptions, TemplateList>("unary", this._transport, method, opt, input);
     }
     /**
+     * ListMembership lists the Memberships of a Space that the User is a Member
+     * of.
+     *
      * @generated from protobuf rpc: ListMembership
      */
     listMembership(input: ListMembershipOptions, options?: RpcOptions): UnaryCall<ListMembershipOptions, MembershipList> {
@@ -562,6 +758,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<ListMembershipOptions, MembershipList>("unary", this._transport, method, opt, input);
     }
     /**
+     * ListGitProvider lists the GitProviders of a Space that the User is a
+     * Member of.
+     *
      * @generated from protobuf rpc: ListGitProvider
      */
     listGitProvider(input: ListGitProviderOptions, options?: RpcOptions): UnaryCall<ListGitProviderOptions, GitProviderList> {
@@ -569,6 +768,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<ListGitProviderOptions, GitProviderList>("unary", this._transport, method, opt, input);
     }
     /**
+     * GetSpace retrieves a specific Space. The caller must be a Member of the
+     * Space.
+     *
      * @generated from protobuf rpc: GetSpace
      */
     getSpace(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Space> {
@@ -576,6 +778,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GetOptions, Space>("unary", this._transport, method, opt, input);
     }
     /**
+     * GetWorkspace retrieves a specific Workspace owned by the User.
+     *
      * @generated from protobuf rpc: GetWorkspace
      */
     getWorkspace(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Workspace> {
@@ -583,6 +787,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GetOptions, Workspace>("unary", this._transport, method, opt, input);
     }
     /**
+     * GetTemplate retrieves a specific Template. The caller must be a Member of
+     * the Template's Space.
+     *
      * @generated from protobuf rpc: GetTemplate
      */
     getTemplate(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Template> {
@@ -590,6 +797,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GetOptions, Template>("unary", this._transport, method, opt, input);
     }
     /**
+     * GetGitProvider retrieves a specific GitProvider. The caller must be a
+     * Member of the GitProvider's Space.
+     *
      * @generated from protobuf rpc: GetGitProvider
      */
     getGitProvider(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, GitProvider> {
@@ -597,6 +807,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GetOptions, GitProvider>("unary", this._transport, method, opt, input);
     }
     /**
+     * GetMembership retrieves a specific Membership. The caller must be a Member
+     * of the Membership's Space.
+     *
      * @generated from protobuf rpc: GetMembership
      */
     getMembership(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Membership> {
@@ -604,6 +817,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GetOptions, Membership>("unary", this._transport, method, opt, input);
     }
     /**
+     * LeaveSpace removes the calling User's own Membership from a Space. Space
+     * creators cannot leave their own Spaces, they can only delete them.
+     *
      * @generated from protobuf rpc: LeaveSpace
      */
     leaveSpace(input: LeaveSpaceRequest, options?: RpcOptions): UnaryCall<LeaveSpaceRequest, LeaveSpaceResponse> {
@@ -611,7 +827,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<LeaveSpaceRequest, LeaveSpaceResponse>("unary", this._transport, method, opt, input);
     }
     /**
-     * CreateWorkspace creates a Workspace owned by the User.
+     * CreateUserSecret creates a UserSecret owned by the User. UserSecrets of
+     * the SSH_KEY type have their key pair generated by the Cluster. The
+     * UserSecret data is never returned back by the Cluster.
      *
      * @generated from protobuf rpc: CreateUserSecret
      */
@@ -620,7 +838,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<UserSecret, UserSecret>("unary", this._transport, method, opt, input);
     }
     /**
-     * UpdateWorkspace updates a Workspace owned by the User.
+     * UpdateUserSecret updates a UserSecret owned by the User.
      *
      * @generated from protobuf rpc: UpdateUserSecret
      */
@@ -629,7 +847,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<UserSecret, UserSecret>("unary", this._transport, method, opt, input);
     }
     /**
-     * DeleteWorkspace deletes a Workspace owned by the User.
+     * DeleteUserSecret deletes a UserSecret owned by the User.
      *
      * @generated from protobuf rpc: DeleteUserSecret
      */
@@ -638,7 +856,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<DeleteOptions, OperationResult>("unary", this._transport, method, opt, input);
     }
     /**
-     * ListWorkspace lists the Workspaces owned by the User.
+     * ListUserSecret lists the UserSecrets owned by the User. The UserSecrets'
+     * data is not included in the response.
      *
      * @generated from protobuf rpc: ListUserSecret
      */
@@ -647,6 +866,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<ListUserSecretOptions, UserSecretList>("unary", this._transport, method, opt, input);
     }
     /**
+     * GetUserSecret retrieves a specific UserSecret owned by the User. The
+     * UserSecret data is not included in the response.
+     *
      * @generated from protobuf rpc: GetUserSecret
      */
     getUserSecret(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, UserSecret> {
@@ -654,6 +876,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GetOptions, UserSecret>("unary", this._transport, method, opt, input);
     }
     /**
+     * GetUserConfig retrieves the calling User's UserConfig. The UserConfig is
+     * automatically created by the Cluster upon the first call.
+     *
      * @generated from protobuf rpc: GetUserConfig
      */
     getUserConfig(input: GetUserConfigRequest, options?: RpcOptions): UnaryCall<GetUserConfigRequest, UserConfig> {
@@ -661,6 +886,8 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<GetUserConfigRequest, UserConfig>("unary", this._transport, method, opt, input);
     }
     /**
+     * UpdateUserConfig updates the calling User's UserConfig.
+     *
      * @generated from protobuf rpc: UpdateUserConfig
      */
     updateUserConfig(input: UserConfig, options?: RpcOptions): UnaryCall<UserConfig, UserConfig> {
@@ -668,6 +895,9 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<UserConfig, UserConfig>("unary", this._transport, method, opt, input);
     }
     /**
+     * ListRegion lists the Regions of the Cluster that are enabled to host
+     * Workspaces.
+     *
      * @generated from protobuf rpc: ListRegion
      */
     listRegion(input: ListRegionOptions, options?: RpcOptions): UnaryCall<ListRegionOptions, RegionList> {
@@ -675,6 +905,12 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<ListRegionOptions, RegionList>("unary", this._transport, method, opt, input);
     }
     /**
+     * WatchWorkspace opens a server-side stream that publishes the create,
+     * update and delete events of the User's Workspaces. If a workspaceRef is
+     * set in the request, only the events of that specific Workspace are
+     * published. It is the recommended way to follow a Workspace's state
+     * throughout its lifecycle.
+     *
      * @generated from protobuf rpc: WatchWorkspace
      */
     watchWorkspace(input: WatchWorkspaceRequest, options?: RpcOptions): ServerStreamingCall<WatchWorkspaceRequest, WatchWorkspaceResponse> {
@@ -683,43 +919,77 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
     }
 }
 /**
+ * WorkspaceService is the API that operates inside a running Workspace. It
+ * provides interactive terminals, command execution and the initialization
+ * logs. Every method requires the Workspace to be owned by the calling User
+ * and to be in the PREPARING or the RUNNING state.
+ *
  * @generated from protobuf service octelium.api.main.cordium.v1.WorkspaceService
  */
 export interface IWorkspaceServiceClient {
     /**
+     * CreateTerminal creates a new interactive terminal (i.e. a PTY-backed
+     * shell) inside a Workspace and returns its ID.
+     *
      * @generated from protobuf rpc: CreateTerminal
      */
     createTerminal(input: CreateTerminalRequest, options?: RpcOptions): UnaryCall<CreateTerminalRequest, CreateTerminalResponse>;
     /**
+     * RemoveTerminal terminates a terminal.
+     *
      * @generated from protobuf rpc: RemoveTerminal
      */
     removeTerminal(input: RemoveTerminalRequest, options?: RpcOptions): UnaryCall<RemoveTerminalRequest, RemoveTerminalResponse>;
     /**
+     * ListTerminal lists the currently open terminals of a Workspace.
+     *
      * @generated from protobuf rpc: ListTerminal
      */
     listTerminal(input: ListTerminalRequest, options?: RpcOptions): UnaryCall<ListTerminalRequest, ListTerminalResponse>;
     /**
+     * WriteTerminalData writes data (i.e. stdin) to a terminal.
+     *
      * @generated from protobuf rpc: WriteTerminalData
      */
     writeTerminalData(input: WriteTerminalDataRequest, options?: RpcOptions): UnaryCall<WriteTerminalDataRequest, WriteTerminalDataResponse>;
     /**
+     * SetTerminalWindowSize resizes a terminal's window.
+     *
      * @generated from protobuf rpc: SetTerminalWindowSize
      */
     setTerminalWindowSize(input: SetTerminalWindowSizeRequest, options?: RpcOptions): UnaryCall<SetTerminalWindowSizeRequest, SetTerminalWindowSizeResponse>;
     /**
+     * ListenTerminal opens a server-side stream of a terminal's output. Multiple
+     * listeners can be attached to the same terminal at the same time.
+     *
      * @generated from protobuf rpc: ListenTerminal
      */
     listenTerminal(input: ListenTerminalRequest, options?: RpcOptions): ServerStreamingCall<ListenTerminalRequest, ListenTerminalResponse>;
     /**
+     * ListenLog opens a server-side stream of a Workspace's initialization logs
+     * (i.e. the repository cloning, image pulling, image building and the
+     * lifecycle tasks output).
+     *
      * @generated from protobuf rpc: ListenLog
      */
     listenLog(input: ListenLogRequest, options?: RpcOptions): ServerStreamingCall<ListenLogRequest, ListenLogResponse>;
     /**
+     * Exec runs a one-off command inside a Workspace over a bidirectional
+     * stream. The first client message must be a `request` message. The
+     * subsequent client messages carry the command's stdin or a kill signal
+     * while the server messages carry the command's stdout, stderr and its
+     * eventual exit code.
+     *
      * @generated from protobuf rpc: Exec
      */
     exec(options?: RpcOptions): DuplexStreamingCall<ExecRequest, ExecResponse>;
 }
 /**
+ * WorkspaceService is the API that operates inside a running Workspace. It
+ * provides interactive terminals, command execution and the initialization
+ * logs. Every method requires the Workspace to be owned by the calling User
+ * and to be in the PREPARING or the RUNNING state.
+ *
  * @generated from protobuf service octelium.api.main.cordium.v1.WorkspaceService
  */
 export class WorkspaceServiceClient implements IWorkspaceServiceClient, ServiceInfo {
@@ -729,6 +999,9 @@ export class WorkspaceServiceClient implements IWorkspaceServiceClient, ServiceI
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
+     * CreateTerminal creates a new interactive terminal (i.e. a PTY-backed
+     * shell) inside a Workspace and returns its ID.
+     *
      * @generated from protobuf rpc: CreateTerminal
      */
     createTerminal(input: CreateTerminalRequest, options?: RpcOptions): UnaryCall<CreateTerminalRequest, CreateTerminalResponse> {
@@ -736,6 +1009,8 @@ export class WorkspaceServiceClient implements IWorkspaceServiceClient, ServiceI
         return stackIntercept<CreateTerminalRequest, CreateTerminalResponse>("unary", this._transport, method, opt, input);
     }
     /**
+     * RemoveTerminal terminates a terminal.
+     *
      * @generated from protobuf rpc: RemoveTerminal
      */
     removeTerminal(input: RemoveTerminalRequest, options?: RpcOptions): UnaryCall<RemoveTerminalRequest, RemoveTerminalResponse> {
@@ -743,6 +1018,8 @@ export class WorkspaceServiceClient implements IWorkspaceServiceClient, ServiceI
         return stackIntercept<RemoveTerminalRequest, RemoveTerminalResponse>("unary", this._transport, method, opt, input);
     }
     /**
+     * ListTerminal lists the currently open terminals of a Workspace.
+     *
      * @generated from protobuf rpc: ListTerminal
      */
     listTerminal(input: ListTerminalRequest, options?: RpcOptions): UnaryCall<ListTerminalRequest, ListTerminalResponse> {
@@ -750,6 +1027,8 @@ export class WorkspaceServiceClient implements IWorkspaceServiceClient, ServiceI
         return stackIntercept<ListTerminalRequest, ListTerminalResponse>("unary", this._transport, method, opt, input);
     }
     /**
+     * WriteTerminalData writes data (i.e. stdin) to a terminal.
+     *
      * @generated from protobuf rpc: WriteTerminalData
      */
     writeTerminalData(input: WriteTerminalDataRequest, options?: RpcOptions): UnaryCall<WriteTerminalDataRequest, WriteTerminalDataResponse> {
@@ -757,6 +1036,8 @@ export class WorkspaceServiceClient implements IWorkspaceServiceClient, ServiceI
         return stackIntercept<WriteTerminalDataRequest, WriteTerminalDataResponse>("unary", this._transport, method, opt, input);
     }
     /**
+     * SetTerminalWindowSize resizes a terminal's window.
+     *
      * @generated from protobuf rpc: SetTerminalWindowSize
      */
     setTerminalWindowSize(input: SetTerminalWindowSizeRequest, options?: RpcOptions): UnaryCall<SetTerminalWindowSizeRequest, SetTerminalWindowSizeResponse> {
@@ -764,6 +1045,9 @@ export class WorkspaceServiceClient implements IWorkspaceServiceClient, ServiceI
         return stackIntercept<SetTerminalWindowSizeRequest, SetTerminalWindowSizeResponse>("unary", this._transport, method, opt, input);
     }
     /**
+     * ListenTerminal opens a server-side stream of a terminal's output. Multiple
+     * listeners can be attached to the same terminal at the same time.
+     *
      * @generated from protobuf rpc: ListenTerminal
      */
     listenTerminal(input: ListenTerminalRequest, options?: RpcOptions): ServerStreamingCall<ListenTerminalRequest, ListenTerminalResponse> {
@@ -771,6 +1055,10 @@ export class WorkspaceServiceClient implements IWorkspaceServiceClient, ServiceI
         return stackIntercept<ListenTerminalRequest, ListenTerminalResponse>("serverStreaming", this._transport, method, opt, input);
     }
     /**
+     * ListenLog opens a server-side stream of a Workspace's initialization logs
+     * (i.e. the repository cloning, image pulling, image building and the
+     * lifecycle tasks output).
+     *
      * @generated from protobuf rpc: ListenLog
      */
     listenLog(input: ListenLogRequest, options?: RpcOptions): ServerStreamingCall<ListenLogRequest, ListenLogResponse> {
@@ -778,6 +1066,12 @@ export class WorkspaceServiceClient implements IWorkspaceServiceClient, ServiceI
         return stackIntercept<ListenLogRequest, ListenLogResponse>("serverStreaming", this._transport, method, opt, input);
     }
     /**
+     * Exec runs a one-off command inside a Workspace over a bidirectional
+     * stream. The first client message must be a `request` message. The
+     * subsequent client messages carry the command's stdin or a kill signal
+     * while the server messages carry the command's stdout, stderr and its
+     * eventual exit code.
+     *
      * @generated from protobuf rpc: Exec
      */
     exec(options?: RpcOptions): DuplexStreamingCall<ExecRequest, ExecResponse> {
@@ -786,6 +1080,10 @@ export class WorkspaceServiceClient implements IWorkspaceServiceClient, ServiceI
     }
 }
 /**
+ * ManagementService is the administrative API of a Cordium Cluster. It is used
+ * by the Cluster administrators (e.g. via `cordium man`) to read and update
+ * the Cluster-wide configuration.
+ *
  * @generated from protobuf service octelium.api.main.cordium.v1.ManagementService
  */
 export interface IManagementServiceClient {
@@ -796,13 +1094,17 @@ export interface IManagementServiceClient {
      */
     getClusterConfig(input: GetClusterConfigRequest, options?: RpcOptions): UnaryCall<GetClusterConfigRequest, ClusterConfig>;
     /**
-     * UpdateConfig updates the Cluster Configuration.
+     * UpdateClusterConfig updates the Cluster Configuration.
      *
      * @generated from protobuf rpc: UpdateClusterConfig
      */
     updateClusterConfig(input: ClusterConfig, options?: RpcOptions): UnaryCall<ClusterConfig, ClusterConfig>;
 }
 /**
+ * ManagementService is the administrative API of a Cordium Cluster. It is used
+ * by the Cluster administrators (e.g. via `cordium man`) to read and update
+ * the Cluster-wide configuration.
+ *
  * @generated from protobuf service octelium.api.main.cordium.v1.ManagementService
  */
 export class ManagementServiceClient implements IManagementServiceClient, ServiceInfo {
@@ -821,7 +1123,7 @@ export class ManagementServiceClient implements IManagementServiceClient, Servic
         return stackIntercept<GetClusterConfigRequest, ClusterConfig>("unary", this._transport, method, opt, input);
     }
     /**
-     * UpdateConfig updates the Cluster Configuration.
+     * UpdateClusterConfig updates the Cluster Configuration.
      *
      * @generated from protobuf rpc: UpdateClusterConfig
      */
