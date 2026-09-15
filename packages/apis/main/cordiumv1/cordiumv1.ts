@@ -936,20 +936,40 @@ export interface Workspace_Spec_Runtime_Octelium {
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network
  */
 export interface Workspace_Spec_Runtime_Network {
+    /**
+     * Egress is the egress (i.e. outbound) traffic configuration.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Egress egress = 1
+     */
+    egress?: Workspace_Spec_Runtime_Network_Egress;
 }
 /**
- * Rule is a network rule that matches a set of network ranges.
+ * Rule is a network rule that matches a set of network ranges and
+ * ports.
  *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule
  */
 export interface Workspace_Spec_Runtime_Network_Rule {
     /**
      * CIDRs is the list of the network ranges, in CIDR notation, that
-     * are matched by the Rule.
+     * are matched by the Rule. At least one CIDR must be set.
      *
      * @generated from protobuf field: repeated string cidrs = 1
      */
     cidrs: string[];
+    /**
+     * Action is the effect of the Rule when it matches. It must be set.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule.Action action = 2
+     */
+    action: Workspace_Spec_Runtime_Network_Rule_Action;
+    /**
+     * Ports is the list of the destination ports that are matched by the
+     * Rule. An empty list matches every port.
+     *
+     * @generated from protobuf field: repeated uint32 ports = 3
+     */
+    ports: number[];
 }
 /**
  * Action is the effect of the Rule when it matches
@@ -958,7 +978,8 @@ export interface Workspace_Spec_Runtime_Network_Rule {
  */
 export enum Workspace_Spec_Runtime_Network_Rule_Action {
     /**
-     * ACTION_UNSET falls back to the default action.
+     * ACTION_UNSET is not used. The action of a Rule must be
+     * explicitly set.
      *
      * @generated from protobuf enum value: ACTION_UNSET = 0;
      */
@@ -977,13 +998,18 @@ export enum Workspace_Spec_Runtime_Network_Rule_Action {
     DENY = 2
 }
 /**
- * Egress is the egress (i.e. outbound) traffic configuration.
+ * Egress is the egress (i.e. outbound) traffic configuration of the
+ * Workspace. The Rules are unordered. A destination that is matched by
+ * a DENY Rule is denied even if it is also matched by an ALLOW Rule. A
+ * destination that is matched by no Rule falls back to the
+ * DefaultAction. The Cluster's own protected networks are always
+ * denied regardless of the configuration.
  *
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Egress
  */
 export interface Workspace_Spec_Runtime_Network_Egress {
     /**
-     * Rules is the list of the egress rules that are evaluated in order.
+     * Rules is the list of the egress rules.
      *
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule rules = 1
      */
@@ -991,9 +1017,36 @@ export interface Workspace_Spec_Runtime_Network_Egress {
     /**
      * DefaultAction is the action that is applied when no Rule matches.
      *
-     * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule.Action defaultAction = 2
+     * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Egress.DefaultAction defaultAction = 2
      */
-    defaultAction: Workspace_Spec_Runtime_Network_Rule_Action;
+    defaultAction: Workspace_Spec_Runtime_Network_Egress_DefaultAction;
+}
+/**
+ * DefaultAction is the action that is applied when no Rule matches
+ *
+ * @generated from protobuf enum octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Egress.DefaultAction
+ */
+export enum Workspace_Spec_Runtime_Network_Egress_DefaultAction {
+    /**
+     * DEFAULT_ACTION_UNSET falls back to ALLOW_PUBLIC.
+     *
+     * @generated from protobuf enum value: DEFAULT_ACTION_UNSET = 0;
+     */
+    DEFAULT_ACTION_UNSET = 0,
+    /**
+     * ALLOW_PUBLIC allows the traffic to the publicly routable
+     * networks and denies the traffic to the private ones.
+     *
+     * @generated from protobuf enum value: ALLOW_PUBLIC = 1;
+     */
+    ALLOW_PUBLIC = 1,
+    /**
+     * DENY denies all the traffic that is not matched by an ALLOW
+     * Rule.
+     *
+     * @generated from protobuf enum value: DENY = 2;
+     */
+    DENY = 2
 }
 /**
  * Filesystem is the container filesystem configuration.
@@ -1511,6 +1564,15 @@ export interface Workspace_Status_Failure {
          */
         additionalRepoClone: Workspace_Status_Failure_AdditionalRepoClone;
     } | {
+        oneofKind: "networkPolicy";
+        /**
+         * NetworkPolicy means that the Workspace's network configuration could
+         * not be enforced.
+         *
+         * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.NetworkPolicy networkPolicy = 16
+         */
+        networkPolicy: Workspace_Status_Failure_NetworkPolicy;
+    } | {
         oneofKind: undefined;
     };
 }
@@ -1646,6 +1708,14 @@ export interface Workspace_Status_Failure_AdditionalRepoClone {
      * @generated from protobuf field: string name = 1
      */
     name: string;
+}
+/**
+ * NetworkPolicy means that the Workspace's network configuration could
+ * not be enforced. The Workspace is not started in that case.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.NetworkPolicy
+ */
+export interface Workspace_Status_Failure_NetworkPolicy {
 }
 /**
  * SharedPort is a named Application of the Workspace that is shared with
@@ -7084,7 +7154,9 @@ export const Workspace_Spec_Runtime_Octelium = new Workspace_Spec_Runtime_Octeli
 // @generated message type with reflection information, may provide speed optimized methods
 class Workspace_Spec_Runtime_Network$Type extends MessageType<Workspace_Spec_Runtime_Network> {
     constructor() {
-        super("octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network", []);
+        super("octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network", [
+            { no: 1, name: "egress", kind: "message", T: () => Workspace_Spec_Runtime_Network_Egress }
+        ]);
     }
     create(value?: PartialMessage<Workspace_Spec_Runtime_Network>): Workspace_Spec_Runtime_Network {
         const message = globalThis.Object.create((this.messagePrototype!));
@@ -7097,6 +7169,9 @@ class Workspace_Spec_Runtime_Network$Type extends MessageType<Workspace_Spec_Run
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
+                case /* octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Egress egress */ 1:
+                    message.egress = Workspace_Spec_Runtime_Network_Egress.internalBinaryRead(reader, reader.uint32(), options, message.egress);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -7109,6 +7184,9 @@ class Workspace_Spec_Runtime_Network$Type extends MessageType<Workspace_Spec_Run
         return message;
     }
     internalBinaryWrite(message: Workspace_Spec_Runtime_Network, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Egress egress = 1; */
+        if (message.egress)
+            Workspace_Spec_Runtime_Network_Egress.internalBinaryWrite(message.egress, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -7123,12 +7201,16 @@ export const Workspace_Spec_Runtime_Network = new Workspace_Spec_Runtime_Network
 class Workspace_Spec_Runtime_Network_Rule$Type extends MessageType<Workspace_Spec_Runtime_Network_Rule> {
     constructor() {
         super("octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule", [
-            { no: 1, name: "cidrs", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "cidrs", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "action", kind: "enum", T: () => ["octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule.Action", Workspace_Spec_Runtime_Network_Rule_Action] },
+            { no: 3, name: "ports", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
     create(value?: PartialMessage<Workspace_Spec_Runtime_Network_Rule>): Workspace_Spec_Runtime_Network_Rule {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.cidrs = [];
+        message.action = 0;
+        message.ports = [];
         if (value !== undefined)
             reflectionMergePartial<Workspace_Spec_Runtime_Network_Rule>(this, message, value);
         return message;
@@ -7140,6 +7222,16 @@ class Workspace_Spec_Runtime_Network_Rule$Type extends MessageType<Workspace_Spe
             switch (fieldNo) {
                 case /* repeated string cidrs */ 1:
                     message.cidrs.push(reader.string());
+                    break;
+                case /* octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule.Action action */ 2:
+                    message.action = reader.int32();
+                    break;
+                case /* repeated uint32 ports */ 3:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.ports.push(reader.uint32());
+                    else
+                        message.ports.push(reader.uint32());
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -7156,6 +7248,16 @@ class Workspace_Spec_Runtime_Network_Rule$Type extends MessageType<Workspace_Spe
         /* repeated string cidrs = 1; */
         for (let i = 0; i < message.cidrs.length; i++)
             writer.tag(1, WireType.LengthDelimited).string(message.cidrs[i]);
+        /* octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule.Action action = 2; */
+        if (message.action !== 0)
+            writer.tag(2, WireType.Varint).int32(message.action);
+        /* repeated uint32 ports = 3; */
+        if (message.ports.length) {
+            writer.tag(3, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.ports.length; i++)
+                writer.uint32(message.ports[i]);
+            writer.join();
+        }
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -7171,7 +7273,7 @@ class Workspace_Spec_Runtime_Network_Egress$Type extends MessageType<Workspace_S
     constructor() {
         super("octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Egress", [
             { no: 1, name: "rules", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Workspace_Spec_Runtime_Network_Rule },
-            { no: 2, name: "defaultAction", kind: "enum", T: () => ["octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule.Action", Workspace_Spec_Runtime_Network_Rule_Action] }
+            { no: 2, name: "defaultAction", kind: "enum", T: () => ["octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Egress.DefaultAction", Workspace_Spec_Runtime_Network_Egress_DefaultAction] }
         ]);
     }
     create(value?: PartialMessage<Workspace_Spec_Runtime_Network_Egress>): Workspace_Spec_Runtime_Network_Egress {
@@ -7190,7 +7292,7 @@ class Workspace_Spec_Runtime_Network_Egress$Type extends MessageType<Workspace_S
                 case /* repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule rules */ 1:
                     message.rules.push(Workspace_Spec_Runtime_Network_Rule.internalBinaryRead(reader, reader.uint32(), options));
                     break;
-                case /* octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule.Action defaultAction */ 2:
+                case /* octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Egress.DefaultAction defaultAction */ 2:
                     message.defaultAction = reader.int32();
                     break;
                 default:
@@ -7208,7 +7310,7 @@ class Workspace_Spec_Runtime_Network_Egress$Type extends MessageType<Workspace_S
         /* repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule rules = 1; */
         for (let i = 0; i < message.rules.length; i++)
             Workspace_Spec_Runtime_Network_Rule.internalBinaryWrite(message.rules[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Rule.Action defaultAction = 2; */
+        /* octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Network.Egress.DefaultAction defaultAction = 2; */
         if (message.defaultAction !== 0)
             writer.tag(2, WireType.Varint).int32(message.defaultAction);
         let u = options.writeUnknownFields;
@@ -7939,7 +8041,8 @@ class Workspace_Status_Failure$Type extends MessageType<Workspace_Status_Failure
             { no: 12, name: "runContainer", kind: "message", oneof: "type", T: () => Workspace_Status_Failure_RunContainer },
             { no: 13, name: "healthCheck", kind: "message", oneof: "type", T: () => Workspace_Status_Failure_HealthCheck },
             { no: 14, name: "unknown", kind: "message", oneof: "type", T: () => Workspace_Status_Failure_Unknown },
-            { no: 15, name: "additionalRepoClone", kind: "message", oneof: "type", T: () => Workspace_Status_Failure_AdditionalRepoClone }
+            { no: 15, name: "additionalRepoClone", kind: "message", oneof: "type", T: () => Workspace_Status_Failure_AdditionalRepoClone },
+            { no: 16, name: "networkPolicy", kind: "message", oneof: "type", T: () => Workspace_Status_Failure_NetworkPolicy }
         ]);
     }
     create(value?: PartialMessage<Workspace_Status_Failure>): Workspace_Status_Failure {
@@ -8042,6 +8145,12 @@ class Workspace_Status_Failure$Type extends MessageType<Workspace_Status_Failure
                         additionalRepoClone: Workspace_Status_Failure_AdditionalRepoClone.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).additionalRepoClone)
                     };
                     break;
+                case /* octelium.api.main.cordium.v1.Workspace.Status.Failure.NetworkPolicy networkPolicy */ 16:
+                    message.type = {
+                        oneofKind: "networkPolicy",
+                        networkPolicy: Workspace_Status_Failure_NetworkPolicy.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).networkPolicy)
+                    };
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -8099,6 +8208,9 @@ class Workspace_Status_Failure$Type extends MessageType<Workspace_Status_Failure
         /* octelium.api.main.cordium.v1.Workspace.Status.Failure.AdditionalRepoClone additionalRepoClone = 15; */
         if (message.type.oneofKind === "additionalRepoClone")
             Workspace_Status_Failure_AdditionalRepoClone.internalBinaryWrite(message.type.additionalRepoClone, writer.tag(15, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.Workspace.Status.Failure.NetworkPolicy networkPolicy = 16; */
+        if (message.type.oneofKind === "networkPolicy")
+            Workspace_Status_Failure_NetworkPolicy.internalBinaryWrite(message.type.networkPolicy, writer.tag(16, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -8705,6 +8817,44 @@ class Workspace_Status_Failure_AdditionalRepoClone$Type extends MessageType<Work
  * @generated MessageType for protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.AdditionalRepoClone
  */
 export const Workspace_Status_Failure_AdditionalRepoClone = new Workspace_Status_Failure_AdditionalRepoClone$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Workspace_Status_Failure_NetworkPolicy$Type extends MessageType<Workspace_Status_Failure_NetworkPolicy> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.Workspace.Status.Failure.NetworkPolicy", []);
+    }
+    create(value?: PartialMessage<Workspace_Status_Failure_NetworkPolicy>): Workspace_Status_Failure_NetworkPolicy {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<Workspace_Status_Failure_NetworkPolicy>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Workspace_Status_Failure_NetworkPolicy): Workspace_Status_Failure_NetworkPolicy {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Workspace_Status_Failure_NetworkPolicy, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.NetworkPolicy
+ */
+export const Workspace_Status_Failure_NetworkPolicy = new Workspace_Status_Failure_NetworkPolicy$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Workspace_Status_SharedPort$Type extends MessageType<Workspace_Status_SharedPort> {
     constructor() {
