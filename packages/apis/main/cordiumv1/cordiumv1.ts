@@ -664,6 +664,15 @@ export interface Workspace_Spec_Runtime {
      * @generated from protobuf field: bool autoStop = 12
      */
     autoStop: boolean;
+    /**
+     * VolumeMounts is the list of the Volumes of the Workspace's Space that
+     * are mounted inside the Workspace. The mounts that are defined by the
+     * Template are merged with the ones that are defined by the Workspace
+     * itself.
+     *
+     * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.VolumeMount volumeMounts = 13
+     */
+    volumeMounts: Workspace_Spec_Runtime_VolumeMount[];
 }
 /**
  * EnvVar is an environment variable that is injected into the Workspace
@@ -849,6 +858,38 @@ export enum Workspace_Spec_Runtime_Task_OnFailure {
      * @generated from protobuf enum value: ON_FAILURE_CONTINUE = 2;
      */
     CONTINUE = 2
+}
+/**
+ * VolumeMount attaches a Volume of the Workspace's Space to a path
+ * inside the Workspace's container.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.VolumeMount
+ */
+export interface Workspace_Spec_Runtime_VolumeMount {
+    /**
+     * VolumeRef is the reference of the mounted Volume. The Volume must
+     * belong to the same Space as the Workspace.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference volumeRef = 1
+     */
+    volumeRef?: ObjectReference;
+    /**
+     * MountPath is the absolute, canonical path inside the Workspace's
+     * container at which the Volume is mounted (e.g. `/data`). It cannot
+     * be the root directory, it cannot overlap with another mount and it
+     * cannot cover the paths that are reserved by the Cluster.
+     *
+     * @generated from protobuf field: string mountPath = 2
+     */
+    mountPath: string;
+    /**
+     * ReadOnly mounts the Volume read-only inside this Workspace. It is
+     * set per mount (i.e. the same Volume can simultaneously be mounted
+     * read-write by a Workspace and read-only by another one).
+     *
+     * @generated from protobuf field: bool readOnly = 3
+     */
+    readOnly: boolean;
 }
 /**
  * Devcontainers is the Development Container-related configuration.
@@ -1428,6 +1469,23 @@ export interface Workspace_Status {
      * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Workspace.Status.Run lastRuns = 25
      */
     lastRuns: Workspace_Status_Run[];
+    /**
+     * WorkspaceSnapshotRef is the reference of the WorkspaceSnapshot that the
+     * Workspace's persistent storage was restored from. It is set by the
+     * Cluster upon the creation of the Workspace and it is immutable.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceSnapshotRef = 26
+     */
+    workspaceSnapshotRef?: ObjectReference;
+    /**
+     * LastRegionRef is the reference of the Region that hosted the latest run
+     * of the Workspace. Unlike regionRef, which is unset once the Workspace is
+     * stopped, it is preserved since the Workspace's persistent storage
+     * remains in that Region.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference lastRegionRef = 27
+     */
+    lastRegionRef?: ObjectReference;
 }
 /**
  * Failure describes the reason of the failure of a Workspace run.
@@ -1573,6 +1631,14 @@ export interface Workspace_Status_Failure {
          */
         networkPolicy: Workspace_Status_Failure_NetworkPolicy;
     } | {
+        oneofKind: "volume";
+        /**
+         * Volume means that one of the mounted Volumes could not be resolved.
+         *
+         * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Status.Failure.Volume volume = 17
+         */
+        volume: Workspace_Status_Failure_Volume;
+    } | {
         oneofKind: undefined;
     };
 }
@@ -1716,6 +1782,22 @@ export interface Workspace_Status_Failure_AdditionalRepoClone {
  * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.NetworkPolicy
  */
 export interface Workspace_Status_Failure_NetworkPolicy {
+}
+/**
+ * Volume means that one of the Volumes that are mounted by the
+ * Workspace could not be resolved (e.g. it does not exist anymore, it
+ * belongs to another Space or it is hosted in another Region). The
+ * Workspace is not started in that case.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.Volume
+ */
+export interface Workspace_Status_Failure_Volume {
+    /**
+     * Name is the name of the Volume that could not be resolved.
+     *
+     * @generated from protobuf field: string name = 1
+     */
+    name: string;
 }
 /**
  * SharedPort is a named Application of the Workspace that is shared with
@@ -1991,6 +2073,680 @@ export interface ListWorkspaceOptions {
     } | {
         oneofKind: undefined;
     };
+}
+/**
+ * WorkspaceSnapshot is a point-in-time checkpoint of the persistent storage of
+ * a Workspace. It is backed by a Kubernetes CSI volume snapshot of the
+ * Workspace's underlying volume and it is what enables a Workspace to be
+ * cloned into a brand new Workspace inside the same Space. A snapshot is taken
+ * online (i.e. without stopping the source Workspace) in which case it is a
+ * crash-consistent checkpoint, or while the source Workspace is stopped in
+ * which case it is a clean one. Snapshots are owned by the Octelium User who
+ * created them and they have a lifecycle of their own (i.e. they outlive both
+ * their source Workspace and the Workspaces that are restored from them).
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot
+ */
+export interface WorkspaceSnapshot {
+    /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
+     * @generated from protobuf field: string apiVersion = 1
+     */
+    apiVersion: string;
+    /**
+     * Kind is the resource name (i.e. `WorkspaceSnapshot`).
+     *
+     * @generated from protobuf field: string kind = 2
+     */
+    kind: string;
+    /**
+     * Metadata is the object's metadata.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
+     */
+    metadata?: Metadata;
+    /**
+     * Spec is the WorkspaceSnapshot specification.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.WorkspaceSnapshot.Spec spec = 4
+     */
+    spec?: WorkspaceSnapshot_Spec;
+    /**
+     * Status is the current status of the WorkspaceSnapshot.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.WorkspaceSnapshot.Status status = 5
+     */
+    status?: WorkspaceSnapshot_Status;
+}
+/**
+ * Spec is the WorkspaceSnapshot specification. It is intentionally empty.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Spec
+ */
+export interface WorkspaceSnapshot_Spec {
+}
+/**
+ * Status is the current status of the WorkspaceSnapshot. It is entirely
+ * managed by the Cluster and it is read-only.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Status
+ */
+export interface WorkspaceSnapshot_Status {
+    /**
+     * State is the current state of the WorkspaceSnapshot.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.State state = 1
+     */
+    state: WorkspaceSnapshot_Status_State;
+    /**
+     * WorkspaceRef is the reference of the Workspace that the snapshot was
+     * taken from. It is kept even after that Workspace is deleted.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceRef = 2
+     */
+    workspaceRef?: ObjectReference;
+    /**
+     * UserRef is the reference of the Octelium User who owns the snapshot.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 3
+     */
+    userRef?: ObjectReference;
+    /**
+     * SpaceRef is the reference of the Space of the source Workspace. New
+     * Workspaces can only be restored from the snapshot inside that Space.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 4
+     */
+    spaceRef?: ObjectReference;
+    /**
+     * TemplateRef is the reference of the Template of the source Workspace.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference templateRef = 5
+     */
+    templateRef?: ObjectReference;
+    /**
+     * RegionRef is the reference of the Region that holds the snapshot. It is
+     * the Region that hosted the latest run of the source Workspace and it is
+     * where the restored Workspaces are run.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference regionRef = 6
+     */
+    regionRef?: ObjectReference;
+    /**
+     * SnapshotAt is the timestamp of the point-in-time cut as it is reported
+     * by the storage backend. It is unset until the backend starts taking the
+     * snapshot.
+     *
+     * @generated from protobuf field: google.protobuf.Timestamp snapshotAt = 7
+     */
+    snapshotAt?: Timestamp;
+    /**
+     * ReadyAt is the timestamp at which the snapshot became restorable.
+     *
+     * @generated from protobuf field: google.protobuf.Timestamp readyAt = 8
+     */
+    readyAt?: Timestamp;
+    /**
+     * RestoreSizeBytes is the minimum size, in bytes, of the volume that the
+     * snapshot can be restored into. It is reported by the storage backend.
+     *
+     * @generated from protobuf field: uint64 restoreSizeBytes = 9
+     */
+    restoreSizeBytes: number;
+    /**
+     * Consistency is the consistency guarantee of the snapshot.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Consistency consistency = 10
+     */
+    consistency: WorkspaceSnapshot_Status_Consistency;
+    /**
+     * Failure is the reason of the failure of the snapshot, if any.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure failure = 11
+     */
+    failure?: WorkspaceSnapshot_Status_Failure;
+}
+/**
+ * Failure describes the reason of the failure of a snapshot.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure
+ */
+export interface WorkspaceSnapshot_Status_Failure {
+    /**
+     * Message is a human-readable description of the failure.
+     *
+     * @generated from protobuf field: string message = 1
+     */
+    message: string;
+    /**
+     * Type is the specific reason of the failure
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "unsupported";
+        /**
+         * Unsupported means that the Cluster cannot snapshot the Workspaces'
+         * storage.
+         *
+         * @generated from protobuf field: octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Unsupported unsupported = 2
+         */
+        unsupported: WorkspaceSnapshot_Status_Failure_Unsupported;
+    } | {
+        oneofKind: "sourceNotFound";
+        /**
+         * SourceNotFound means that the Workspace's volume does not exist.
+         *
+         * @generated from protobuf field: octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.SourceNotFound sourceNotFound = 3
+         */
+        sourceNotFound: WorkspaceSnapshot_Status_Failure_SourceNotFound;
+    } | {
+        oneofKind: "storage";
+        /**
+         * Storage means that the storage backend failed to take the snapshot.
+         *
+         * @generated from protobuf field: octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Storage storage = 4
+         */
+        storage: WorkspaceSnapshot_Status_Failure_Storage;
+    } | {
+        oneofKind: "unknown";
+        /**
+         * Unknown means that the snapshot failed for an unclassified reason.
+         *
+         * @generated from protobuf field: octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Unknown unknown = 5
+         */
+        unknown: WorkspaceSnapshot_Status_Failure_Unknown;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * Unsupported means that the Cluster is not able to snapshot the
+ * Workspaces' storage (e.g. the CSI volume snapshot API is not installed
+ * or no VolumeSnapshotClass is configured).
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Unsupported
+ */
+export interface WorkspaceSnapshot_Status_Failure_Unsupported {
+}
+/**
+ * SourceNotFound means that the Workspace's underlying volume does not
+ * exist anymore.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.SourceNotFound
+ */
+export interface WorkspaceSnapshot_Status_Failure_SourceNotFound {
+}
+/**
+ * Storage means that the storage backend failed to take the snapshot.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Storage
+ */
+export interface WorkspaceSnapshot_Status_Failure_Storage {
+}
+/**
+ * Unknown means that the snapshot failed for an unclassified reason.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Unknown
+ */
+export interface WorkspaceSnapshot_Status_Failure_Unknown {
+}
+/**
+ * State is the current state of the WorkspaceSnapshot's lifecycle
+ *
+ * @generated from protobuf enum octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.State
+ */
+export enum WorkspaceSnapshot_Status_State {
+    /**
+     * STATE_UNKNOWN is not used.
+     *
+     * @generated from protobuf enum value: STATE_UNKNOWN = 0;
+     */
+    UNKNOWN = 0,
+    /**
+     * STATE_CREATING means that the storage backend is still taking the
+     * snapshot. The snapshot cannot be restored from yet.
+     *
+     * @generated from protobuf enum value: STATE_CREATING = 1;
+     */
+    CREATING = 1,
+    /**
+     * STATE_READY means that the snapshot is complete and that new
+     * Workspaces can be restored from it.
+     *
+     * @generated from protobuf enum value: STATE_READY = 2;
+     */
+    READY = 2,
+    /**
+     * STATE_FAILED means that the snapshot could not be taken. It can never
+     * be restored from.
+     *
+     * @generated from protobuf enum value: STATE_FAILED = 3;
+     */
+    FAILED = 3
+}
+/**
+ * Consistency is the consistency guarantee of the snapshot
+ *
+ * @generated from protobuf enum octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Consistency
+ */
+export enum WorkspaceSnapshot_Status_Consistency {
+    /**
+     * CONSISTENCY_UNSET is not used.
+     *
+     * @generated from protobuf enum value: CONSISTENCY_UNSET = 0;
+     */
+    UNSET = 0,
+    /**
+     * CONSISTENCY_CRASH means that the snapshot was taken while the source
+     * Workspace was running. It is equivalent to the state of the storage
+     * after a power loss (i.e. the data that was still buffered in memory is
+     * not included).
+     *
+     * @generated from protobuf enum value: CONSISTENCY_CRASH = 1;
+     */
+    CRASH = 1,
+    /**
+     * CONSISTENCY_CLEAN means that the source Workspace was stopped when the
+     * snapshot was taken.
+     *
+     * @generated from protobuf enum value: CONSISTENCY_CLEAN = 2;
+     */
+    CLEAN = 2
+}
+/**
+ * WorkspaceSnapshotList is the response of the ListWorkspaceSnapshot method.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshotList
+ */
+export interface WorkspaceSnapshotList {
+    /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
+     * @generated from protobuf field: string apiVersion = 1
+     */
+    apiVersion: string;
+    /**
+     * Kind is the resource name (i.e. `WorkspaceSnapshotList`).
+     *
+     * @generated from protobuf field: string kind = 2
+     */
+    kind: string;
+    /**
+     * Items is the list of WorkspaceSnapshots.
+     *
+     * @generated from protobuf field: repeated octelium.api.main.cordium.v1.WorkspaceSnapshot items = 3
+     */
+    items: WorkspaceSnapshot[];
+    /**
+     * ListResponseMeta is common information about the list.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ListResponseMeta listResponseMeta = 4
+     */
+    listResponseMeta?: ListResponseMeta;
+}
+/**
+ * ListWorkspaceSnapshotOptions is the request of the ListWorkspaceSnapshot
+ * method. The returned WorkspaceSnapshots are always restricted to the ones
+ * that are owned by the calling User.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.ListWorkspaceSnapshotOptions
+ */
+export interface ListWorkspaceSnapshotOptions {
+    /**
+     * Common is the pagination and ordering options that are common to all the
+     * List methods.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
+     */
+    common?: CommonListOptions;
+    /**
+     * Filter optionally narrows down the returned WorkspaceSnapshots
+     *
+     * @generated from protobuf oneof: filter
+     */
+    filter: {
+        oneofKind: "workspaceRef";
+        /**
+         * WorkspaceRef returns only the snapshots of this Workspace.
+         *
+         * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference workspaceRef = 2
+         */
+        workspaceRef: ObjectReference;
+    } | {
+        oneofKind: "spaceRef";
+        /**
+         * SpaceRef returns only the snapshots whose source Workspace belongs to
+         * this Space.
+         *
+         * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 3
+         */
+        spaceRef: ObjectReference;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * Volume is a persistent storage device that lives inside a Space and that is
+ * mounted by the Workspaces of that Space at arbitrary paths. Unlike the
+ * Workspace's own private storage, a Volume has a lifecycle of its own (i.e.
+ * it outlives the Workspaces that mount it), it is shared between the Members
+ * of its Space and it is never included in the WorkspaceSnapshots of the
+ * Workspaces that mount it. Volumes are backed by a Kubernetes persistent
+ * volume and, therefore, they belong to a single Region and can only be
+ * mounted by the Workspaces that run in that same Region.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.Volume
+ */
+export interface Volume {
+    /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
+     * @generated from protobuf field: string apiVersion = 1
+     */
+    apiVersion: string;
+    /**
+     * Kind is the resource name (i.e. `Volume`).
+     *
+     * @generated from protobuf field: string kind = 2
+     */
+    kind: string;
+    /**
+     * Metadata is the object's metadata.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.Metadata metadata = 3
+     */
+    metadata?: Metadata;
+    /**
+     * Spec is the Volume specification.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.Volume.Spec spec = 4
+     */
+    spec?: Volume_Spec;
+    /**
+     * Status is the current status of the Volume.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.Volume.Status status = 5
+     */
+    status?: Volume_Status;
+}
+/**
+ * Spec is the Volume specification
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.Volume.Spec
+ */
+export interface Volume_Spec {
+    /**
+     * Size is the requested capacity of the Volume. It defaults to the
+     * Cluster's default Volume size. It can later be grown but never shrunk
+     * and growing it additionally requires the storage backend to support the
+     * expansion of the already provisioned volumes.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.Volume.Spec.Size size = 1
+     */
+    size?: Volume_Spec_Size;
+    /**
+     * AccessMode is the concurrency guarantee of the Volume. It is immutable
+     * and it defaults to EXCLUSIVE.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.Volume.AccessMode accessMode = 2
+     */
+    accessMode: Volume_AccessMode;
+}
+/**
+ * Size is the capacity of a Volume.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.Volume.Spec.Size
+ */
+export interface Volume_Spec_Size {
+    /**
+     * Megabytes is the capacity in megabytes.
+     *
+     * @generated from protobuf field: uint32 megabytes = 1
+     */
+    megabytes: number;
+}
+/**
+ * Status is the current status of the Volume. It is entirely managed by the
+ * Cluster and it is read-only.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.Volume.Status
+ */
+export interface Volume_Status {
+    /**
+     * State is the current state of the Volume.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.Volume.Status.State state = 1
+     */
+    state: Volume_Status_State;
+    /**
+     * SpaceRef is the reference of the Space that owns the Volume.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 2
+     */
+    spaceRef?: ObjectReference;
+    /**
+     * UserRef is the reference of the Octelium User who created the Volume.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference userRef = 3
+     */
+    userRef?: ObjectReference;
+    /**
+     * RegionRef is the reference of the Region that hosts the Volume's
+     * underlying storage. Only the Workspaces that run in that Region can
+     * mount the Volume.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference regionRef = 4
+     */
+    regionRef?: ObjectReference;
+    /**
+     * Capacity is the actual capacity of the provisioned storage as it is
+     * reported by the storage backend. It is unset until the Volume is
+     * provisioned and it can be larger than the requested size.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.Volume.Spec.Size capacity = 5
+     */
+    capacity?: Volume_Spec_Size;
+    /**
+     * ReadyAt is the timestamp at which the Volume's storage was provisioned.
+     *
+     * @generated from protobuf field: google.protobuf.Timestamp readyAt = 6
+     */
+    readyAt?: Timestamp;
+    /**
+     * Failure is the reason of the failure of the Volume, if any.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.Volume.Status.Failure failure = 7
+     */
+    failure?: Volume_Status_Failure;
+}
+/**
+ * Failure describes the reason of the failure of a Volume.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.Volume.Status.Failure
+ */
+export interface Volume_Status_Failure {
+    /**
+     * Message is a human-readable description of the failure.
+     *
+     * @generated from protobuf field: string message = 1
+     */
+    message: string;
+    /**
+     * Type is the specific reason of the failure
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "unsupported";
+        /**
+         * Unsupported means that the Cluster cannot provision the Volume as it
+         * is requested.
+         *
+         * @generated from protobuf field: octelium.api.main.cordium.v1.Volume.Status.Failure.Unsupported unsupported = 2
+         */
+        unsupported: Volume_Status_Failure_Unsupported;
+    } | {
+        oneofKind: "storage";
+        /**
+         * Storage means that the storage backend failed.
+         *
+         * @generated from protobuf field: octelium.api.main.cordium.v1.Volume.Status.Failure.Storage storage = 3
+         */
+        storage: Volume_Status_Failure_Storage;
+    } | {
+        oneofKind: "unknown";
+        /**
+         * Unknown means that the Volume failed for an unclassified reason.
+         *
+         * @generated from protobuf field: octelium.api.main.cordium.v1.Volume.Status.Failure.Unknown unknown = 4
+         */
+        unknown: Volume_Status_Failure_Unknown;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * Unsupported means that the Cluster is not able to provision the
+ * Volume as it is requested (e.g. a SHARED Volume was requested while no
+ * multi-writer storage backend is configured).
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.Volume.Status.Failure.Unsupported
+ */
+export interface Volume_Status_Failure_Unsupported {
+}
+/**
+ * Storage means that the storage backend failed to provision the Volume
+ * or that the already provisioned storage was lost.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.Volume.Status.Failure.Storage
+ */
+export interface Volume_Status_Failure_Storage {
+}
+/**
+ * Unknown means that the Volume failed for an unclassified reason.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.Volume.Status.Failure.Unknown
+ */
+export interface Volume_Status_Failure_Unknown {
+}
+/**
+ * State is the current state of the Volume's lifecycle
+ *
+ * @generated from protobuf enum octelium.api.main.cordium.v1.Volume.Status.State
+ */
+export enum Volume_Status_State {
+    /**
+     * STATE_UNKNOWN is not used.
+     *
+     * @generated from protobuf enum value: STATE_UNKNOWN = 0;
+     */
+    UNKNOWN = 0,
+    /**
+     * STATE_PENDING means that the underlying storage is not provisioned
+     * yet. A Volume can already be mounted by the Workspaces while it is
+     * PENDING since the storage backends commonly defer the provisioning
+     * itself until the first Workspace that mounts the Volume is scheduled.
+     *
+     * @generated from protobuf enum value: STATE_PENDING = 1;
+     */
+    PENDING = 1,
+    /**
+     * STATE_READY means that the underlying storage is provisioned.
+     *
+     * @generated from protobuf enum value: STATE_READY = 2;
+     */
+    READY = 2,
+    /**
+     * STATE_FAILED means that the underlying storage could not be
+     * provisioned or that it was lost.
+     *
+     * @generated from protobuf enum value: STATE_FAILED = 3;
+     */
+    FAILED = 3
+}
+/**
+ * AccessMode is the concurrency guarantee of a Volume
+ *
+ * @generated from protobuf enum octelium.api.main.cordium.v1.Volume.AccessMode
+ */
+export enum Volume_AccessMode {
+    /**
+     * ACCESS_MODE_UNSET falls back to EXCLUSIVE.
+     *
+     * @generated from protobuf enum value: ACCESS_MODE_UNSET = 0;
+     */
+    UNSET = 0,
+    /**
+     * ACCESS_MODE_EXCLUSIVE is a Volume that is meant to be actively mounted
+     * by a single Workspace at a time. It is backed by a single-writer
+     * Kubernetes volume which is what the block storage backends typically
+     * provide.
+     *
+     * @generated from protobuf enum value: ACCESS_MODE_EXCLUSIVE = 1;
+     */
+    EXCLUSIVE = 1,
+    /**
+     * ACCESS_MODE_SHARED is a Volume that can be actively mounted by several
+     * Workspaces at the same time. It is backed by a multi-writer Kubernetes
+     * volume and, therefore, it requires the Cluster to be configured with a
+     * shared filesystem storage backend (e.g. NFS, CephFS or EFS).
+     *
+     * @generated from protobuf enum value: ACCESS_MODE_SHARED = 2;
+     */
+    SHARED = 2
+}
+/**
+ * VolumeList is the response of the ListVolume method.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.VolumeList
+ */
+export interface VolumeList {
+    /**
+     * APIVersion is the API version (i.e. "cordium/v1")
+     *
+     * @generated from protobuf field: string apiVersion = 1
+     */
+    apiVersion: string;
+    /**
+     * Kind is the resource name (i.e. `VolumeList`).
+     *
+     * @generated from protobuf field: string kind = 2
+     */
+    kind: string;
+    /**
+     * Items is the list of Volumes.
+     *
+     * @generated from protobuf field: repeated octelium.api.main.cordium.v1.Volume items = 3
+     */
+    items: Volume[];
+    /**
+     * ListResponseMeta is common information about the list.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ListResponseMeta listResponseMeta = 4
+     */
+    listResponseMeta?: ListResponseMeta;
+}
+/**
+ * ListVolumeOptions is the request of the ListVolume method.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.ListVolumeOptions
+ */
+export interface ListVolumeOptions {
+    /**
+     * Common is the pagination and ordering options that are common to all the
+     * List methods.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.CommonListOptions common = 1
+     */
+    common?: CommonListOptions;
+    /**
+     * SpaceRef is the reference of the Space whose Volumes are listed.
+     *
+     * @generated from protobuf field: octelium.api.main.meta.v1.ObjectReference spaceRef = 2
+     */
+    spaceRef?: ObjectReference;
 }
 /**
  * Secret is a sensitive value (e.g. an API key, a token, a password or a
@@ -4999,6 +5755,12 @@ export interface ClusterConfig_Spec {
      * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace workspace = 2
      */
     workspace?: ClusterConfig_Spec_Workspace;
+    /**
+     * Volume is the Cluster-wide Volume-related configuration.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume volume = 3
+     */
+    volume?: ClusterConfig_Spec_Volume;
 }
 /**
  * Space is the Cluster-wide Space-related configuration.
@@ -5124,8 +5886,9 @@ export interface ClusterConfig_Spec_Workspace_Storage {
     storageClass?: ClusterConfig_Spec_Workspace_Storage_StorageClass;
     /**
      * VolumeSnapshotClass selects the VolumeSnapshotClass of the Template
-     * pre-build snapshots. If it is unset or if no rule matches, the
-     * Template pre-builds are disabled.
+     * pre-build snapshots and of the WorkspaceSnapshots. If it is unset or
+     * if no rule matches, the Cluster lets Kubernetes pick the default
+     * VolumeSnapshotClass of the volume's CSI driver instead.
      *
      * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Storage.VolumeSnapshotClass volumeSnapshotClass = 2
      */
@@ -5169,7 +5932,8 @@ export interface ClusterConfig_Spec_Workspace_Storage_StorageClass_Rule {
 }
 /**
  * VolumeSnapshotClass selects the Kubernetes VolumeSnapshotClass that
- * is used for the Template pre-build snapshots.
+ * is used for the Template pre-build snapshots as well as for the
+ * WorkspaceSnapshots.
  *
  * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Storage.VolumeSnapshotClass
  */
@@ -5190,8 +5954,8 @@ export interface ClusterConfig_Spec_Workspace_Storage_VolumeSnapshotClass {
 export interface ClusterConfig_Spec_Workspace_Storage_VolumeSnapshotClass_Rule {
     /**
      * Condition is evaluated against the request context which
-     * contains the build Workspace (i.e. `ctx.workspace`) and its
-     * Template (i.e. `ctx.template`).
+     * contains the snapshotted Workspace (i.e. `ctx.workspace`) and
+     * its Template (i.e. `ctx.template`).
      *
      * @generated from protobuf field: octelium.api.main.cordium.v1.Condition condition = 1
      */
@@ -5253,6 +6017,13 @@ export interface ClusterConfig_Spec_Workspace_Limit {
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Limit maxLimit = 6
      */
     maxLimit?: Workspace_Spec_Limit;
+    /**
+     * MaxSnapshotsPerUser is the maximum total number of the
+     * WorkspaceSnapshots that a single User can own.
+     *
+     * @generated from protobuf field: uint32 maxSnapshotsPerUser = 7
+     */
+    maxSnapshotsPerUser: number;
 }
 /**
  * Timeout is the Cluster-wide inactivity timeouts after which a running
@@ -5310,6 +6081,116 @@ export interface ClusterConfig_Spec_Workspace_Runtime {
      * @generated from protobuf field: octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Capabilities capabilities = 1
      */
     capabilities?: Workspace_Spec_Runtime_Capabilities;
+}
+/**
+ * Volume is the Cluster-wide Volume-related configuration.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume
+ */
+export interface ClusterConfig_Spec_Volume {
+    /**
+     * Storage is the storage provisioning configuration of the Volumes.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage storage = 1
+     */
+    storage?: ClusterConfig_Spec_Volume_Storage;
+    /**
+     * Limit is the Cluster-wide Volume limits.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Limit limit = 2
+     */
+    limit?: ClusterConfig_Spec_Volume_Limit;
+}
+/**
+ * Storage is the storage provisioning configuration of the Volumes.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage
+ */
+export interface ClusterConfig_Spec_Volume_Storage {
+    /**
+     * StorageClass selects the StorageClass of the Volumes. If it is unset
+     * or if no rule matches, the Cluster lets Kubernetes pick its default
+     * StorageClass instead.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage.StorageClass storageClass = 1
+     */
+    storageClass?: ClusterConfig_Spec_Volume_Storage_StorageClass;
+}
+/**
+ * StorageClass selects the Kubernetes StorageClass that is used to
+ * provision the Volumes. Since the Kubernetes API does not expose
+ * whether a StorageClass is able to provide multi-writer volumes, the
+ * rules are what tells the Cluster which backend to use for the SHARED
+ * Volumes and which one to use for the EXCLUSIVE ones.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage.StorageClass
+ */
+export interface ClusterConfig_Spec_Volume_Storage_StorageClass {
+    /**
+     * Rules is the list of the storage class selection rules. They are
+     * evaluated in order and the first matching one is used.
+     *
+     * @generated from protobuf field: repeated octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage.StorageClass.Rule rules = 1
+     */
+    rules: ClusterConfig_Spec_Volume_Storage_StorageClass_Rule[];
+}
+/**
+ * Rule is a single storage class selection rule.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage.StorageClass.Rule
+ */
+export interface ClusterConfig_Spec_Volume_Storage_StorageClass_Rule {
+    /**
+     * Condition is evaluated against the request context which
+     * contains the Volume that is being provisioned (i.e.
+     * `ctx.volume`).
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.Condition condition = 1
+     */
+    condition?: Condition;
+    /**
+     * StorageClass is the name of the Kubernetes StorageClass that is
+     * used once the Condition matches.
+     *
+     * @generated from protobuf field: string storageClass = 2
+     */
+    storageClass: string;
+}
+/**
+ * Limit is the Cluster-wide Volume limits. All the fields are optional
+ * and omitting one means that no Cluster-level restriction is applied
+ * for that dimension.
+ *
+ * @generated from protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Limit
+ */
+export interface ClusterConfig_Spec_Volume_Limit {
+    /**
+     * MaxPerSpace is the maximum total number of the Volumes that a single
+     * Space can own.
+     *
+     * @generated from protobuf field: uint32 maxPerSpace = 1
+     */
+    maxPerSpace: number;
+    /**
+     * MaxSize is a hard cap that no Volume of the Cluster can exceed.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.Volume.Spec.Size maxSize = 2
+     */
+    maxSize?: Volume_Spec_Size;
+    /**
+     * DefaultSize is the size of the Volumes that do not request an
+     * explicit one.
+     *
+     * @generated from protobuf field: octelium.api.main.cordium.v1.Volume.Spec.Size defaultSize = 3
+     */
+    defaultSize?: Volume_Spec_Size;
+    /**
+     * MaxMountsPerWorkspace is the maximum number of the Volumes that a
+     * single Workspace can mount.
+     *
+     * @generated from protobuf field: uint32 maxMountsPerWorkspace = 4
+     */
+    maxMountsPerWorkspace: number;
 }
 /**
  * Status is the current status of the ClusterConfig. It is intentionally
@@ -6599,7 +7480,8 @@ class Workspace_Spec_Runtime$Type extends MessageType<Workspace_Spec_Runtime> {
             { no: 9, name: "filesystem", kind: "message", T: () => Workspace_Spec_Runtime_Filesystem },
             { no: 10, name: "capabilities", kind: "message", T: () => Workspace_Spec_Runtime_Capabilities },
             { no: 11, name: "timeout", kind: "message", T: () => Workspace_Spec_Runtime_Timeout },
-            { no: 12, name: "autoStop", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 12, name: "autoStop", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 13, name: "volumeMounts", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Workspace_Spec_Runtime_VolumeMount }
         ]);
     }
     create(value?: PartialMessage<Workspace_Spec_Runtime>): Workspace_Spec_Runtime {
@@ -6610,6 +7492,7 @@ class Workspace_Spec_Runtime$Type extends MessageType<Workspace_Spec_Runtime> {
         message.cmd = "";
         message.entrypoint = "";
         message.autoStop = false;
+        message.volumeMounts = [];
         if (value !== undefined)
             reflectionMergePartial<Workspace_Spec_Runtime>(this, message, value);
         return message;
@@ -6654,6 +7537,9 @@ class Workspace_Spec_Runtime$Type extends MessageType<Workspace_Spec_Runtime> {
                     break;
                 case /* bool autoStop */ 12:
                     message.autoStop = reader.bool();
+                    break;
+                case /* repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.VolumeMount volumeMounts */ 13:
+                    message.volumeMounts.push(Workspace_Spec_Runtime_VolumeMount.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -6703,6 +7589,9 @@ class Workspace_Spec_Runtime$Type extends MessageType<Workspace_Spec_Runtime> {
         /* bool autoStop = 12; */
         if (message.autoStop !== false)
             writer.tag(12, WireType.Varint).bool(message.autoStop);
+        /* repeated octelium.api.main.cordium.v1.Workspace.Spec.Runtime.VolumeMount volumeMounts = 13; */
+        for (let i = 0; i < message.volumeMounts.length; i++)
+            Workspace_Spec_Runtime_VolumeMount.internalBinaryWrite(message.volumeMounts[i], writer.tag(13, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -6939,6 +7828,68 @@ class Workspace_Spec_Runtime_Task_EnvVar$Type extends MessageType<Workspace_Spec
  * @generated MessageType for protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.Task.EnvVar
  */
 export const Workspace_Spec_Runtime_Task_EnvVar = new Workspace_Spec_Runtime_Task_EnvVar$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Workspace_Spec_Runtime_VolumeMount$Type extends MessageType<Workspace_Spec_Runtime_VolumeMount> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.Workspace.Spec.Runtime.VolumeMount", [
+            { no: 1, name: "volumeRef", kind: "message", T: () => ObjectReference },
+            { no: 2, name: "mountPath", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "readOnly", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Workspace_Spec_Runtime_VolumeMount>): Workspace_Spec_Runtime_VolumeMount {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.mountPath = "";
+        message.readOnly = false;
+        if (value !== undefined)
+            reflectionMergePartial<Workspace_Spec_Runtime_VolumeMount>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Workspace_Spec_Runtime_VolumeMount): Workspace_Spec_Runtime_VolumeMount {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.meta.v1.ObjectReference volumeRef */ 1:
+                    message.volumeRef = ObjectReference.internalBinaryRead(reader, reader.uint32(), options, message.volumeRef);
+                    break;
+                case /* string mountPath */ 2:
+                    message.mountPath = reader.string();
+                    break;
+                case /* bool readOnly */ 3:
+                    message.readOnly = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Workspace_Spec_Runtime_VolumeMount, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.meta.v1.ObjectReference volumeRef = 1; */
+        if (message.volumeRef)
+            ObjectReference.internalBinaryWrite(message.volumeRef, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string mountPath = 2; */
+        if (message.mountPath !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.mountPath);
+        /* bool readOnly = 3; */
+        if (message.readOnly !== false)
+            writer.tag(3, WireType.Varint).bool(message.readOnly);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.Workspace.Spec.Runtime.VolumeMount
+ */
+export const Workspace_Spec_Runtime_VolumeMount = new Workspace_Spec_Runtime_VolumeMount$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Workspace_Spec_Runtime_Devcontainers$Type extends MessageType<Workspace_Spec_Runtime_Devcontainers> {
     constructor() {
@@ -7827,7 +8778,9 @@ class Workspace_Status$Type extends MessageType<Workspace_Status> {
             { no: 22, name: "stoppingReason", kind: "enum", T: () => ["octelium.api.main.cordium.v1.Workspace.Status.StoppingReason", Workspace_Status_StoppingReason, "STOPPING_REASON_"] },
             { no: 23, name: "lastStoppingReason", kind: "enum", T: () => ["octelium.api.main.cordium.v1.Workspace.Status.StoppingReason", Workspace_Status_StoppingReason, "STOPPING_REASON_"] },
             { no: 24, name: "run", kind: "message", T: () => Workspace_Status_Run },
-            { no: 25, name: "lastRuns", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Workspace_Status_Run }
+            { no: 25, name: "lastRuns", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Workspace_Status_Run },
+            { no: 26, name: "workspaceSnapshotRef", kind: "message", T: () => ObjectReference },
+            { no: 27, name: "lastRegionRef", kind: "message", T: () => ObjectReference }
         ]);
     }
     create(value?: PartialMessage<Workspace_Status>): Workspace_Status {
@@ -7926,6 +8879,12 @@ class Workspace_Status$Type extends MessageType<Workspace_Status> {
                 case /* repeated octelium.api.main.cordium.v1.Workspace.Status.Run lastRuns */ 25:
                     message.lastRuns.push(Workspace_Status_Run.internalBinaryRead(reader, reader.uint32(), options));
                     break;
+                case /* octelium.api.main.meta.v1.ObjectReference workspaceSnapshotRef */ 26:
+                    message.workspaceSnapshotRef = ObjectReference.internalBinaryRead(reader, reader.uint32(), options, message.workspaceSnapshotRef);
+                    break;
+                case /* octelium.api.main.meta.v1.ObjectReference lastRegionRef */ 27:
+                    message.lastRegionRef = ObjectReference.internalBinaryRead(reader, reader.uint32(), options, message.lastRegionRef);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -8013,6 +8972,12 @@ class Workspace_Status$Type extends MessageType<Workspace_Status> {
         /* repeated octelium.api.main.cordium.v1.Workspace.Status.Run lastRuns = 25; */
         for (let i = 0; i < message.lastRuns.length; i++)
             Workspace_Status_Run.internalBinaryWrite(message.lastRuns[i], writer.tag(25, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.meta.v1.ObjectReference workspaceSnapshotRef = 26; */
+        if (message.workspaceSnapshotRef)
+            ObjectReference.internalBinaryWrite(message.workspaceSnapshotRef, writer.tag(26, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.meta.v1.ObjectReference lastRegionRef = 27; */
+        if (message.lastRegionRef)
+            ObjectReference.internalBinaryWrite(message.lastRegionRef, writer.tag(27, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -8042,7 +9007,8 @@ class Workspace_Status_Failure$Type extends MessageType<Workspace_Status_Failure
             { no: 13, name: "healthCheck", kind: "message", oneof: "type", T: () => Workspace_Status_Failure_HealthCheck },
             { no: 14, name: "unknown", kind: "message", oneof: "type", T: () => Workspace_Status_Failure_Unknown },
             { no: 15, name: "additionalRepoClone", kind: "message", oneof: "type", T: () => Workspace_Status_Failure_AdditionalRepoClone },
-            { no: 16, name: "networkPolicy", kind: "message", oneof: "type", T: () => Workspace_Status_Failure_NetworkPolicy }
+            { no: 16, name: "networkPolicy", kind: "message", oneof: "type", T: () => Workspace_Status_Failure_NetworkPolicy },
+            { no: 17, name: "volume", kind: "message", oneof: "type", T: () => Workspace_Status_Failure_Volume }
         ]);
     }
     create(value?: PartialMessage<Workspace_Status_Failure>): Workspace_Status_Failure {
@@ -8151,6 +9117,12 @@ class Workspace_Status_Failure$Type extends MessageType<Workspace_Status_Failure
                         networkPolicy: Workspace_Status_Failure_NetworkPolicy.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).networkPolicy)
                     };
                     break;
+                case /* octelium.api.main.cordium.v1.Workspace.Status.Failure.Volume volume */ 17:
+                    message.type = {
+                        oneofKind: "volume",
+                        volume: Workspace_Status_Failure_Volume.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).volume)
+                    };
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -8211,6 +9183,9 @@ class Workspace_Status_Failure$Type extends MessageType<Workspace_Status_Failure
         /* octelium.api.main.cordium.v1.Workspace.Status.Failure.NetworkPolicy networkPolicy = 16; */
         if (message.type.oneofKind === "networkPolicy")
             Workspace_Status_Failure_NetworkPolicy.internalBinaryWrite(message.type.networkPolicy, writer.tag(16, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.Workspace.Status.Failure.Volume volume = 17; */
+        if (message.type.oneofKind === "volume")
+            Workspace_Status_Failure_Volume.internalBinaryWrite(message.type.volume, writer.tag(17, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -8856,6 +9831,53 @@ class Workspace_Status_Failure_NetworkPolicy$Type extends MessageType<Workspace_
  */
 export const Workspace_Status_Failure_NetworkPolicy = new Workspace_Status_Failure_NetworkPolicy$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class Workspace_Status_Failure_Volume$Type extends MessageType<Workspace_Status_Failure_Volume> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.Workspace.Status.Failure.Volume", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Workspace_Status_Failure_Volume>): Workspace_Status_Failure_Volume {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.name = "";
+        if (value !== undefined)
+            reflectionMergePartial<Workspace_Status_Failure_Volume>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Workspace_Status_Failure_Volume): Workspace_Status_Failure_Volume {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Workspace_Status_Failure_Volume, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.Workspace.Status.Failure.Volume
+ */
+export const Workspace_Status_Failure_Volume = new Workspace_Status_Failure_Volume$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class Workspace_Status_SharedPort$Type extends MessageType<Workspace_Status_SharedPort> {
     constructor() {
         super("octelium.api.main.cordium.v1.Workspace.Status.SharedPort", [
@@ -9122,6 +10144,1197 @@ class ListWorkspaceOptions$Type extends MessageType<ListWorkspaceOptions> {
  * @generated MessageType for protobuf message octelium.api.main.cordium.v1.ListWorkspaceOptions
  */
 export const ListWorkspaceOptions = new ListWorkspaceOptions$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class WorkspaceSnapshot$Type extends MessageType<WorkspaceSnapshot> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.WorkspaceSnapshot", [
+            { no: 1, name: "apiVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "kind", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "metadata", kind: "message", T: () => Metadata },
+            { no: 4, name: "spec", kind: "message", T: () => WorkspaceSnapshot_Spec },
+            { no: 5, name: "status", kind: "message", T: () => WorkspaceSnapshot_Status }
+        ]);
+    }
+    create(value?: PartialMessage<WorkspaceSnapshot>): WorkspaceSnapshot {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.apiVersion = "";
+        message.kind = "";
+        if (value !== undefined)
+            reflectionMergePartial<WorkspaceSnapshot>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: WorkspaceSnapshot): WorkspaceSnapshot {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string apiVersion */ 1:
+                    message.apiVersion = reader.string();
+                    break;
+                case /* string kind */ 2:
+                    message.kind = reader.string();
+                    break;
+                case /* octelium.api.main.meta.v1.Metadata metadata */ 3:
+                    message.metadata = Metadata.internalBinaryRead(reader, reader.uint32(), options, message.metadata);
+                    break;
+                case /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Spec spec */ 4:
+                    message.spec = WorkspaceSnapshot_Spec.internalBinaryRead(reader, reader.uint32(), options, message.spec);
+                    break;
+                case /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status status */ 5:
+                    message.status = WorkspaceSnapshot_Status.internalBinaryRead(reader, reader.uint32(), options, message.status);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: WorkspaceSnapshot, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string apiVersion = 1; */
+        if (message.apiVersion !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.apiVersion);
+        /* string kind = 2; */
+        if (message.kind !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.kind);
+        /* octelium.api.main.meta.v1.Metadata metadata = 3; */
+        if (message.metadata)
+            Metadata.internalBinaryWrite(message.metadata, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Spec spec = 4; */
+        if (message.spec)
+            WorkspaceSnapshot_Spec.internalBinaryWrite(message.spec, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status status = 5; */
+        if (message.status)
+            WorkspaceSnapshot_Status.internalBinaryWrite(message.status, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot
+ */
+export const WorkspaceSnapshot = new WorkspaceSnapshot$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class WorkspaceSnapshot_Spec$Type extends MessageType<WorkspaceSnapshot_Spec> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.WorkspaceSnapshot.Spec", []);
+    }
+    create(value?: PartialMessage<WorkspaceSnapshot_Spec>): WorkspaceSnapshot_Spec {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<WorkspaceSnapshot_Spec>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: WorkspaceSnapshot_Spec): WorkspaceSnapshot_Spec {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: WorkspaceSnapshot_Spec, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Spec
+ */
+export const WorkspaceSnapshot_Spec = new WorkspaceSnapshot_Spec$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class WorkspaceSnapshot_Status$Type extends MessageType<WorkspaceSnapshot_Status> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.WorkspaceSnapshot.Status", [
+            { no: 1, name: "state", kind: "enum", T: () => ["octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.State", WorkspaceSnapshot_Status_State, "STATE_"] },
+            { no: 2, name: "workspaceRef", kind: "message", T: () => ObjectReference },
+            { no: 3, name: "userRef", kind: "message", T: () => ObjectReference },
+            { no: 4, name: "spaceRef", kind: "message", T: () => ObjectReference },
+            { no: 5, name: "templateRef", kind: "message", T: () => ObjectReference },
+            { no: 6, name: "regionRef", kind: "message", T: () => ObjectReference },
+            { no: 7, name: "snapshotAt", kind: "message", T: () => Timestamp },
+            { no: 8, name: "readyAt", kind: "message", T: () => Timestamp },
+            { no: 9, name: "restoreSizeBytes", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 10, name: "consistency", kind: "enum", T: () => ["octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Consistency", WorkspaceSnapshot_Status_Consistency, "CONSISTENCY_"] },
+            { no: 11, name: "failure", kind: "message", T: () => WorkspaceSnapshot_Status_Failure }
+        ]);
+    }
+    create(value?: PartialMessage<WorkspaceSnapshot_Status>): WorkspaceSnapshot_Status {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.state = 0;
+        message.restoreSizeBytes = 0;
+        message.consistency = 0;
+        if (value !== undefined)
+            reflectionMergePartial<WorkspaceSnapshot_Status>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: WorkspaceSnapshot_Status): WorkspaceSnapshot_Status {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.State state */ 1:
+                    message.state = reader.int32();
+                    break;
+                case /* octelium.api.main.meta.v1.ObjectReference workspaceRef */ 2:
+                    message.workspaceRef = ObjectReference.internalBinaryRead(reader, reader.uint32(), options, message.workspaceRef);
+                    break;
+                case /* octelium.api.main.meta.v1.ObjectReference userRef */ 3:
+                    message.userRef = ObjectReference.internalBinaryRead(reader, reader.uint32(), options, message.userRef);
+                    break;
+                case /* octelium.api.main.meta.v1.ObjectReference spaceRef */ 4:
+                    message.spaceRef = ObjectReference.internalBinaryRead(reader, reader.uint32(), options, message.spaceRef);
+                    break;
+                case /* octelium.api.main.meta.v1.ObjectReference templateRef */ 5:
+                    message.templateRef = ObjectReference.internalBinaryRead(reader, reader.uint32(), options, message.templateRef);
+                    break;
+                case /* octelium.api.main.meta.v1.ObjectReference regionRef */ 6:
+                    message.regionRef = ObjectReference.internalBinaryRead(reader, reader.uint32(), options, message.regionRef);
+                    break;
+                case /* google.protobuf.Timestamp snapshotAt */ 7:
+                    message.snapshotAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.snapshotAt);
+                    break;
+                case /* google.protobuf.Timestamp readyAt */ 8:
+                    message.readyAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.readyAt);
+                    break;
+                case /* uint64 restoreSizeBytes */ 9:
+                    message.restoreSizeBytes = reader.uint64().toNumber();
+                    break;
+                case /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Consistency consistency */ 10:
+                    message.consistency = reader.int32();
+                    break;
+                case /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure failure */ 11:
+                    message.failure = WorkspaceSnapshot_Status_Failure.internalBinaryRead(reader, reader.uint32(), options, message.failure);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: WorkspaceSnapshot_Status, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.State state = 1; */
+        if (message.state !== 0)
+            writer.tag(1, WireType.Varint).int32(message.state);
+        /* octelium.api.main.meta.v1.ObjectReference workspaceRef = 2; */
+        if (message.workspaceRef)
+            ObjectReference.internalBinaryWrite(message.workspaceRef, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.meta.v1.ObjectReference userRef = 3; */
+        if (message.userRef)
+            ObjectReference.internalBinaryWrite(message.userRef, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.meta.v1.ObjectReference spaceRef = 4; */
+        if (message.spaceRef)
+            ObjectReference.internalBinaryWrite(message.spaceRef, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.meta.v1.ObjectReference templateRef = 5; */
+        if (message.templateRef)
+            ObjectReference.internalBinaryWrite(message.templateRef, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.meta.v1.ObjectReference regionRef = 6; */
+        if (message.regionRef)
+            ObjectReference.internalBinaryWrite(message.regionRef, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* google.protobuf.Timestamp snapshotAt = 7; */
+        if (message.snapshotAt)
+            Timestamp.internalBinaryWrite(message.snapshotAt, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        /* google.protobuf.Timestamp readyAt = 8; */
+        if (message.readyAt)
+            Timestamp.internalBinaryWrite(message.readyAt, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* uint64 restoreSizeBytes = 9; */
+        if (message.restoreSizeBytes !== 0)
+            writer.tag(9, WireType.Varint).uint64(message.restoreSizeBytes);
+        /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Consistency consistency = 10; */
+        if (message.consistency !== 0)
+            writer.tag(10, WireType.Varint).int32(message.consistency);
+        /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure failure = 11; */
+        if (message.failure)
+            WorkspaceSnapshot_Status_Failure.internalBinaryWrite(message.failure, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Status
+ */
+export const WorkspaceSnapshot_Status = new WorkspaceSnapshot_Status$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class WorkspaceSnapshot_Status_Failure$Type extends MessageType<WorkspaceSnapshot_Status_Failure> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure", [
+            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "unsupported", kind: "message", oneof: "type", T: () => WorkspaceSnapshot_Status_Failure_Unsupported },
+            { no: 3, name: "sourceNotFound", kind: "message", oneof: "type", T: () => WorkspaceSnapshot_Status_Failure_SourceNotFound },
+            { no: 4, name: "storage", kind: "message", oneof: "type", T: () => WorkspaceSnapshot_Status_Failure_Storage },
+            { no: 5, name: "unknown", kind: "message", oneof: "type", T: () => WorkspaceSnapshot_Status_Failure_Unknown }
+        ]);
+    }
+    create(value?: PartialMessage<WorkspaceSnapshot_Status_Failure>): WorkspaceSnapshot_Status_Failure {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.message = "";
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<WorkspaceSnapshot_Status_Failure>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: WorkspaceSnapshot_Status_Failure): WorkspaceSnapshot_Status_Failure {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string message */ 1:
+                    message.message = reader.string();
+                    break;
+                case /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Unsupported unsupported */ 2:
+                    message.type = {
+                        oneofKind: "unsupported",
+                        unsupported: WorkspaceSnapshot_Status_Failure_Unsupported.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).unsupported)
+                    };
+                    break;
+                case /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.SourceNotFound sourceNotFound */ 3:
+                    message.type = {
+                        oneofKind: "sourceNotFound",
+                        sourceNotFound: WorkspaceSnapshot_Status_Failure_SourceNotFound.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).sourceNotFound)
+                    };
+                    break;
+                case /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Storage storage */ 4:
+                    message.type = {
+                        oneofKind: "storage",
+                        storage: WorkspaceSnapshot_Status_Failure_Storage.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).storage)
+                    };
+                    break;
+                case /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Unknown unknown */ 5:
+                    message.type = {
+                        oneofKind: "unknown",
+                        unknown: WorkspaceSnapshot_Status_Failure_Unknown.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).unknown)
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: WorkspaceSnapshot_Status_Failure, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string message = 1; */
+        if (message.message !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.message);
+        /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Unsupported unsupported = 2; */
+        if (message.type.oneofKind === "unsupported")
+            WorkspaceSnapshot_Status_Failure_Unsupported.internalBinaryWrite(message.type.unsupported, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.SourceNotFound sourceNotFound = 3; */
+        if (message.type.oneofKind === "sourceNotFound")
+            WorkspaceSnapshot_Status_Failure_SourceNotFound.internalBinaryWrite(message.type.sourceNotFound, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Storage storage = 4; */
+        if (message.type.oneofKind === "storage")
+            WorkspaceSnapshot_Status_Failure_Storage.internalBinaryWrite(message.type.storage, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Unknown unknown = 5; */
+        if (message.type.oneofKind === "unknown")
+            WorkspaceSnapshot_Status_Failure_Unknown.internalBinaryWrite(message.type.unknown, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure
+ */
+export const WorkspaceSnapshot_Status_Failure = new WorkspaceSnapshot_Status_Failure$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class WorkspaceSnapshot_Status_Failure_Unsupported$Type extends MessageType<WorkspaceSnapshot_Status_Failure_Unsupported> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Unsupported", []);
+    }
+    create(value?: PartialMessage<WorkspaceSnapshot_Status_Failure_Unsupported>): WorkspaceSnapshot_Status_Failure_Unsupported {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<WorkspaceSnapshot_Status_Failure_Unsupported>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: WorkspaceSnapshot_Status_Failure_Unsupported): WorkspaceSnapshot_Status_Failure_Unsupported {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: WorkspaceSnapshot_Status_Failure_Unsupported, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Unsupported
+ */
+export const WorkspaceSnapshot_Status_Failure_Unsupported = new WorkspaceSnapshot_Status_Failure_Unsupported$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class WorkspaceSnapshot_Status_Failure_SourceNotFound$Type extends MessageType<WorkspaceSnapshot_Status_Failure_SourceNotFound> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.SourceNotFound", []);
+    }
+    create(value?: PartialMessage<WorkspaceSnapshot_Status_Failure_SourceNotFound>): WorkspaceSnapshot_Status_Failure_SourceNotFound {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<WorkspaceSnapshot_Status_Failure_SourceNotFound>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: WorkspaceSnapshot_Status_Failure_SourceNotFound): WorkspaceSnapshot_Status_Failure_SourceNotFound {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: WorkspaceSnapshot_Status_Failure_SourceNotFound, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.SourceNotFound
+ */
+export const WorkspaceSnapshot_Status_Failure_SourceNotFound = new WorkspaceSnapshot_Status_Failure_SourceNotFound$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class WorkspaceSnapshot_Status_Failure_Storage$Type extends MessageType<WorkspaceSnapshot_Status_Failure_Storage> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Storage", []);
+    }
+    create(value?: PartialMessage<WorkspaceSnapshot_Status_Failure_Storage>): WorkspaceSnapshot_Status_Failure_Storage {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<WorkspaceSnapshot_Status_Failure_Storage>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: WorkspaceSnapshot_Status_Failure_Storage): WorkspaceSnapshot_Status_Failure_Storage {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: WorkspaceSnapshot_Status_Failure_Storage, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Storage
+ */
+export const WorkspaceSnapshot_Status_Failure_Storage = new WorkspaceSnapshot_Status_Failure_Storage$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class WorkspaceSnapshot_Status_Failure_Unknown$Type extends MessageType<WorkspaceSnapshot_Status_Failure_Unknown> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Unknown", []);
+    }
+    create(value?: PartialMessage<WorkspaceSnapshot_Status_Failure_Unknown>): WorkspaceSnapshot_Status_Failure_Unknown {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<WorkspaceSnapshot_Status_Failure_Unknown>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: WorkspaceSnapshot_Status_Failure_Unknown): WorkspaceSnapshot_Status_Failure_Unknown {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: WorkspaceSnapshot_Status_Failure_Unknown, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshot.Status.Failure.Unknown
+ */
+export const WorkspaceSnapshot_Status_Failure_Unknown = new WorkspaceSnapshot_Status_Failure_Unknown$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class WorkspaceSnapshotList$Type extends MessageType<WorkspaceSnapshotList> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.WorkspaceSnapshotList", [
+            { no: 1, name: "apiVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "kind", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "items", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => WorkspaceSnapshot },
+            { no: 4, name: "listResponseMeta", kind: "message", T: () => ListResponseMeta }
+        ]);
+    }
+    create(value?: PartialMessage<WorkspaceSnapshotList>): WorkspaceSnapshotList {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.apiVersion = "";
+        message.kind = "";
+        message.items = [];
+        if (value !== undefined)
+            reflectionMergePartial<WorkspaceSnapshotList>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: WorkspaceSnapshotList): WorkspaceSnapshotList {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string apiVersion */ 1:
+                    message.apiVersion = reader.string();
+                    break;
+                case /* string kind */ 2:
+                    message.kind = reader.string();
+                    break;
+                case /* repeated octelium.api.main.cordium.v1.WorkspaceSnapshot items */ 3:
+                    message.items.push(WorkspaceSnapshot.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* octelium.api.main.meta.v1.ListResponseMeta listResponseMeta */ 4:
+                    message.listResponseMeta = ListResponseMeta.internalBinaryRead(reader, reader.uint32(), options, message.listResponseMeta);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: WorkspaceSnapshotList, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string apiVersion = 1; */
+        if (message.apiVersion !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.apiVersion);
+        /* string kind = 2; */
+        if (message.kind !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.kind);
+        /* repeated octelium.api.main.cordium.v1.WorkspaceSnapshot items = 3; */
+        for (let i = 0; i < message.items.length; i++)
+            WorkspaceSnapshot.internalBinaryWrite(message.items[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.meta.v1.ListResponseMeta listResponseMeta = 4; */
+        if (message.listResponseMeta)
+            ListResponseMeta.internalBinaryWrite(message.listResponseMeta, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.WorkspaceSnapshotList
+ */
+export const WorkspaceSnapshotList = new WorkspaceSnapshotList$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListWorkspaceSnapshotOptions$Type extends MessageType<ListWorkspaceSnapshotOptions> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.ListWorkspaceSnapshotOptions", [
+            { no: 1, name: "common", kind: "message", T: () => CommonListOptions },
+            { no: 2, name: "workspaceRef", kind: "message", oneof: "filter", T: () => ObjectReference },
+            { no: 3, name: "spaceRef", kind: "message", oneof: "filter", T: () => ObjectReference }
+        ]);
+    }
+    create(value?: PartialMessage<ListWorkspaceSnapshotOptions>): ListWorkspaceSnapshotOptions {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.filter = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<ListWorkspaceSnapshotOptions>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ListWorkspaceSnapshotOptions): ListWorkspaceSnapshotOptions {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.meta.v1.CommonListOptions common */ 1:
+                    message.common = CommonListOptions.internalBinaryRead(reader, reader.uint32(), options, message.common);
+                    break;
+                case /* octelium.api.main.meta.v1.ObjectReference workspaceRef */ 2:
+                    message.filter = {
+                        oneofKind: "workspaceRef",
+                        workspaceRef: ObjectReference.internalBinaryRead(reader, reader.uint32(), options, (message.filter as any).workspaceRef)
+                    };
+                    break;
+                case /* octelium.api.main.meta.v1.ObjectReference spaceRef */ 3:
+                    message.filter = {
+                        oneofKind: "spaceRef",
+                        spaceRef: ObjectReference.internalBinaryRead(reader, reader.uint32(), options, (message.filter as any).spaceRef)
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ListWorkspaceSnapshotOptions, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.meta.v1.CommonListOptions common = 1; */
+        if (message.common)
+            CommonListOptions.internalBinaryWrite(message.common, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.meta.v1.ObjectReference workspaceRef = 2; */
+        if (message.filter.oneofKind === "workspaceRef")
+            ObjectReference.internalBinaryWrite(message.filter.workspaceRef, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.meta.v1.ObjectReference spaceRef = 3; */
+        if (message.filter.oneofKind === "spaceRef")
+            ObjectReference.internalBinaryWrite(message.filter.spaceRef, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.ListWorkspaceSnapshotOptions
+ */
+export const ListWorkspaceSnapshotOptions = new ListWorkspaceSnapshotOptions$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Volume$Type extends MessageType<Volume> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.Volume", [
+            { no: 1, name: "apiVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "kind", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "metadata", kind: "message", T: () => Metadata },
+            { no: 4, name: "spec", kind: "message", T: () => Volume_Spec },
+            { no: 5, name: "status", kind: "message", T: () => Volume_Status }
+        ]);
+    }
+    create(value?: PartialMessage<Volume>): Volume {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.apiVersion = "";
+        message.kind = "";
+        if (value !== undefined)
+            reflectionMergePartial<Volume>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Volume): Volume {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string apiVersion */ 1:
+                    message.apiVersion = reader.string();
+                    break;
+                case /* string kind */ 2:
+                    message.kind = reader.string();
+                    break;
+                case /* octelium.api.main.meta.v1.Metadata metadata */ 3:
+                    message.metadata = Metadata.internalBinaryRead(reader, reader.uint32(), options, message.metadata);
+                    break;
+                case /* octelium.api.main.cordium.v1.Volume.Spec spec */ 4:
+                    message.spec = Volume_Spec.internalBinaryRead(reader, reader.uint32(), options, message.spec);
+                    break;
+                case /* octelium.api.main.cordium.v1.Volume.Status status */ 5:
+                    message.status = Volume_Status.internalBinaryRead(reader, reader.uint32(), options, message.status);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Volume, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string apiVersion = 1; */
+        if (message.apiVersion !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.apiVersion);
+        /* string kind = 2; */
+        if (message.kind !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.kind);
+        /* octelium.api.main.meta.v1.Metadata metadata = 3; */
+        if (message.metadata)
+            Metadata.internalBinaryWrite(message.metadata, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.Volume.Spec spec = 4; */
+        if (message.spec)
+            Volume_Spec.internalBinaryWrite(message.spec, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.Volume.Status status = 5; */
+        if (message.status)
+            Volume_Status.internalBinaryWrite(message.status, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.Volume
+ */
+export const Volume = new Volume$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Volume_Spec$Type extends MessageType<Volume_Spec> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.Volume.Spec", [
+            { no: 1, name: "size", kind: "message", T: () => Volume_Spec_Size },
+            { no: 2, name: "accessMode", kind: "enum", T: () => ["octelium.api.main.cordium.v1.Volume.AccessMode", Volume_AccessMode, "ACCESS_MODE_"] }
+        ]);
+    }
+    create(value?: PartialMessage<Volume_Spec>): Volume_Spec {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.accessMode = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Volume_Spec>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Volume_Spec): Volume_Spec {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.cordium.v1.Volume.Spec.Size size */ 1:
+                    message.size = Volume_Spec_Size.internalBinaryRead(reader, reader.uint32(), options, message.size);
+                    break;
+                case /* octelium.api.main.cordium.v1.Volume.AccessMode accessMode */ 2:
+                    message.accessMode = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Volume_Spec, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.cordium.v1.Volume.Spec.Size size = 1; */
+        if (message.size)
+            Volume_Spec_Size.internalBinaryWrite(message.size, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.Volume.AccessMode accessMode = 2; */
+        if (message.accessMode !== 0)
+            writer.tag(2, WireType.Varint).int32(message.accessMode);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.Volume.Spec
+ */
+export const Volume_Spec = new Volume_Spec$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Volume_Spec_Size$Type extends MessageType<Volume_Spec_Size> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.Volume.Spec.Size", [
+            { no: 1, name: "megabytes", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Volume_Spec_Size>): Volume_Spec_Size {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.megabytes = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Volume_Spec_Size>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Volume_Spec_Size): Volume_Spec_Size {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* uint32 megabytes */ 1:
+                    message.megabytes = reader.uint32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Volume_Spec_Size, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* uint32 megabytes = 1; */
+        if (message.megabytes !== 0)
+            writer.tag(1, WireType.Varint).uint32(message.megabytes);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.Volume.Spec.Size
+ */
+export const Volume_Spec_Size = new Volume_Spec_Size$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Volume_Status$Type extends MessageType<Volume_Status> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.Volume.Status", [
+            { no: 1, name: "state", kind: "enum", T: () => ["octelium.api.main.cordium.v1.Volume.Status.State", Volume_Status_State, "STATE_"] },
+            { no: 2, name: "spaceRef", kind: "message", T: () => ObjectReference },
+            { no: 3, name: "userRef", kind: "message", T: () => ObjectReference },
+            { no: 4, name: "regionRef", kind: "message", T: () => ObjectReference },
+            { no: 5, name: "capacity", kind: "message", T: () => Volume_Spec_Size },
+            { no: 6, name: "readyAt", kind: "message", T: () => Timestamp },
+            { no: 7, name: "failure", kind: "message", T: () => Volume_Status_Failure }
+        ]);
+    }
+    create(value?: PartialMessage<Volume_Status>): Volume_Status {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.state = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Volume_Status>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Volume_Status): Volume_Status {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.cordium.v1.Volume.Status.State state */ 1:
+                    message.state = reader.int32();
+                    break;
+                case /* octelium.api.main.meta.v1.ObjectReference spaceRef */ 2:
+                    message.spaceRef = ObjectReference.internalBinaryRead(reader, reader.uint32(), options, message.spaceRef);
+                    break;
+                case /* octelium.api.main.meta.v1.ObjectReference userRef */ 3:
+                    message.userRef = ObjectReference.internalBinaryRead(reader, reader.uint32(), options, message.userRef);
+                    break;
+                case /* octelium.api.main.meta.v1.ObjectReference regionRef */ 4:
+                    message.regionRef = ObjectReference.internalBinaryRead(reader, reader.uint32(), options, message.regionRef);
+                    break;
+                case /* octelium.api.main.cordium.v1.Volume.Spec.Size capacity */ 5:
+                    message.capacity = Volume_Spec_Size.internalBinaryRead(reader, reader.uint32(), options, message.capacity);
+                    break;
+                case /* google.protobuf.Timestamp readyAt */ 6:
+                    message.readyAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.readyAt);
+                    break;
+                case /* octelium.api.main.cordium.v1.Volume.Status.Failure failure */ 7:
+                    message.failure = Volume_Status_Failure.internalBinaryRead(reader, reader.uint32(), options, message.failure);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Volume_Status, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.cordium.v1.Volume.Status.State state = 1; */
+        if (message.state !== 0)
+            writer.tag(1, WireType.Varint).int32(message.state);
+        /* octelium.api.main.meta.v1.ObjectReference spaceRef = 2; */
+        if (message.spaceRef)
+            ObjectReference.internalBinaryWrite(message.spaceRef, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.meta.v1.ObjectReference userRef = 3; */
+        if (message.userRef)
+            ObjectReference.internalBinaryWrite(message.userRef, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.meta.v1.ObjectReference regionRef = 4; */
+        if (message.regionRef)
+            ObjectReference.internalBinaryWrite(message.regionRef, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.Volume.Spec.Size capacity = 5; */
+        if (message.capacity)
+            Volume_Spec_Size.internalBinaryWrite(message.capacity, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* google.protobuf.Timestamp readyAt = 6; */
+        if (message.readyAt)
+            Timestamp.internalBinaryWrite(message.readyAt, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.Volume.Status.Failure failure = 7; */
+        if (message.failure)
+            Volume_Status_Failure.internalBinaryWrite(message.failure, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.Volume.Status
+ */
+export const Volume_Status = new Volume_Status$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Volume_Status_Failure$Type extends MessageType<Volume_Status_Failure> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.Volume.Status.Failure", [
+            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "unsupported", kind: "message", oneof: "type", T: () => Volume_Status_Failure_Unsupported },
+            { no: 3, name: "storage", kind: "message", oneof: "type", T: () => Volume_Status_Failure_Storage },
+            { no: 4, name: "unknown", kind: "message", oneof: "type", T: () => Volume_Status_Failure_Unknown }
+        ]);
+    }
+    create(value?: PartialMessage<Volume_Status_Failure>): Volume_Status_Failure {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.message = "";
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<Volume_Status_Failure>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Volume_Status_Failure): Volume_Status_Failure {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string message */ 1:
+                    message.message = reader.string();
+                    break;
+                case /* octelium.api.main.cordium.v1.Volume.Status.Failure.Unsupported unsupported */ 2:
+                    message.type = {
+                        oneofKind: "unsupported",
+                        unsupported: Volume_Status_Failure_Unsupported.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).unsupported)
+                    };
+                    break;
+                case /* octelium.api.main.cordium.v1.Volume.Status.Failure.Storage storage */ 3:
+                    message.type = {
+                        oneofKind: "storage",
+                        storage: Volume_Status_Failure_Storage.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).storage)
+                    };
+                    break;
+                case /* octelium.api.main.cordium.v1.Volume.Status.Failure.Unknown unknown */ 4:
+                    message.type = {
+                        oneofKind: "unknown",
+                        unknown: Volume_Status_Failure_Unknown.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).unknown)
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Volume_Status_Failure, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string message = 1; */
+        if (message.message !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.message);
+        /* octelium.api.main.cordium.v1.Volume.Status.Failure.Unsupported unsupported = 2; */
+        if (message.type.oneofKind === "unsupported")
+            Volume_Status_Failure_Unsupported.internalBinaryWrite(message.type.unsupported, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.Volume.Status.Failure.Storage storage = 3; */
+        if (message.type.oneofKind === "storage")
+            Volume_Status_Failure_Storage.internalBinaryWrite(message.type.storage, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.Volume.Status.Failure.Unknown unknown = 4; */
+        if (message.type.oneofKind === "unknown")
+            Volume_Status_Failure_Unknown.internalBinaryWrite(message.type.unknown, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.Volume.Status.Failure
+ */
+export const Volume_Status_Failure = new Volume_Status_Failure$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Volume_Status_Failure_Unsupported$Type extends MessageType<Volume_Status_Failure_Unsupported> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.Volume.Status.Failure.Unsupported", []);
+    }
+    create(value?: PartialMessage<Volume_Status_Failure_Unsupported>): Volume_Status_Failure_Unsupported {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<Volume_Status_Failure_Unsupported>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Volume_Status_Failure_Unsupported): Volume_Status_Failure_Unsupported {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Volume_Status_Failure_Unsupported, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.Volume.Status.Failure.Unsupported
+ */
+export const Volume_Status_Failure_Unsupported = new Volume_Status_Failure_Unsupported$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Volume_Status_Failure_Storage$Type extends MessageType<Volume_Status_Failure_Storage> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.Volume.Status.Failure.Storage", []);
+    }
+    create(value?: PartialMessage<Volume_Status_Failure_Storage>): Volume_Status_Failure_Storage {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<Volume_Status_Failure_Storage>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Volume_Status_Failure_Storage): Volume_Status_Failure_Storage {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Volume_Status_Failure_Storage, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.Volume.Status.Failure.Storage
+ */
+export const Volume_Status_Failure_Storage = new Volume_Status_Failure_Storage$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Volume_Status_Failure_Unknown$Type extends MessageType<Volume_Status_Failure_Unknown> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.Volume.Status.Failure.Unknown", []);
+    }
+    create(value?: PartialMessage<Volume_Status_Failure_Unknown>): Volume_Status_Failure_Unknown {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<Volume_Status_Failure_Unknown>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Volume_Status_Failure_Unknown): Volume_Status_Failure_Unknown {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Volume_Status_Failure_Unknown, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.Volume.Status.Failure.Unknown
+ */
+export const Volume_Status_Failure_Unknown = new Volume_Status_Failure_Unknown$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class VolumeList$Type extends MessageType<VolumeList> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.VolumeList", [
+            { no: 1, name: "apiVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "kind", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "items", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Volume },
+            { no: 4, name: "listResponseMeta", kind: "message", T: () => ListResponseMeta }
+        ]);
+    }
+    create(value?: PartialMessage<VolumeList>): VolumeList {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.apiVersion = "";
+        message.kind = "";
+        message.items = [];
+        if (value !== undefined)
+            reflectionMergePartial<VolumeList>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: VolumeList): VolumeList {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string apiVersion */ 1:
+                    message.apiVersion = reader.string();
+                    break;
+                case /* string kind */ 2:
+                    message.kind = reader.string();
+                    break;
+                case /* repeated octelium.api.main.cordium.v1.Volume items */ 3:
+                    message.items.push(Volume.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* octelium.api.main.meta.v1.ListResponseMeta listResponseMeta */ 4:
+                    message.listResponseMeta = ListResponseMeta.internalBinaryRead(reader, reader.uint32(), options, message.listResponseMeta);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: VolumeList, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string apiVersion = 1; */
+        if (message.apiVersion !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.apiVersion);
+        /* string kind = 2; */
+        if (message.kind !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.kind);
+        /* repeated octelium.api.main.cordium.v1.Volume items = 3; */
+        for (let i = 0; i < message.items.length; i++)
+            Volume.internalBinaryWrite(message.items[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.meta.v1.ListResponseMeta listResponseMeta = 4; */
+        if (message.listResponseMeta)
+            ListResponseMeta.internalBinaryWrite(message.listResponseMeta, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.VolumeList
+ */
+export const VolumeList = new VolumeList$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListVolumeOptions$Type extends MessageType<ListVolumeOptions> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.ListVolumeOptions", [
+            { no: 1, name: "common", kind: "message", T: () => CommonListOptions },
+            { no: 2, name: "spaceRef", kind: "message", T: () => ObjectReference }
+        ]);
+    }
+    create(value?: PartialMessage<ListVolumeOptions>): ListVolumeOptions {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<ListVolumeOptions>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ListVolumeOptions): ListVolumeOptions {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.meta.v1.CommonListOptions common */ 1:
+                    message.common = CommonListOptions.internalBinaryRead(reader, reader.uint32(), options, message.common);
+                    break;
+                case /* octelium.api.main.meta.v1.ObjectReference spaceRef */ 2:
+                    message.spaceRef = ObjectReference.internalBinaryRead(reader, reader.uint32(), options, message.spaceRef);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ListVolumeOptions, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.meta.v1.CommonListOptions common = 1; */
+        if (message.common)
+            CommonListOptions.internalBinaryWrite(message.common, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.meta.v1.ObjectReference spaceRef = 2; */
+        if (message.spaceRef)
+            ObjectReference.internalBinaryWrite(message.spaceRef, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.ListVolumeOptions
+ */
+export const ListVolumeOptions = new ListVolumeOptions$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Secret$Type extends MessageType<Secret> {
     constructor() {
@@ -15605,7 +17818,8 @@ class ClusterConfig_Spec$Type extends MessageType<ClusterConfig_Spec> {
     constructor() {
         super("octelium.api.main.cordium.v1.ClusterConfig.Spec", [
             { no: 1, name: "space", kind: "message", T: () => ClusterConfig_Spec_Space },
-            { no: 2, name: "workspace", kind: "message", T: () => ClusterConfig_Spec_Workspace }
+            { no: 2, name: "workspace", kind: "message", T: () => ClusterConfig_Spec_Workspace },
+            { no: 3, name: "volume", kind: "message", T: () => ClusterConfig_Spec_Volume }
         ]);
     }
     create(value?: PartialMessage<ClusterConfig_Spec>): ClusterConfig_Spec {
@@ -15625,6 +17839,9 @@ class ClusterConfig_Spec$Type extends MessageType<ClusterConfig_Spec> {
                 case /* octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace workspace */ 2:
                     message.workspace = ClusterConfig_Spec_Workspace.internalBinaryRead(reader, reader.uint32(), options, message.workspace);
                     break;
+                case /* octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume volume */ 3:
+                    message.volume = ClusterConfig_Spec_Volume.internalBinaryRead(reader, reader.uint32(), options, message.volume);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -15643,6 +17860,9 @@ class ClusterConfig_Spec$Type extends MessageType<ClusterConfig_Spec> {
         /* octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace workspace = 2; */
         if (message.workspace)
             ClusterConfig_Spec_Workspace.internalBinaryWrite(message.workspace, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume volume = 3; */
+        if (message.volume)
+            ClusterConfig_Spec_Volume.internalBinaryWrite(message.volume, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -16131,13 +18351,15 @@ class ClusterConfig_Spec_Workspace_Limit$Type extends MessageType<ClusterConfig_
             { no: 3, name: "buildLimit", kind: "message", T: () => Workspace_Spec_Limit },
             { no: 4, name: "defaultOrganizationSpaceLimit", kind: "message", T: () => Workspace_Spec_Limit },
             { no: 5, name: "defaultUserSpaceLimit", kind: "message", T: () => Workspace_Spec_Limit },
-            { no: 6, name: "maxLimit", kind: "message", T: () => Workspace_Spec_Limit }
+            { no: 6, name: "maxLimit", kind: "message", T: () => Workspace_Spec_Limit },
+            { no: 7, name: "maxSnapshotsPerUser", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
     create(value?: PartialMessage<ClusterConfig_Spec_Workspace_Limit>): ClusterConfig_Spec_Workspace_Limit {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.maxPerUser = 0;
         message.maxActivePerUser = 0;
+        message.maxSnapshotsPerUser = 0;
         if (value !== undefined)
             reflectionMergePartial<ClusterConfig_Spec_Workspace_Limit>(this, message, value);
         return message;
@@ -16164,6 +18386,9 @@ class ClusterConfig_Spec_Workspace_Limit$Type extends MessageType<ClusterConfig_
                     break;
                 case /* octelium.api.main.cordium.v1.Workspace.Spec.Limit maxLimit */ 6:
                     message.maxLimit = Workspace_Spec_Limit.internalBinaryRead(reader, reader.uint32(), options, message.maxLimit);
+                    break;
+                case /* uint32 maxSnapshotsPerUser */ 7:
+                    message.maxSnapshotsPerUser = reader.uint32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -16195,6 +18420,9 @@ class ClusterConfig_Spec_Workspace_Limit$Type extends MessageType<ClusterConfig_
         /* octelium.api.main.cordium.v1.Workspace.Spec.Limit maxLimit = 6; */
         if (message.maxLimit)
             Workspace_Spec_Limit.internalBinaryWrite(message.maxLimit, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* uint32 maxSnapshotsPerUser = 7; */
+        if (message.maxSnapshotsPerUser !== 0)
+            writer.tag(7, WireType.Varint).uint32(message.maxSnapshotsPerUser);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -16326,6 +18554,275 @@ class ClusterConfig_Spec_Workspace_Runtime$Type extends MessageType<ClusterConfi
  * @generated MessageType for protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Workspace.Runtime
  */
 export const ClusterConfig_Spec_Workspace_Runtime = new ClusterConfig_Spec_Workspace_Runtime$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Volume$Type extends MessageType<ClusterConfig_Spec_Volume> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume", [
+            { no: 1, name: "storage", kind: "message", T: () => ClusterConfig_Spec_Volume_Storage },
+            { no: 2, name: "limit", kind: "message", T: () => ClusterConfig_Spec_Volume_Limit }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Volume>): ClusterConfig_Spec_Volume {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Volume>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Volume): ClusterConfig_Spec_Volume {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage storage */ 1:
+                    message.storage = ClusterConfig_Spec_Volume_Storage.internalBinaryRead(reader, reader.uint32(), options, message.storage);
+                    break;
+                case /* octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Limit limit */ 2:
+                    message.limit = ClusterConfig_Spec_Volume_Limit.internalBinaryRead(reader, reader.uint32(), options, message.limit);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Volume, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage storage = 1; */
+        if (message.storage)
+            ClusterConfig_Spec_Volume_Storage.internalBinaryWrite(message.storage, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Limit limit = 2; */
+        if (message.limit)
+            ClusterConfig_Spec_Volume_Limit.internalBinaryWrite(message.limit, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume
+ */
+export const ClusterConfig_Spec_Volume = new ClusterConfig_Spec_Volume$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Volume_Storage$Type extends MessageType<ClusterConfig_Spec_Volume_Storage> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage", [
+            { no: 1, name: "storageClass", kind: "message", T: () => ClusterConfig_Spec_Volume_Storage_StorageClass }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Volume_Storage>): ClusterConfig_Spec_Volume_Storage {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Volume_Storage>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Volume_Storage): ClusterConfig_Spec_Volume_Storage {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage.StorageClass storageClass */ 1:
+                    message.storageClass = ClusterConfig_Spec_Volume_Storage_StorageClass.internalBinaryRead(reader, reader.uint32(), options, message.storageClass);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Volume_Storage, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage.StorageClass storageClass = 1; */
+        if (message.storageClass)
+            ClusterConfig_Spec_Volume_Storage_StorageClass.internalBinaryWrite(message.storageClass, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage
+ */
+export const ClusterConfig_Spec_Volume_Storage = new ClusterConfig_Spec_Volume_Storage$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Volume_Storage_StorageClass$Type extends MessageType<ClusterConfig_Spec_Volume_Storage_StorageClass> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage.StorageClass", [
+            { no: 1, name: "rules", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => ClusterConfig_Spec_Volume_Storage_StorageClass_Rule }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Volume_Storage_StorageClass>): ClusterConfig_Spec_Volume_Storage_StorageClass {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.rules = [];
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Volume_Storage_StorageClass>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Volume_Storage_StorageClass): ClusterConfig_Spec_Volume_Storage_StorageClass {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage.StorageClass.Rule rules */ 1:
+                    message.rules.push(ClusterConfig_Spec_Volume_Storage_StorageClass_Rule.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Volume_Storage_StorageClass, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage.StorageClass.Rule rules = 1; */
+        for (let i = 0; i < message.rules.length; i++)
+            ClusterConfig_Spec_Volume_Storage_StorageClass_Rule.internalBinaryWrite(message.rules[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage.StorageClass
+ */
+export const ClusterConfig_Spec_Volume_Storage_StorageClass = new ClusterConfig_Spec_Volume_Storage_StorageClass$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Volume_Storage_StorageClass_Rule$Type extends MessageType<ClusterConfig_Spec_Volume_Storage_StorageClass_Rule> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage.StorageClass.Rule", [
+            { no: 1, name: "condition", kind: "message", T: () => Condition },
+            { no: 2, name: "storageClass", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Volume_Storage_StorageClass_Rule>): ClusterConfig_Spec_Volume_Storage_StorageClass_Rule {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.storageClass = "";
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Volume_Storage_StorageClass_Rule>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Volume_Storage_StorageClass_Rule): ClusterConfig_Spec_Volume_Storage_StorageClass_Rule {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.cordium.v1.Condition condition */ 1:
+                    message.condition = Condition.internalBinaryRead(reader, reader.uint32(), options, message.condition);
+                    break;
+                case /* string storageClass */ 2:
+                    message.storageClass = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Volume_Storage_StorageClass_Rule, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.cordium.v1.Condition condition = 1; */
+        if (message.condition)
+            Condition.internalBinaryWrite(message.condition, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string storageClass = 2; */
+        if (message.storageClass !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.storageClass);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Storage.StorageClass.Rule
+ */
+export const ClusterConfig_Spec_Volume_Storage_StorageClass_Rule = new ClusterConfig_Spec_Volume_Storage_StorageClass_Rule$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClusterConfig_Spec_Volume_Limit$Type extends MessageType<ClusterConfig_Spec_Volume_Limit> {
+    constructor() {
+        super("octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Limit", [
+            { no: 1, name: "maxPerSpace", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 2, name: "maxSize", kind: "message", T: () => Volume_Spec_Size },
+            { no: 3, name: "defaultSize", kind: "message", T: () => Volume_Spec_Size },
+            { no: 4, name: "maxMountsPerWorkspace", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ClusterConfig_Spec_Volume_Limit>): ClusterConfig_Spec_Volume_Limit {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.maxPerSpace = 0;
+        message.maxMountsPerWorkspace = 0;
+        if (value !== undefined)
+            reflectionMergePartial<ClusterConfig_Spec_Volume_Limit>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ClusterConfig_Spec_Volume_Limit): ClusterConfig_Spec_Volume_Limit {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* uint32 maxPerSpace */ 1:
+                    message.maxPerSpace = reader.uint32();
+                    break;
+                case /* octelium.api.main.cordium.v1.Volume.Spec.Size maxSize */ 2:
+                    message.maxSize = Volume_Spec_Size.internalBinaryRead(reader, reader.uint32(), options, message.maxSize);
+                    break;
+                case /* octelium.api.main.cordium.v1.Volume.Spec.Size defaultSize */ 3:
+                    message.defaultSize = Volume_Spec_Size.internalBinaryRead(reader, reader.uint32(), options, message.defaultSize);
+                    break;
+                case /* uint32 maxMountsPerWorkspace */ 4:
+                    message.maxMountsPerWorkspace = reader.uint32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ClusterConfig_Spec_Volume_Limit, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* uint32 maxPerSpace = 1; */
+        if (message.maxPerSpace !== 0)
+            writer.tag(1, WireType.Varint).uint32(message.maxPerSpace);
+        /* octelium.api.main.cordium.v1.Volume.Spec.Size maxSize = 2; */
+        if (message.maxSize)
+            Volume_Spec_Size.internalBinaryWrite(message.maxSize, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.cordium.v1.Volume.Spec.Size defaultSize = 3; */
+        if (message.defaultSize)
+            Volume_Spec_Size.internalBinaryWrite(message.defaultSize, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* uint32 maxMountsPerWorkspace = 4; */
+        if (message.maxMountsPerWorkspace !== 0)
+            writer.tag(4, WireType.Varint).uint32(message.maxMountsPerWorkspace);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.cordium.v1.ClusterConfig.Spec.Volume.Limit
+ */
+export const ClusterConfig_Spec_Volume_Limit = new ClusterConfig_Spec_Volume_Limit$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class ClusterConfig_Status$Type extends MessageType<ClusterConfig_Status> {
     constructor() {
@@ -16845,6 +19342,15 @@ export const MainService = new ServiceType("octelium.api.main.cordium.v1.MainSer
     { name: "UpdateWorkspace", options: {}, I: Workspace, O: Workspace },
     { name: "DeleteWorkspace", options: {}, I: DeleteOptions, O: OperationResult },
     { name: "ListWorkspace", options: {}, I: ListWorkspaceOptions, O: WorkspaceList },
+    { name: "CreateWorkspaceSnapshot", options: {}, I: WorkspaceSnapshot, O: WorkspaceSnapshot },
+    { name: "DeleteWorkspaceSnapshot", options: {}, I: DeleteOptions, O: OperationResult },
+    { name: "ListWorkspaceSnapshot", options: {}, I: ListWorkspaceSnapshotOptions, O: WorkspaceSnapshotList },
+    { name: "GetWorkspaceSnapshot", options: {}, I: GetOptions, O: WorkspaceSnapshot },
+    { name: "CreateVolume", options: {}, I: Volume, O: Volume },
+    { name: "UpdateVolume", options: {}, I: Volume, O: Volume },
+    { name: "DeleteVolume", options: {}, I: DeleteOptions, O: OperationResult },
+    { name: "ListVolume", options: {}, I: ListVolumeOptions, O: VolumeList },
+    { name: "GetVolume", options: {}, I: GetOptions, O: Volume },
     { name: "StartWorkspace", options: {}, I: StartWorkspaceRequest, O: StartWorkspaceResponse },
     { name: "StopWorkspace", options: {}, I: StopWorkspaceRequest, O: StopWorkspaceResponse },
     { name: "ShareWorkspacePort", options: {}, I: ShareWorkspacePortRequest, O: ShareWorkspacePortResponse },

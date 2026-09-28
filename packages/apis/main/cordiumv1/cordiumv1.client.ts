@@ -69,6 +69,12 @@ import type { StopWorkspaceResponse } from "./cordiumv1.js";
 import type { StopWorkspaceRequest } from "./cordiumv1.js";
 import type { StartWorkspaceResponse } from "./cordiumv1.js";
 import type { StartWorkspaceRequest } from "./cordiumv1.js";
+import type { VolumeList } from "./cordiumv1.js";
+import type { ListVolumeOptions } from "./cordiumv1.js";
+import type { Volume } from "./cordiumv1.js";
+import type { WorkspaceSnapshotList } from "./cordiumv1.js";
+import type { ListWorkspaceSnapshotOptions } from "./cordiumv1.js";
+import type { WorkspaceSnapshot } from "./cordiumv1.js";
 import type { WorkspaceList } from "./cordiumv1.js";
 import type { ListWorkspaceOptions } from "./cordiumv1.js";
 import type { Workspace } from "./cordiumv1.js";
@@ -268,6 +274,73 @@ export interface IMainServiceClient {
      * @generated from protobuf rpc: ListWorkspace
      */
     listWorkspace(input: ListWorkspaceOptions, options?: RpcOptions): UnaryCall<ListWorkspaceOptions, WorkspaceList>;
+    /**
+     * CreateWorkspaceSnapshot creates a WorkspaceSnapshot out of the persistent
+     * storage of a Workspace owned by the User. The Workspace is neither stopped
+     * nor restarted and it remains fully usable while the snapshot is being
+     * taken. The snapshot is created in the CREATING state and the snapshotting
+     * itself is asynchronous.
+     *
+     * @generated from protobuf rpc: CreateWorkspaceSnapshot
+     */
+    createWorkspaceSnapshot(input: WorkspaceSnapshot, options?: RpcOptions): UnaryCall<WorkspaceSnapshot, WorkspaceSnapshot>;
+    /**
+     * DeleteWorkspaceSnapshot deletes a WorkspaceSnapshot owned by the User
+     * together with its underlying storage snapshot.
+     *
+     * @generated from protobuf rpc: DeleteWorkspaceSnapshot
+     */
+    deleteWorkspaceSnapshot(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult>;
+    /**
+     * ListWorkspaceSnapshot lists the WorkspaceSnapshots owned by the User.
+     *
+     * @generated from protobuf rpc: ListWorkspaceSnapshot
+     */
+    listWorkspaceSnapshot(input: ListWorkspaceSnapshotOptions, options?: RpcOptions): UnaryCall<ListWorkspaceSnapshotOptions, WorkspaceSnapshotList>;
+    /**
+     * GetWorkspaceSnapshot retrieves a specific WorkspaceSnapshot owned by the
+     * User.
+     *
+     * @generated from protobuf rpc: GetWorkspaceSnapshot
+     */
+    getWorkspaceSnapshot(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, WorkspaceSnapshot>;
+    /**
+     * CreateVolume creates a Volume inside a Space. Volumes are provisioned
+     * asynchronously and they can be mounted by the Workspaces of the Space
+     * while they are still being provisioned.
+     *
+     * @generated from protobuf rpc: CreateVolume
+     */
+    createVolume(input: Volume, options?: RpcOptions): UnaryCall<Volume, Volume>;
+    /**
+     * UpdateVolume updates a Volume. Only growing the Volume's size is
+     * supported and it additionally requires the underlying storage backend to
+     * support the expansion of the already provisioned volumes.
+     *
+     * @generated from protobuf rpc: UpdateVolume
+     */
+    updateVolume(input: Volume, options?: RpcOptions): UnaryCall<Volume, Volume>;
+    /**
+     * DeleteVolume deletes a Volume together with its underlying storage. It is
+     * rejected while the Volume is still mounted by a Workspace or a Template of
+     * the Space regardless of whether those Workspaces are running.
+     *
+     * @generated from protobuf rpc: DeleteVolume
+     */
+    deleteVolume(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult>;
+    /**
+     * ListVolume lists the Volumes of a Space that the User is a Member of.
+     *
+     * @generated from protobuf rpc: ListVolume
+     */
+    listVolume(input: ListVolumeOptions, options?: RpcOptions): UnaryCall<ListVolumeOptions, VolumeList>;
+    /**
+     * GetVolume retrieves a specific Volume of a Space that the User is a Member
+     * of.
+     *
+     * @generated from protobuf rpc: GetVolume
+     */
+    getVolume(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Volume>;
     /**
      * StartWorkspace starts a stopped Workspace. The Cluster creates a dedicated
      * Octelium Session for the run and moves the Workspace to the INIT_REQUEST
@@ -686,6 +759,100 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<ListWorkspaceOptions, WorkspaceList>("unary", this._transport, method, opt, input);
     }
     /**
+     * CreateWorkspaceSnapshot creates a WorkspaceSnapshot out of the persistent
+     * storage of a Workspace owned by the User. The Workspace is neither stopped
+     * nor restarted and it remains fully usable while the snapshot is being
+     * taken. The snapshot is created in the CREATING state and the snapshotting
+     * itself is asynchronous.
+     *
+     * @generated from protobuf rpc: CreateWorkspaceSnapshot
+     */
+    createWorkspaceSnapshot(input: WorkspaceSnapshot, options?: RpcOptions): UnaryCall<WorkspaceSnapshot, WorkspaceSnapshot> {
+        const method = this.methods[23], opt = this._transport.mergeOptions(options);
+        return stackIntercept<WorkspaceSnapshot, WorkspaceSnapshot>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * DeleteWorkspaceSnapshot deletes a WorkspaceSnapshot owned by the User
+     * together with its underlying storage snapshot.
+     *
+     * @generated from protobuf rpc: DeleteWorkspaceSnapshot
+     */
+    deleteWorkspaceSnapshot(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult> {
+        const method = this.methods[24], opt = this._transport.mergeOptions(options);
+        return stackIntercept<DeleteOptions, OperationResult>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * ListWorkspaceSnapshot lists the WorkspaceSnapshots owned by the User.
+     *
+     * @generated from protobuf rpc: ListWorkspaceSnapshot
+     */
+    listWorkspaceSnapshot(input: ListWorkspaceSnapshotOptions, options?: RpcOptions): UnaryCall<ListWorkspaceSnapshotOptions, WorkspaceSnapshotList> {
+        const method = this.methods[25], opt = this._transport.mergeOptions(options);
+        return stackIntercept<ListWorkspaceSnapshotOptions, WorkspaceSnapshotList>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * GetWorkspaceSnapshot retrieves a specific WorkspaceSnapshot owned by the
+     * User.
+     *
+     * @generated from protobuf rpc: GetWorkspaceSnapshot
+     */
+    getWorkspaceSnapshot(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, WorkspaceSnapshot> {
+        const method = this.methods[26], opt = this._transport.mergeOptions(options);
+        return stackIntercept<GetOptions, WorkspaceSnapshot>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * CreateVolume creates a Volume inside a Space. Volumes are provisioned
+     * asynchronously and they can be mounted by the Workspaces of the Space
+     * while they are still being provisioned.
+     *
+     * @generated from protobuf rpc: CreateVolume
+     */
+    createVolume(input: Volume, options?: RpcOptions): UnaryCall<Volume, Volume> {
+        const method = this.methods[27], opt = this._transport.mergeOptions(options);
+        return stackIntercept<Volume, Volume>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * UpdateVolume updates a Volume. Only growing the Volume's size is
+     * supported and it additionally requires the underlying storage backend to
+     * support the expansion of the already provisioned volumes.
+     *
+     * @generated from protobuf rpc: UpdateVolume
+     */
+    updateVolume(input: Volume, options?: RpcOptions): UnaryCall<Volume, Volume> {
+        const method = this.methods[28], opt = this._transport.mergeOptions(options);
+        return stackIntercept<Volume, Volume>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * DeleteVolume deletes a Volume together with its underlying storage. It is
+     * rejected while the Volume is still mounted by a Workspace or a Template of
+     * the Space regardless of whether those Workspaces are running.
+     *
+     * @generated from protobuf rpc: DeleteVolume
+     */
+    deleteVolume(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult> {
+        const method = this.methods[29], opt = this._transport.mergeOptions(options);
+        return stackIntercept<DeleteOptions, OperationResult>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * ListVolume lists the Volumes of a Space that the User is a Member of.
+     *
+     * @generated from protobuf rpc: ListVolume
+     */
+    listVolume(input: ListVolumeOptions, options?: RpcOptions): UnaryCall<ListVolumeOptions, VolumeList> {
+        const method = this.methods[30], opt = this._transport.mergeOptions(options);
+        return stackIntercept<ListVolumeOptions, VolumeList>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * GetVolume retrieves a specific Volume of a Space that the User is a Member
+     * of.
+     *
+     * @generated from protobuf rpc: GetVolume
+     */
+    getVolume(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Volume> {
+        const method = this.methods[31], opt = this._transport.mergeOptions(options);
+        return stackIntercept<GetOptions, Volume>("unary", this._transport, method, opt, input);
+    }
+    /**
      * StartWorkspace starts a stopped Workspace. The Cluster creates a dedicated
      * Octelium Session for the run and moves the Workspace to the INIT_REQUEST
      * state. The actual initialization is asynchronous and can be followed via
@@ -694,7 +861,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: StartWorkspace
      */
     startWorkspace(input: StartWorkspaceRequest, options?: RpcOptions): UnaryCall<StartWorkspaceRequest, StartWorkspaceResponse> {
-        const method = this.methods[23], opt = this._transport.mergeOptions(options);
+        const method = this.methods[32], opt = this._transport.mergeOptions(options);
         return stackIntercept<StartWorkspaceRequest, StartWorkspaceResponse>("unary", this._transport, method, opt, input);
     }
     /**
@@ -705,7 +872,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: StopWorkspace
      */
     stopWorkspace(input: StopWorkspaceRequest, options?: RpcOptions): UnaryCall<StopWorkspaceRequest, StopWorkspaceResponse> {
-        const method = this.methods[24], opt = this._transport.mergeOptions(options);
+        const method = this.methods[33], opt = this._transport.mergeOptions(options);
         return stackIntercept<StopWorkspaceRequest, StopWorkspaceResponse>("unary", this._transport, method, opt, input);
     }
     /**
@@ -715,7 +882,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: ShareWorkspacePort
      */
     shareWorkspacePort(input: ShareWorkspacePortRequest, options?: RpcOptions): UnaryCall<ShareWorkspacePortRequest, ShareWorkspacePortResponse> {
-        const method = this.methods[25], opt = this._transport.mergeOptions(options);
+        const method = this.methods[34], opt = this._transport.mergeOptions(options);
         return stackIntercept<ShareWorkspacePortRequest, ShareWorkspacePortResponse>("unary", this._transport, method, opt, input);
     }
     /**
@@ -725,7 +892,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: UnshareWorkspacePort
      */
     unshareWorkspacePort(input: UnshareWorkspacePortRequest, options?: RpcOptions): UnaryCall<UnshareWorkspacePortRequest, UnshareWorkspacePortResponse> {
-        const method = this.methods[26], opt = this._transport.mergeOptions(options);
+        const method = this.methods[35], opt = this._transport.mergeOptions(options);
         return stackIntercept<UnshareWorkspacePortRequest, UnshareWorkspacePortResponse>("unary", this._transport, method, opt, input);
     }
     /**
@@ -735,7 +902,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: ListSpace
      */
     listSpace(input: ListSpaceOptions, options?: RpcOptions): UnaryCall<ListSpaceOptions, SpaceList> {
-        const method = this.methods[27], opt = this._transport.mergeOptions(options);
+        const method = this.methods[36], opt = this._transport.mergeOptions(options);
         return stackIntercept<ListSpaceOptions, SpaceList>("unary", this._transport, method, opt, input);
     }
     /**
@@ -744,7 +911,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: ListTemplate
      */
     listTemplate(input: ListTemplateOptions, options?: RpcOptions): UnaryCall<ListTemplateOptions, TemplateList> {
-        const method = this.methods[28], opt = this._transport.mergeOptions(options);
+        const method = this.methods[37], opt = this._transport.mergeOptions(options);
         return stackIntercept<ListTemplateOptions, TemplateList>("unary", this._transport, method, opt, input);
     }
     /**
@@ -754,7 +921,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: ListMembership
      */
     listMembership(input: ListMembershipOptions, options?: RpcOptions): UnaryCall<ListMembershipOptions, MembershipList> {
-        const method = this.methods[29], opt = this._transport.mergeOptions(options);
+        const method = this.methods[38], opt = this._transport.mergeOptions(options);
         return stackIntercept<ListMembershipOptions, MembershipList>("unary", this._transport, method, opt, input);
     }
     /**
@@ -764,7 +931,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: ListGitProvider
      */
     listGitProvider(input: ListGitProviderOptions, options?: RpcOptions): UnaryCall<ListGitProviderOptions, GitProviderList> {
-        const method = this.methods[30], opt = this._transport.mergeOptions(options);
+        const method = this.methods[39], opt = this._transport.mergeOptions(options);
         return stackIntercept<ListGitProviderOptions, GitProviderList>("unary", this._transport, method, opt, input);
     }
     /**
@@ -774,7 +941,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: GetSpace
      */
     getSpace(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Space> {
-        const method = this.methods[31], opt = this._transport.mergeOptions(options);
+        const method = this.methods[40], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetOptions, Space>("unary", this._transport, method, opt, input);
     }
     /**
@@ -783,7 +950,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: GetWorkspace
      */
     getWorkspace(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Workspace> {
-        const method = this.methods[32], opt = this._transport.mergeOptions(options);
+        const method = this.methods[41], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetOptions, Workspace>("unary", this._transport, method, opt, input);
     }
     /**
@@ -793,7 +960,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: GetTemplate
      */
     getTemplate(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Template> {
-        const method = this.methods[33], opt = this._transport.mergeOptions(options);
+        const method = this.methods[42], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetOptions, Template>("unary", this._transport, method, opt, input);
     }
     /**
@@ -803,7 +970,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: GetGitProvider
      */
     getGitProvider(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, GitProvider> {
-        const method = this.methods[34], opt = this._transport.mergeOptions(options);
+        const method = this.methods[43], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetOptions, GitProvider>("unary", this._transport, method, opt, input);
     }
     /**
@@ -813,7 +980,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: GetMembership
      */
     getMembership(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Membership> {
-        const method = this.methods[35], opt = this._transport.mergeOptions(options);
+        const method = this.methods[44], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetOptions, Membership>("unary", this._transport, method, opt, input);
     }
     /**
@@ -823,7 +990,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: LeaveSpace
      */
     leaveSpace(input: LeaveSpaceRequest, options?: RpcOptions): UnaryCall<LeaveSpaceRequest, LeaveSpaceResponse> {
-        const method = this.methods[36], opt = this._transport.mergeOptions(options);
+        const method = this.methods[45], opt = this._transport.mergeOptions(options);
         return stackIntercept<LeaveSpaceRequest, LeaveSpaceResponse>("unary", this._transport, method, opt, input);
     }
     /**
@@ -834,7 +1001,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: CreateUserSecret
      */
     createUserSecret(input: UserSecret, options?: RpcOptions): UnaryCall<UserSecret, UserSecret> {
-        const method = this.methods[37], opt = this._transport.mergeOptions(options);
+        const method = this.methods[46], opt = this._transport.mergeOptions(options);
         return stackIntercept<UserSecret, UserSecret>("unary", this._transport, method, opt, input);
     }
     /**
@@ -843,7 +1010,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: UpdateUserSecret
      */
     updateUserSecret(input: UserSecret, options?: RpcOptions): UnaryCall<UserSecret, UserSecret> {
-        const method = this.methods[38], opt = this._transport.mergeOptions(options);
+        const method = this.methods[47], opt = this._transport.mergeOptions(options);
         return stackIntercept<UserSecret, UserSecret>("unary", this._transport, method, opt, input);
     }
     /**
@@ -852,7 +1019,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: DeleteUserSecret
      */
     deleteUserSecret(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult> {
-        const method = this.methods[39], opt = this._transport.mergeOptions(options);
+        const method = this.methods[48], opt = this._transport.mergeOptions(options);
         return stackIntercept<DeleteOptions, OperationResult>("unary", this._transport, method, opt, input);
     }
     /**
@@ -862,7 +1029,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: ListUserSecret
      */
     listUserSecret(input: ListUserSecretOptions, options?: RpcOptions): UnaryCall<ListUserSecretOptions, UserSecretList> {
-        const method = this.methods[40], opt = this._transport.mergeOptions(options);
+        const method = this.methods[49], opt = this._transport.mergeOptions(options);
         return stackIntercept<ListUserSecretOptions, UserSecretList>("unary", this._transport, method, opt, input);
     }
     /**
@@ -872,7 +1039,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: GetUserSecret
      */
     getUserSecret(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, UserSecret> {
-        const method = this.methods[41], opt = this._transport.mergeOptions(options);
+        const method = this.methods[50], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetOptions, UserSecret>("unary", this._transport, method, opt, input);
     }
     /**
@@ -882,7 +1049,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: GetUserConfig
      */
     getUserConfig(input: GetUserConfigRequest, options?: RpcOptions): UnaryCall<GetUserConfigRequest, UserConfig> {
-        const method = this.methods[42], opt = this._transport.mergeOptions(options);
+        const method = this.methods[51], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetUserConfigRequest, UserConfig>("unary", this._transport, method, opt, input);
     }
     /**
@@ -891,7 +1058,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: UpdateUserConfig
      */
     updateUserConfig(input: UserConfig, options?: RpcOptions): UnaryCall<UserConfig, UserConfig> {
-        const method = this.methods[43], opt = this._transport.mergeOptions(options);
+        const method = this.methods[52], opt = this._transport.mergeOptions(options);
         return stackIntercept<UserConfig, UserConfig>("unary", this._transport, method, opt, input);
     }
     /**
@@ -901,7 +1068,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: ListRegion
      */
     listRegion(input: ListRegionOptions, options?: RpcOptions): UnaryCall<ListRegionOptions, RegionList> {
-        const method = this.methods[44], opt = this._transport.mergeOptions(options);
+        const method = this.methods[53], opt = this._transport.mergeOptions(options);
         return stackIntercept<ListRegionOptions, RegionList>("unary", this._transport, method, opt, input);
     }
     /**
@@ -914,7 +1081,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: WatchWorkspace
      */
     watchWorkspace(input: WatchWorkspaceRequest, options?: RpcOptions): ServerStreamingCall<WatchWorkspaceRequest, WatchWorkspaceResponse> {
-        const method = this.methods[45], opt = this._transport.mergeOptions(options);
+        const method = this.methods[54], opt = this._transport.mergeOptions(options);
         return stackIntercept<WatchWorkspaceRequest, WatchWorkspaceResponse>("serverStreaming", this._transport, method, opt, input);
     }
 }

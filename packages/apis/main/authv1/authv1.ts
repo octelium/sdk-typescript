@@ -78,6 +78,14 @@ export interface ClientLoginRequest {
      * @generated from protobuf field: bytes codeChallenge = 4
      */
     codeChallenge: Uint8Array;
+    /**
+     * CallbackType is the type of the callback to which the Cluster redirects
+     * the ClientLoginResponse. The Cluster derives the callback URL out of it and
+     * it never accepts an arbitrary callback URL from the client.
+     *
+     * @generated from protobuf field: octelium.api.main.auth.v1.ClientLoginRequest.CallbackType callbackType = 5
+     */
+    callbackType: ClientLoginRequest_CallbackType;
 }
 /**
  * @generated from protobuf enum octelium.api.main.auth.v1.ClientLoginRequest.APIVersion
@@ -99,6 +107,28 @@ export enum ClientLoginRequest_APIVersion {
      * @generated from protobuf enum value: V2 = 2;
      */
     V2 = 2
+}
+/**
+ * @generated from protobuf enum octelium.api.main.auth.v1.ClientLoginRequest.CallbackType
+ */
+export enum ClientLoginRequest_CallbackType {
+    /**
+     * LOOPBACK is the loopback HTTP callback of the desktop clients (i.e. the
+     * Octelium CLI and the Octelium daemon). Its URL is derived from
+     * callbackPort and callbackSuffix.
+     *
+     * @generated from protobuf enum value: LOOPBACK = 0;
+     */
+    LOOPBACK = 0,
+    /**
+     * APP is the fixed private-use URI scheme callback of the Octelium mobile
+     * applications (i.e. `com.octelium.client:/callback/success`). Both
+     * callbackPort and callbackSuffix must be unset and codeChallenge is
+     * required. Clusters that do not support it reject the request.
+     *
+     * @generated from protobuf enum value: APP = 1;
+     */
+    APP = 1
 }
 /**
  * @generated from protobuf message octelium.api.main.auth.v1.ClientLoginResponse
@@ -1165,7 +1195,8 @@ class ClientLoginRequest$Type extends MessageType<ClientLoginRequest> {
             { no: 1, name: "apiVersion", kind: "enum", T: () => ["octelium.api.main.auth.v1.ClientLoginRequest.APIVersion", ClientLoginRequest_APIVersion] },
             { no: 2, name: "callbackPort", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 3, name: "callbackSuffix", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "codeChallenge", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+            { no: 4, name: "codeChallenge", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 5, name: "callbackType", kind: "enum", T: () => ["octelium.api.main.auth.v1.ClientLoginRequest.CallbackType", ClientLoginRequest_CallbackType] }
         ]);
     }
     create(value?: PartialMessage<ClientLoginRequest>): ClientLoginRequest {
@@ -1174,6 +1205,7 @@ class ClientLoginRequest$Type extends MessageType<ClientLoginRequest> {
         message.callbackPort = 0;
         message.callbackSuffix = "";
         message.codeChallenge = new Uint8Array(0);
+        message.callbackType = 0;
         if (value !== undefined)
             reflectionMergePartial<ClientLoginRequest>(this, message, value);
         return message;
@@ -1194,6 +1226,9 @@ class ClientLoginRequest$Type extends MessageType<ClientLoginRequest> {
                     break;
                 case /* bytes codeChallenge */ 4:
                     message.codeChallenge = reader.bytes();
+                    break;
+                case /* octelium.api.main.auth.v1.ClientLoginRequest.CallbackType callbackType */ 5:
+                    message.callbackType = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1219,6 +1254,9 @@ class ClientLoginRequest$Type extends MessageType<ClientLoginRequest> {
         /* bytes codeChallenge = 4; */
         if (message.codeChallenge.length)
             writer.tag(4, WireType.LengthDelimited).bytes(message.codeChallenge);
+        /* octelium.api.main.auth.v1.ClientLoginRequest.CallbackType callbackType = 5; */
+        if (message.callbackType !== 0)
+            writer.tag(5, WireType.Varint).int32(message.callbackType);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

@@ -3109,11 +3109,12 @@ export interface Service_Spec_Config_LLM {
      * default, the downstream request path is proxied to the upstream as
      * is. The upstreams that serve neither of these two shapes are
      * supported via the `path` field instead. If not set, which is the
-     * default, the OPENAI protocol is used. Note that Octelium currently proxies the
-     * requests to the upstream in the same protocol that it accepts them
-     * from the downstreams, it does not translate between the protocols.
-     * This field has to be set in the "default" or global Configuration
-     * (as opposed to named dynamic Configs) in order to actually work.
+     * default, the OPENAI protocol is used. Note that this is the protocol
+     * that the downstreams speak as well as the one that the upstream
+     * speaks, unless a `translation` is set, which is what makes the two
+     * differ. This field has to be set in the "default" or global
+     * Configuration (as opposed to named dynamic Configs) in order to
+     * actually work.
      *
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol protocol = 1
      */
@@ -3230,6 +3231,17 @@ export interface Service_Spec_Config_LLM {
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding embedding = 13
      */
     embedding?: Service_Spec_Config_LLM_Embedding;
+    /**
+     * Translation converts the requests and the responses between the
+     * protocol that the Service serves to its downstreams and the
+     * protocol that its upstream speaks. If not set, which is the
+     * default, the two are the same protocol and nothing is translated.
+     * This field has to be set in the "default" or global Configuration
+     * (as opposed to named dynamic Configs) in order to actually work.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Translation translation = 14
+     */
+    translation?: Service_Spec_Config_LLM_Translation;
 }
 /**
  * Model overwrites the model name requested by the downstream
@@ -3588,6 +3600,122 @@ export interface Service_Spec_Config_LLM_Embedding_Source_Upstream {
     auth?: Service_Spec_Config_HTTP_Auth;
 }
 /**
+ * Translation converts the inference requests and responses between
+ * the protocol that the Service serves to its downstreams, which is
+ * the `protocol` field, and the protocol that its upstream speaks.
+ * Without it the two are the same protocol and Octelium proxies the
+ * requests to the upstream in whichever protocol it accepted them
+ * from the downstreams, which is the default.
+ *
+ * It is what lets an OpenAI SDK client, an Anthropic SDK client and a
+ * coding agent that speaks one of them reach an upstream that serves
+ * the other one, with every Policy, Plugin and AccessLog of the
+ * Service continuing to read the request exactly as the downstream
+ * sent it. A translation is applied after every inference-specific
+ * Plugin, so a Guardrail inspects what the downstream wrote, a Prompt
+ * and a Tools Plugin manipulate the downstream's own protocol, a
+ * SemanticCache stores the response in the downstream's own protocol,
+ * and the conversion to the upstream protocol is the last thing that
+ * happens to a request before its credentials and its path are
+ * applied.
+ *
+ * Octelium translates a deliberately bounded subset rather than every
+ * field of every protocol, and it rejects the requests that carry a
+ * feature outside that subset instead of silently dropping it, since
+ * a request that is quietly turned into a materially different one is
+ * worse than a request that is refused. The subset is the text,
+ * image, system instruction, multi-turn history, client tool, tool
+ * call, tool result, tool choice, stop sequence, output limit,
+ * sampling, streaming and usage surface that the protocols have in
+ * common. The provider-specific features that no other protocol
+ * defines (e.g. the OpenAI logprobs, logit biases, penalties, seeds
+ * and structured outputs, the Anthropic top_k sampling, thinking
+ * blocks, assistant prefills, documents, citations and server tools,
+ * the Gemini safety settings, cached content, multiple candidates and
+ * built-in tools, and the Bedrock guardrail configuration, prompt
+ * variables and additional model request fields) are rejected. The
+ * prompt cache controls of a protocol that the target protocol does
+ * not define are dropped rather than rejected, since they change what
+ * a request costs rather than what it generates. The tool schemas are
+ * proxied verbatim rather than rewritten, so a schema that the target
+ * model does not accept is rejected by the provider itself rather
+ * than silently stripped of its constraints.
+ *
+ * Note that the Gemini models which sign their tool calls require
+ * that signature to be returned on the next turn of the conversation,
+ * while no other protocol has anywhere to carry it. Octelium
+ * therefore retains those signatures itself, bound to the Session
+ * that received them and to the upstream model that issued them, for
+ * as long as a turn plausibly continues, and restores them into the
+ * translated requests. Nothing of the reasoning content itself is
+ * ever exposed to a downstream that did not receive it.
+ *
+ * Note that a reasoning configuration that a downstream requested for
+ * itself is translated only where the two protocols express reasoning
+ * in the same terms, which the API of a model that accepts an ordinal
+ * effort and the API of a model that accepts a numeric token budget
+ * do not. Set the Service's own `reasoning` field, or a Reasoning
+ * Plugin, in order to own the reasoning configuration of the
+ * translated requests: it is resolved against the upstream protocol
+ * and encoded into the upstream request, which is exactly the case
+ * that a portable Level is written for.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Translation
+ */
+export interface Service_Spec_Config_LLM_Translation {
+    /**
+     * UpstreamProtocol is the inference API protocol spoken by the
+     * upstream. It is the field that enables the translation: whenever
+     * it is unset, or set to the same protocol as the `protocol` field,
+     * no translation is performed at all and the requests are proxied
+     * in the protocol that the downstreams themselves used.
+     *
+     * Every protocol currently translates to every other one, for the
+     * generation operation that each of them defines, which is the
+     * `CHAT_COMPLETIONS` route of the OPENAI protocol, the `MESSAGES`
+     * route of the ANTHROPIC one, the `GENERATE_CONTENT` route of the
+     * GEMINI one and the `CONVERSE` route of the BEDROCK one, together
+     * with their streaming forms. The other operations, which have no
+     * counterpart at all in one another (e.g. embeddings, moderations,
+     * token counting, model listing and the Bedrock InvokeModel
+     * operations whose bodies are model-native), are rejected rather
+     * than proxied, since an upstream that speaks another protocol
+     * serves none of them.
+     *
+     * Note that the GEMINI and the BEDROCK protocols name the model in
+     * the request path rather than in the request body, so a translated
+     * request is addressed to the model that the Service resolved for
+     * it, which is the one that the Model field, a Model Plugin or a
+     * SemanticRouter Plugin decided and otherwise the one that the
+     * downstream itself requested. A model name that the target
+     * protocol cannot address is rejected rather than rewritten.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol upstreamProtocol = 1
+     */
+    upstreamProtocol: Service_Spec_Config_LLM_Protocol;
+    /**
+     * DefaultMaxOutputTokens is the maximum output token count that is
+     * served to an upstream whose protocol requires one while the
+     * downstream protocol allows omitting it, which is the case for an
+     * ANTHROPIC upstream serving the requests of an OPENAI downstream.
+     * It is only used for the requests that declare no output limit of
+     * their own. Zero uses Octelium's own default. Note that it is a
+     * translation behavior rather than something that the downstream
+     * asked for, so the `ctx.request.llm.maxOutputTokens` field and the
+     * AccessLogs keep reporting zero for such a request, and that the
+     * `limits.maxOutputTokens` field bounds it in the same way that it
+     * bounds a downstream's own limit. It is only needed for an
+     * ANTHROPIC upstream, since the other protocols let a request
+     * declare no output limit at all. Note also that a reasoning token
+     * budget which the Service itself decided is added on top of it,
+     * since a model whose output limit does not exceed its own reasoning
+     * budget rejects the request outright.
+     *
+     * @generated from protobuf field: uint64 defaultMaxOutputTokens = 2
+     */
+    defaultMaxOutputTokens: number;
+}
+/**
  * Limits sets the LLM request parsing and inference limits
  *
  * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Limits
@@ -3805,6 +3933,12 @@ export interface Service_Spec_Config_LLM_Visibility {
  * configuration that the SemanticCache and the SemanticRouter Plugins
  * read whenever they set none of their own, so that a Service which
  * uses both of them describes its embedding backend once.
+ *
+ * A `translation`, whenever the Configuration sets one, sits outside
+ * that order as well: it is applied to a request after every
+ * inference-specific Plugin and to a response before every one of
+ * them, so that every Plugin reads and writes the protocol that the
+ * downstream itself used rather than the one that the upstream speaks.
  *
  * Note that the Plugins which reuse the HTTP mode's own types sit
  * outside that order and outside the Guardrail boundary: they run
@@ -5991,6 +6125,12 @@ export interface Service_Spec_Config_Postgres {
      * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Postgres.Authorization authorization = 5
      */
     authorization?: Service_Spec_Config_Postgres_Authorization;
+    /**
+     * Visibility sets the visibility/access logging specific options
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.Postgres.Visibility visibility = 6
+     */
+    visibility?: Service_Spec_Config_Postgres_Visibility;
 }
 /**
  * Auth sets the credentials used to authenticate to the upstream
@@ -6080,6 +6220,23 @@ export enum Service_Spec_Config_Postgres_Authorization_Mode {
     NONE = 2
 }
 /**
+ * Visibility sets the PostgreSQL-specific access logging configuration
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.Postgres.Visibility
+ */
+export interface Service_Spec_Config_Postgres_Visibility {
+    /**
+     * DisableQuery disables recording the statement text of the query
+     * and parse messages in the access logs. The access log entries
+     * themselves are still recorded without the statement text. This is
+     * recommended for databases whose statements routinely embed
+     * credentials or other sensitive values.
+     *
+     * @generated from protobuf field: bool disableQuery = 1
+     */
+    disableQuery: boolean;
+}
+/**
  * SSLMode is the PostgreSQL SSL mode used to connect to the upstream
  *
  * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.Postgres.SSLMode
@@ -6101,11 +6258,32 @@ export enum Service_Spec_Config_Postgres_SSLMode {
     /**
      * REQUIRE sets SSL mode to "require". This is extremely recommended
      * over the default "prefer" mode if the upstream is listening over
-     * TLS which is the case for SaaS databases.
+     * TLS which is the case for SaaS databases. Note that it encrypts the
+     * connection without verifying the upstream's certificate at all.
      *
      * @generated from protobuf enum value: REQUIRE = 2;
      */
-    REQUIRE = 2
+    REQUIRE = 2,
+    /**
+     * VERIFY_CA sets SSL mode to "verify-ca". It additionally verifies
+     * that the upstream's certificate chains up to a trusted certificate
+     * authority without verifying the upstream's hostname. The trusted
+     * certificate authorities are set by the `tls` Configuration field
+     * and they default to the system's ones.
+     *
+     * @generated from protobuf enum value: VERIFY_CA = 3;
+     */
+    VERIFY_CA = 3,
+    /**
+     * VERIFY_FULL sets SSL mode to "verify-full". It additionally
+     * verifies both the upstream's certificate chain and its hostname.
+     * The trusted certificate authorities are set by the `tls`
+     * Configuration field and they default to the system's ones. This is
+     * the recommended mode for the upstreams that are listening over TLS.
+     *
+     * @generated from protobuf enum value: VERIFY_FULL = 4;
+     */
+    VERIFY_FULL = 4
 }
 /**
  * MySQL sets the MySQL-specific configuration
@@ -6143,6 +6321,18 @@ export interface Service_Spec_Config_MySQL {
      * @generated from protobuf field: bool isTLS = 4
      */
     isTLS: boolean;
+    /**
+     * Visibility sets the visibility/access logging specific options
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.MySQL.Visibility visibility = 5
+     */
+    visibility?: Service_Spec_Config_MySQL_Visibility;
+    /**
+     * Authorization sets MySQL-specific authorization configuration
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.MySQL.Authorization authorization = 6
+     */
+    authorization?: Service_Spec_Config_MySQL_Authorization;
 }
 /**
  * Auth sets the credentials used to authenticate to the upstream MySQL
@@ -6189,6 +6379,63 @@ export interface Service_Spec_Config_MySQL_Auth_Password {
     } | {
         oneofKind: undefined;
     };
+}
+/**
+ * Authorization sets the MySQL-specific authorization configuration
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.MySQL.Authorization
+ */
+export interface Service_Spec_Config_MySQL_Authorization {
+    /**
+     * Mode is the authorization mode
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.MySQL.Authorization.Mode mode = 1
+     */
+    mode: Service_Spec_Config_MySQL_Authorization_Mode;
+}
+/**
+ * Mode sets when the authorization is enforced
+ *
+ * @generated from protobuf enum octelium.api.main.core.v1.Service.Spec.Config.MySQL.Authorization.Mode
+ */
+export enum Service_Spec_Config_MySQL_Authorization_Mode {
+    /**
+     * MODE_UNSET uses the default configuration which is currently NONE
+     *
+     * @generated from protobuf enum value: MODE_UNSET = 0;
+     */
+    MODE_UNSET = 0,
+    /**
+     * ALL forces authorization for every MySQL command (e.g. query
+     * commands) not just at the beginning of the connection
+     *
+     * @generated from protobuf enum value: ALL = 1;
+     */
+    ALL = 1,
+    /**
+     * NONE which is currently the default behavior enforces
+     * authorization only at the beginning of the connection
+     *
+     * @generated from protobuf enum value: NONE = 2;
+     */
+    NONE = 2
+}
+/**
+ * Visibility sets the MySQL-specific access logging configuration
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.Service.Spec.Config.MySQL.Visibility
+ */
+export interface Service_Spec_Config_MySQL_Visibility {
+    /**
+     * DisableQuery disables recording the statement text of the query
+     * and prepare statement commands in the access logs. The access log
+     * entries themselves are still recorded without the statement text.
+     * This is recommended for databases whose statements routinely embed
+     * credentials or other sensitive values.
+     *
+     * @generated from protobuf field: bool disableQuery = 1
+     */
+    disableQuery: boolean;
 }
 /**
  * ClientCertificate sets the x509 client certificate used to
@@ -11623,6 +11870,13 @@ export interface AccessLog_Entry_Info_Postgres {
     } | {
         oneofKind: undefined;
     };
+    /**
+     * IsTruncated shows whether the recorded statement text was truncated
+     * since it exceeded the maximum recorded length
+     *
+     * @generated from protobuf field: bool isTruncated = 5
+     */
+    isTruncated: boolean;
 }
 /**
  * Start is the details of the start of a PostgreSQL connection
@@ -11820,6 +12074,13 @@ export interface AccessLog_Entry_Info_MySQL {
     } | {
         oneofKind: undefined;
     };
+    /**
+     * IsTruncated shows whether the recorded statement text was truncated
+     * since it exceeded the maximum recorded length
+     *
+     * @generated from protobuf field: bool isTruncated = 7
+     */
+    isTruncated: boolean;
 }
 /**
  * Query is the details of a query command
@@ -12679,6 +12940,14 @@ export interface AccessLog_Entry_Info_LLM {
      * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter semanticRouter = 27
      */
     semanticRouter?: AccessLog_Entry_Info_LLM_SemanticRouter;
+    /**
+     * Translation is the record of a request whose upstream protocol
+     * differed from the one that the downstream used. It is unset for the
+     * requests that were not translated at all.
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Translation translation = 28
+     */
+    translation?: AccessLog_Entry_Info_LLM_Translation;
 }
 /**
  * Model shows which model the request named and which one served it
@@ -12863,6 +13132,42 @@ export interface AccessLog_Entry_Info_LLM_Tools {
      */
     isCalledNamesTruncated: boolean;
 }
+/**
+ * Translation is the record of a request whose upstream protocol
+ * differed from the one that the downstream used. It is only set for
+ * the requests that Octelium actually translated, so its absence
+ * means that the upstream spoke the entry's own `protocol` field.
+ * The downstream protocol and route are deliberately not repeated
+ * here, since the entry already carries them.
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Translation
+ */
+export interface AccessLog_Entry_Info_LLM_Translation {
+    /**
+     * UpstreamProtocol is the inference API protocol that the request
+     * was translated into and that the upstream served
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol upstreamProtocol = 1
+     */
+    upstreamProtocol: Service_Spec_Config_LLM_Protocol;
+    /**
+     * UpstreamRoute is the canonical inference API route of the
+     * upstream protocol that the request was translated into
+     *
+     * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.LLM.Route upstreamRoute = 2
+     */
+    upstreamRoute: RequestContext_Request_LLM_Route;
+}
+// Note that the Usage, ResponseID, RawFinishReason and Model.Reported
+// fields of a translated entry are the ones that the upstream itself
+// reported rather than the ones that the translated response carried,
+// since a translation regenerates the response identifier and spells
+// the completion status in the downstream's own vocabulary. The Usage
+// counts therefore follow the accounting of the UpstreamProtocol
+// rather than of the entry's own `protocol` field, which matters for
+// the cache token counts that the two protocols account for
+// differently.
+
 /**
  * Guardrail is the outcome that one Guardrail Plugin reached on one
  * leg of the exchange. A request carries one of them per applied
@@ -15180,6 +15485,12 @@ export interface ClusterConfig_Spec_DNS {
      * @generated from protobuf field: octelium.api.main.core.v1.ClusterConfig.Spec.DNS.Zone fallbackZone = 1
      */
     fallbackZone?: ClusterConfig_Spec_DNS_Zone;
+    /**
+     * Zones is the list of DNS zones used to resolve matching domain suffixes
+     *
+     * @generated from protobuf field: repeated octelium.api.main.core.v1.ClusterConfig.Spec.DNS.Zone zones = 2
+     */
+    zones: ClusterConfig_Spec_DNS_Zone[];
 }
 /**
  * Zone sets the options of a DNS zone
@@ -15200,6 +15511,12 @@ export interface ClusterConfig_Spec_DNS_Zone {
      * @generated from protobuf field: octelium.api.main.meta.v1.Duration cacheDuration = 2
      */
     cacheDuration?: Duration;
+    /**
+     * Domains is the list of domain suffixes served by the zone
+     *
+     * @generated from protobuf field: repeated string domains = 3
+     */
+    domains: string[];
 }
 /**
  * Authorization sets the Cluster-wide Policies that are applied to every
@@ -16561,6 +16878,14 @@ export interface RequestContext_Request {
          */
         llm: RequestContext_Request_LLM;
     } | {
+        oneofKind: "mysql";
+        /**
+         * MySQL is the MySQL specific details.
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.MySQL mysql = 11
+         */
+        mysql: RequestContext_Request_MySQL;
+    } | {
         oneofKind: undefined;
     };
     /**
@@ -16879,6 +17204,85 @@ export interface RequestContext_Request_Postgres_Parse {
      * @generated from protobuf field: string query = 2
      */
     query: string;
+}
+/**
+ * MySQL is the MySQL-specific request details
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.MySQL
+ */
+export interface RequestContext_Request_MySQL {
+    /**
+     * Type sets the type of the MySQL request
+     *
+     * @generated from protobuf oneof: type
+     */
+    type: {
+        oneofKind: "query";
+        /**
+         * Query is the details of a query command
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.MySQL.Query query = 1
+         */
+        query: RequestContext_Request_MySQL_Query;
+    } | {
+        oneofKind: "prepareStatement";
+        /**
+         * PrepareStatement is the details of a command that prepares a
+         * statement
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.MySQL.PrepareStatement prepareStatement = 2
+         */
+        prepareStatement: RequestContext_Request_MySQL_PrepareStatement;
+    } | {
+        oneofKind: "initDB";
+        /**
+         * InitDB is the details of a command that changes the default database
+         *
+         * @generated from protobuf field: octelium.api.main.core.v1.RequestContext.Request.MySQL.InitDB initDB = 3
+         */
+        initDB: RequestContext_Request_MySQL_InitDB;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * Query is the details of a query command
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.MySQL.Query
+ */
+export interface RequestContext_Request_MySQL_Query {
+    /**
+     * Query is the SQL query itself
+     *
+     * @generated from protobuf field: string query = 1
+     */
+    query: string;
+}
+/**
+ * PrepareStatement is the details of a command that prepares a statement
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.MySQL.PrepareStatement
+ */
+export interface RequestContext_Request_MySQL_PrepareStatement {
+    /**
+     * Query is the SQL query itself
+     *
+     * @generated from protobuf field: string query = 1
+     */
+    query: string;
+}
+/**
+ * InitDB is the details of a command that changes the default database
+ *
+ * @generated from protobuf message octelium.api.main.core.v1.RequestContext.Request.MySQL.InitDB
+ */
+export interface RequestContext_Request_MySQL_InitDB {
+    /**
+     * Database is the database name requested by the downstream
+     *
+     * @generated from protobuf field: string database = 1
+     */
+    database: string;
 }
 /**
  * DNS is the DNS-specific request details
@@ -23598,7 +24002,8 @@ class Service_Spec_Config_LLM$Type extends MessageType<Service_Spec_Config_LLM> 
             { no: 10, name: "visibility", kind: "message", T: () => Service_Spec_Config_LLM_Visibility },
             { no: 11, name: "cors", kind: "message", T: () => Service_Spec_Config_HTTP_CORS },
             { no: 12, name: "reasoning", kind: "message", T: () => Service_Spec_Config_LLM_Reasoning },
-            { no: 13, name: "embedding", kind: "message", T: () => Service_Spec_Config_LLM_Embedding }
+            { no: 13, name: "embedding", kind: "message", T: () => Service_Spec_Config_LLM_Embedding },
+            { no: 14, name: "translation", kind: "message", T: () => Service_Spec_Config_LLM_Translation }
         ]);
     }
     create(value?: PartialMessage<Service_Spec_Config_LLM>): Service_Spec_Config_LLM {
@@ -23655,6 +24060,9 @@ class Service_Spec_Config_LLM$Type extends MessageType<Service_Spec_Config_LLM> 
                 case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding embedding */ 13:
                     message.embedding = Service_Spec_Config_LLM_Embedding.internalBinaryRead(reader, reader.uint32(), options, message.embedding);
                     break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Translation translation */ 14:
+                    message.translation = Service_Spec_Config_LLM_Translation.internalBinaryRead(reader, reader.uint32(), options, message.translation);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -23706,6 +24114,9 @@ class Service_Spec_Config_LLM$Type extends MessageType<Service_Spec_Config_LLM> 
         /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding embedding = 13; */
         if (message.embedding)
             Service_Spec_Config_LLM_Embedding.internalBinaryWrite(message.embedding, writer.tag(13, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Translation translation = 14; */
+        if (message.translation)
+            Service_Spec_Config_LLM_Translation.internalBinaryWrite(message.translation, writer.tag(14, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -24060,6 +24471,61 @@ class Service_Spec_Config_LLM_Embedding_Source_Upstream$Type extends MessageType
  * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Embedding.Source.Upstream
  */
 export const Service_Spec_Config_LLM_Embedding_Source_Upstream = new Service_Spec_Config_LLM_Embedding_Source_Upstream$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_LLM_Translation$Type extends MessageType<Service_Spec_Config_LLM_Translation> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.LLM.Translation", [
+            { no: 1, name: "upstreamProtocol", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol", Service_Spec_Config_LLM_Protocol] },
+            { no: 2, name: "defaultMaxOutputTokens", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 2 /*LongType.NUMBER*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_LLM_Translation>): Service_Spec_Config_LLM_Translation {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.upstreamProtocol = 0;
+        message.defaultMaxOutputTokens = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_LLM_Translation>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_LLM_Translation): Service_Spec_Config_LLM_Translation {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol upstreamProtocol */ 1:
+                    message.upstreamProtocol = reader.int32();
+                    break;
+                case /* uint64 defaultMaxOutputTokens */ 2:
+                    message.defaultMaxOutputTokens = reader.uint64().toNumber();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_LLM_Translation, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol upstreamProtocol = 1; */
+        if (message.upstreamProtocol !== 0)
+            writer.tag(1, WireType.Varint).int32(message.upstreamProtocol);
+        /* uint64 defaultMaxOutputTokens = 2; */
+        if (message.defaultMaxOutputTokens !== 0)
+            writer.tag(2, WireType.Varint).uint64(message.defaultMaxOutputTokens);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.LLM.Translation
+ */
+export const Service_Spec_Config_LLM_Translation = new Service_Spec_Config_LLM_Translation$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Service_Spec_Config_LLM_Limits$Type extends MessageType<Service_Spec_Config_LLM_Limits> {
     constructor() {
@@ -26087,7 +26553,8 @@ class Service_Spec_Config_Postgres$Type extends MessageType<Service_Spec_Config_
             { no: 2, name: "auth", kind: "message", T: () => Service_Spec_Config_Postgres_Auth },
             { no: 3, name: "database", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "sslMode", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.Postgres.SSLMode", Service_Spec_Config_Postgres_SSLMode] },
-            { no: 5, name: "authorization", kind: "message", T: () => Service_Spec_Config_Postgres_Authorization }
+            { no: 5, name: "authorization", kind: "message", T: () => Service_Spec_Config_Postgres_Authorization },
+            { no: 6, name: "visibility", kind: "message", T: () => Service_Spec_Config_Postgres_Visibility }
         ]);
     }
     create(value?: PartialMessage<Service_Spec_Config_Postgres>): Service_Spec_Config_Postgres {
@@ -26119,6 +26586,9 @@ class Service_Spec_Config_Postgres$Type extends MessageType<Service_Spec_Config_
                 case /* octelium.api.main.core.v1.Service.Spec.Config.Postgres.Authorization authorization */ 5:
                     message.authorization = Service_Spec_Config_Postgres_Authorization.internalBinaryRead(reader, reader.uint32(), options, message.authorization);
                     break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.Postgres.Visibility visibility */ 6:
+                    message.visibility = Service_Spec_Config_Postgres_Visibility.internalBinaryRead(reader, reader.uint32(), options, message.visibility);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -26146,6 +26616,9 @@ class Service_Spec_Config_Postgres$Type extends MessageType<Service_Spec_Config_
         /* octelium.api.main.core.v1.Service.Spec.Config.Postgres.Authorization authorization = 5; */
         if (message.authorization)
             Service_Spec_Config_Postgres_Authorization.internalBinaryWrite(message.authorization, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.Postgres.Visibility visibility = 6; */
+        if (message.visibility)
+            Service_Spec_Config_Postgres_Visibility.internalBinaryWrite(message.visibility, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -26304,13 +26777,62 @@ class Service_Spec_Config_Postgres_Authorization$Type extends MessageType<Servic
  */
 export const Service_Spec_Config_Postgres_Authorization = new Service_Spec_Config_Postgres_Authorization$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_Postgres_Visibility$Type extends MessageType<Service_Spec_Config_Postgres_Visibility> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.Postgres.Visibility", [
+            { no: 1, name: "disableQuery", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_Postgres_Visibility>): Service_Spec_Config_Postgres_Visibility {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.disableQuery = false;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_Postgres_Visibility>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_Postgres_Visibility): Service_Spec_Config_Postgres_Visibility {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool disableQuery */ 1:
+                    message.disableQuery = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_Postgres_Visibility, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool disableQuery = 1; */
+        if (message.disableQuery !== false)
+            writer.tag(1, WireType.Varint).bool(message.disableQuery);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.Postgres.Visibility
+ */
+export const Service_Spec_Config_Postgres_Visibility = new Service_Spec_Config_Postgres_Visibility$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class Service_Spec_Config_MySQL$Type extends MessageType<Service_Spec_Config_MySQL> {
     constructor() {
         super("octelium.api.main.core.v1.Service.Spec.Config.MySQL", [
             { no: 1, name: "user", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "auth", kind: "message", T: () => Service_Spec_Config_MySQL_Auth },
             { no: 3, name: "database", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "isTLS", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 4, name: "isTLS", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 5, name: "visibility", kind: "message", T: () => Service_Spec_Config_MySQL_Visibility },
+            { no: 6, name: "authorization", kind: "message", T: () => Service_Spec_Config_MySQL_Authorization }
         ]);
     }
     create(value?: PartialMessage<Service_Spec_Config_MySQL>): Service_Spec_Config_MySQL {
@@ -26339,6 +26861,12 @@ class Service_Spec_Config_MySQL$Type extends MessageType<Service_Spec_Config_MyS
                 case /* bool isTLS */ 4:
                     message.isTLS = reader.bool();
                     break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.MySQL.Visibility visibility */ 5:
+                    message.visibility = Service_Spec_Config_MySQL_Visibility.internalBinaryRead(reader, reader.uint32(), options, message.visibility);
+                    break;
+                case /* octelium.api.main.core.v1.Service.Spec.Config.MySQL.Authorization authorization */ 6:
+                    message.authorization = Service_Spec_Config_MySQL_Authorization.internalBinaryRead(reader, reader.uint32(), options, message.authorization);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -26363,6 +26891,12 @@ class Service_Spec_Config_MySQL$Type extends MessageType<Service_Spec_Config_MyS
         /* bool isTLS = 4; */
         if (message.isTLS !== false)
             writer.tag(4, WireType.Varint).bool(message.isTLS);
+        /* octelium.api.main.core.v1.Service.Spec.Config.MySQL.Visibility visibility = 5; */
+        if (message.visibility)
+            Service_Spec_Config_MySQL_Visibility.internalBinaryWrite(message.visibility, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.Service.Spec.Config.MySQL.Authorization authorization = 6; */
+        if (message.authorization)
+            Service_Spec_Config_MySQL_Authorization.internalBinaryWrite(message.authorization, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -26473,6 +27007,100 @@ class Service_Spec_Config_MySQL_Auth_Password$Type extends MessageType<Service_S
  * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.MySQL.Auth.Password
  */
 export const Service_Spec_Config_MySQL_Auth_Password = new Service_Spec_Config_MySQL_Auth_Password$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_MySQL_Authorization$Type extends MessageType<Service_Spec_Config_MySQL_Authorization> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.MySQL.Authorization", [
+            { no: 1, name: "mode", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.MySQL.Authorization.Mode", Service_Spec_Config_MySQL_Authorization_Mode] }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_MySQL_Authorization>): Service_Spec_Config_MySQL_Authorization {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.mode = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_MySQL_Authorization>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_MySQL_Authorization): Service_Spec_Config_MySQL_Authorization {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.MySQL.Authorization.Mode mode */ 1:
+                    message.mode = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_MySQL_Authorization, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.MySQL.Authorization.Mode mode = 1; */
+        if (message.mode !== 0)
+            writer.tag(1, WireType.Varint).int32(message.mode);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.MySQL.Authorization
+ */
+export const Service_Spec_Config_MySQL_Authorization = new Service_Spec_Config_MySQL_Authorization$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Service_Spec_Config_MySQL_Visibility$Type extends MessageType<Service_Spec_Config_MySQL_Visibility> {
+    constructor() {
+        super("octelium.api.main.core.v1.Service.Spec.Config.MySQL.Visibility", [
+            { no: 1, name: "disableQuery", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Service_Spec_Config_MySQL_Visibility>): Service_Spec_Config_MySQL_Visibility {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.disableQuery = false;
+        if (value !== undefined)
+            reflectionMergePartial<Service_Spec_Config_MySQL_Visibility>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Service_Spec_Config_MySQL_Visibility): Service_Spec_Config_MySQL_Visibility {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool disableQuery */ 1:
+                    message.disableQuery = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Service_Spec_Config_MySQL_Visibility, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool disableQuery = 1; */
+        if (message.disableQuery !== false)
+            writer.tag(1, WireType.Varint).bool(message.disableQuery);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.Service.Spec.Config.MySQL.Visibility
+ */
+export const Service_Spec_Config_MySQL_Visibility = new Service_Spec_Config_MySQL_Visibility$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Service_Spec_Config_ClientCertificate$Type extends MessageType<Service_Spec_Config_ClientCertificate> {
     constructor() {
@@ -35977,13 +36605,15 @@ class AccessLog_Entry_Info_Postgres$Type extends MessageType<AccessLog_Entry_Inf
             { no: 1, name: "type", kind: "enum", T: () => ["octelium.api.main.core.v1.AccessLog.Entry.Info.Postgres.Type", AccessLog_Entry_Info_Postgres_Type] },
             { no: 2, name: "start", kind: "message", oneof: "details", T: () => AccessLog_Entry_Info_Postgres_Start },
             { no: 3, name: "query", kind: "message", oneof: "details", T: () => AccessLog_Entry_Info_Postgres_Query },
-            { no: 4, name: "parse", kind: "message", oneof: "details", T: () => AccessLog_Entry_Info_Postgres_Parse }
+            { no: 4, name: "parse", kind: "message", oneof: "details", T: () => AccessLog_Entry_Info_Postgres_Parse },
+            { no: 5, name: "isTruncated", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
     create(value?: PartialMessage<AccessLog_Entry_Info_Postgres>): AccessLog_Entry_Info_Postgres {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.type = 0;
         message.details = { oneofKind: undefined };
+        message.isTruncated = false;
         if (value !== undefined)
             reflectionMergePartial<AccessLog_Entry_Info_Postgres>(this, message, value);
         return message;
@@ -36014,6 +36644,9 @@ class AccessLog_Entry_Info_Postgres$Type extends MessageType<AccessLog_Entry_Inf
                         parse: AccessLog_Entry_Info_Postgres_Parse.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).parse)
                     };
                     break;
+                case /* bool isTruncated */ 5:
+                    message.isTruncated = reader.bool();
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -36038,6 +36671,9 @@ class AccessLog_Entry_Info_Postgres$Type extends MessageType<AccessLog_Entry_Inf
         /* octelium.api.main.core.v1.AccessLog.Entry.Info.Postgres.Parse parse = 4; */
         if (message.details.oneofKind === "parse")
             AccessLog_Entry_Info_Postgres_Parse.internalBinaryWrite(message.details.parse, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* bool isTruncated = 5; */
+        if (message.isTruncated !== false)
+            writer.tag(5, WireType.Varint).bool(message.isTruncated);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -36238,13 +36874,15 @@ class AccessLog_Entry_Info_MySQL$Type extends MessageType<AccessLog_Entry_Info_M
             { no: 3, name: "initDB", kind: "message", oneof: "details", T: () => AccessLog_Entry_Info_MySQL_InitDB },
             { no: 4, name: "createDB", kind: "message", oneof: "details", T: () => AccessLog_Entry_Info_MySQL_CreateDB },
             { no: 5, name: "dropDB", kind: "message", oneof: "details", T: () => AccessLog_Entry_Info_MySQL_DropDB },
-            { no: 6, name: "prepareStatement", kind: "message", oneof: "details", T: () => AccessLog_Entry_Info_MySQL_PrepareStatement }
+            { no: 6, name: "prepareStatement", kind: "message", oneof: "details", T: () => AccessLog_Entry_Info_MySQL_PrepareStatement },
+            { no: 7, name: "isTruncated", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
     create(value?: PartialMessage<AccessLog_Entry_Info_MySQL>): AccessLog_Entry_Info_MySQL {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.type = 0;
         message.details = { oneofKind: undefined };
+        message.isTruncated = false;
         if (value !== undefined)
             reflectionMergePartial<AccessLog_Entry_Info_MySQL>(this, message, value);
         return message;
@@ -36287,6 +36925,9 @@ class AccessLog_Entry_Info_MySQL$Type extends MessageType<AccessLog_Entry_Info_M
                         prepareStatement: AccessLog_Entry_Info_MySQL_PrepareStatement.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).prepareStatement)
                     };
                     break;
+                case /* bool isTruncated */ 7:
+                    message.isTruncated = reader.bool();
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -36317,6 +36958,9 @@ class AccessLog_Entry_Info_MySQL$Type extends MessageType<AccessLog_Entry_Info_M
         /* octelium.api.main.core.v1.AccessLog.Entry.Info.MySQL.PrepareStatement prepareStatement = 6; */
         if (message.details.oneofKind === "prepareStatement")
             AccessLog_Entry_Info_MySQL_PrepareStatement.internalBinaryWrite(message.details.prepareStatement, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* bool isTruncated = 7; */
+        if (message.isTruncated !== false)
+            writer.tag(7, WireType.Varint).bool(message.isTruncated);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -37222,7 +37866,8 @@ class AccessLog_Entry_Info_LLM$Type extends MessageType<AccessLog_Entry_Info_LLM
             { no: 24, name: "guardrails", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => AccessLog_Entry_Info_LLM_Guardrail },
             { no: 25, name: "tokenRateLimit", kind: "message", T: () => AccessLog_Entry_Info_LLM_TokenRateLimit },
             { no: 26, name: "semanticCache", kind: "message", T: () => AccessLog_Entry_Info_LLM_SemanticCache },
-            { no: 27, name: "semanticRouter", kind: "message", T: () => AccessLog_Entry_Info_LLM_SemanticRouter }
+            { no: 27, name: "semanticRouter", kind: "message", T: () => AccessLog_Entry_Info_LLM_SemanticRouter },
+            { no: 28, name: "translation", kind: "message", T: () => AccessLog_Entry_Info_LLM_Translation }
         ]);
     }
     create(value?: PartialMessage<AccessLog_Entry_Info_LLM>): AccessLog_Entry_Info_LLM {
@@ -37335,6 +37980,9 @@ class AccessLog_Entry_Info_LLM$Type extends MessageType<AccessLog_Entry_Info_LLM
                 case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter semanticRouter */ 27:
                     message.semanticRouter = AccessLog_Entry_Info_LLM_SemanticRouter.internalBinaryRead(reader, reader.uint32(), options, message.semanticRouter);
                     break;
+                case /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Translation translation */ 28:
+                    message.translation = AccessLog_Entry_Info_LLM_Translation.internalBinaryRead(reader, reader.uint32(), options, message.translation);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -37428,6 +38076,9 @@ class AccessLog_Entry_Info_LLM$Type extends MessageType<AccessLog_Entry_Info_LLM
         /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.SemanticRouter semanticRouter = 27; */
         if (message.semanticRouter)
             AccessLog_Entry_Info_LLM_SemanticRouter.internalBinaryWrite(message.semanticRouter, writer.tag(27, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Translation translation = 28; */
+        if (message.translation)
+            AccessLog_Entry_Info_LLM_Translation.internalBinaryWrite(message.translation, writer.tag(28, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -37675,6 +38326,61 @@ class AccessLog_Entry_Info_LLM_Tools$Type extends MessageType<AccessLog_Entry_In
  * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Tools
  */
 export const AccessLog_Entry_Info_LLM_Tools = new AccessLog_Entry_Info_LLM_Tools$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AccessLog_Entry_Info_LLM_Translation$Type extends MessageType<AccessLog_Entry_Info_LLM_Translation> {
+    constructor() {
+        super("octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Translation", [
+            { no: 1, name: "upstreamProtocol", kind: "enum", T: () => ["octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol", Service_Spec_Config_LLM_Protocol] },
+            { no: 2, name: "upstreamRoute", kind: "enum", T: () => ["octelium.api.main.core.v1.RequestContext.Request.LLM.Route", RequestContext_Request_LLM_Route] }
+        ]);
+    }
+    create(value?: PartialMessage<AccessLog_Entry_Info_LLM_Translation>): AccessLog_Entry_Info_LLM_Translation {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.upstreamProtocol = 0;
+        message.upstreamRoute = 0;
+        if (value !== undefined)
+            reflectionMergePartial<AccessLog_Entry_Info_LLM_Translation>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AccessLog_Entry_Info_LLM_Translation): AccessLog_Entry_Info_LLM_Translation {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol upstreamProtocol */ 1:
+                    message.upstreamProtocol = reader.int32();
+                    break;
+                case /* octelium.api.main.core.v1.RequestContext.Request.LLM.Route upstreamRoute */ 2:
+                    message.upstreamRoute = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AccessLog_Entry_Info_LLM_Translation, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.Service.Spec.Config.LLM.Protocol upstreamProtocol = 1; */
+        if (message.upstreamProtocol !== 0)
+            writer.tag(1, WireType.Varint).int32(message.upstreamProtocol);
+        /* octelium.api.main.core.v1.RequestContext.Request.LLM.Route upstreamRoute = 2; */
+        if (message.upstreamRoute !== 0)
+            writer.tag(2, WireType.Varint).int32(message.upstreamRoute);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.AccessLog.Entry.Info.LLM.Translation
+ */
+export const AccessLog_Entry_Info_LLM_Translation = new AccessLog_Entry_Info_LLM_Translation$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class AccessLog_Entry_Info_LLM_Guardrail$Type extends MessageType<AccessLog_Entry_Info_LLM_Guardrail> {
     constructor() {
@@ -41337,11 +42043,13 @@ export const ClusterConfig_Spec_Gateway = new ClusterConfig_Spec_Gateway$Type();
 class ClusterConfig_Spec_DNS$Type extends MessageType<ClusterConfig_Spec_DNS> {
     constructor() {
         super("octelium.api.main.core.v1.ClusterConfig.Spec.DNS", [
-            { no: 1, name: "fallbackZone", kind: "message", T: () => ClusterConfig_Spec_DNS_Zone }
+            { no: 1, name: "fallbackZone", kind: "message", T: () => ClusterConfig_Spec_DNS_Zone },
+            { no: 2, name: "zones", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => ClusterConfig_Spec_DNS_Zone }
         ]);
     }
     create(value?: PartialMessage<ClusterConfig_Spec_DNS>): ClusterConfig_Spec_DNS {
         const message = globalThis.Object.create((this.messagePrototype!));
+        message.zones = [];
         if (value !== undefined)
             reflectionMergePartial<ClusterConfig_Spec_DNS>(this, message, value);
         return message;
@@ -41353,6 +42061,9 @@ class ClusterConfig_Spec_DNS$Type extends MessageType<ClusterConfig_Spec_DNS> {
             switch (fieldNo) {
                 case /* octelium.api.main.core.v1.ClusterConfig.Spec.DNS.Zone fallbackZone */ 1:
                     message.fallbackZone = ClusterConfig_Spec_DNS_Zone.internalBinaryRead(reader, reader.uint32(), options, message.fallbackZone);
+                    break;
+                case /* repeated octelium.api.main.core.v1.ClusterConfig.Spec.DNS.Zone zones */ 2:
+                    message.zones.push(ClusterConfig_Spec_DNS_Zone.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -41369,6 +42080,9 @@ class ClusterConfig_Spec_DNS$Type extends MessageType<ClusterConfig_Spec_DNS> {
         /* octelium.api.main.core.v1.ClusterConfig.Spec.DNS.Zone fallbackZone = 1; */
         if (message.fallbackZone)
             ClusterConfig_Spec_DNS_Zone.internalBinaryWrite(message.fallbackZone, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* repeated octelium.api.main.core.v1.ClusterConfig.Spec.DNS.Zone zones = 2; */
+        for (let i = 0; i < message.zones.length; i++)
+            ClusterConfig_Spec_DNS_Zone.internalBinaryWrite(message.zones[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -41384,12 +42098,14 @@ class ClusterConfig_Spec_DNS_Zone$Type extends MessageType<ClusterConfig_Spec_DN
     constructor() {
         super("octelium.api.main.core.v1.ClusterConfig.Spec.DNS.Zone", [
             { no: 1, name: "servers", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "cacheDuration", kind: "message", T: () => Duration }
+            { no: 2, name: "cacheDuration", kind: "message", T: () => Duration },
+            { no: 3, name: "domains", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<ClusterConfig_Spec_DNS_Zone>): ClusterConfig_Spec_DNS_Zone {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.servers = [];
+        message.domains = [];
         if (value !== undefined)
             reflectionMergePartial<ClusterConfig_Spec_DNS_Zone>(this, message, value);
         return message;
@@ -41404,6 +42120,9 @@ class ClusterConfig_Spec_DNS_Zone$Type extends MessageType<ClusterConfig_Spec_DN
                     break;
                 case /* octelium.api.main.meta.v1.Duration cacheDuration */ 2:
                     message.cacheDuration = Duration.internalBinaryRead(reader, reader.uint32(), options, message.cacheDuration);
+                    break;
+                case /* repeated string domains */ 3:
+                    message.domains.push(reader.string());
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -41423,6 +42142,9 @@ class ClusterConfig_Spec_DNS_Zone$Type extends MessageType<ClusterConfig_Spec_DN
         /* octelium.api.main.meta.v1.Duration cacheDuration = 2; */
         if (message.cacheDuration)
             Duration.internalBinaryWrite(message.cacheDuration, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* repeated string domains = 3; */
+        for (let i = 0; i < message.domains.length; i++)
+            writer.tag(3, WireType.LengthDelimited).string(message.domains[i]);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -43817,6 +44539,7 @@ class RequestContext_Request$Type extends MessageType<RequestContext_Request> {
             { no: 8, name: "socks5", kind: "message", oneof: "type", T: () => RequestContext_Request_SOCKS5 },
             { no: 9, name: "mcp", kind: "message", oneof: "type", T: () => RequestContext_Request_MCP },
             { no: 10, name: "llm", kind: "message", oneof: "type", T: () => RequestContext_Request_LLM },
+            { no: 11, name: "mysql", kind: "message", oneof: "type", T: () => RequestContext_Request_MySQL },
             { no: 7, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
@@ -43887,6 +44610,12 @@ class RequestContext_Request$Type extends MessageType<RequestContext_Request> {
                         llm: RequestContext_Request_LLM.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).llm)
                     };
                     break;
+                case /* octelium.api.main.core.v1.RequestContext.Request.MySQL mysql */ 11:
+                    message.type = {
+                        oneofKind: "mysql",
+                        mysql: RequestContext_Request_MySQL.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).mysql)
+                    };
+                    break;
                 case /* string ip */ 7:
                     message.ip = reader.string();
                     break;
@@ -43932,6 +44661,9 @@ class RequestContext_Request$Type extends MessageType<RequestContext_Request> {
         /* octelium.api.main.core.v1.RequestContext.Request.LLM llm = 10; */
         if (message.type.oneofKind === "llm")
             RequestContext_Request_LLM.internalBinaryWrite(message.type.llm, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.RequestContext.Request.MySQL mysql = 11; */
+        if (message.type.oneofKind === "mysql")
+            RequestContext_Request_MySQL.internalBinaryWrite(message.type.mysql, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -44620,6 +45352,217 @@ class RequestContext_Request_Postgres_Parse$Type extends MessageType<RequestCont
  * @generated MessageType for protobuf message octelium.api.main.core.v1.RequestContext.Request.Postgres.Parse
  */
 export const RequestContext_Request_Postgres_Parse = new RequestContext_Request_Postgres_Parse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RequestContext_Request_MySQL$Type extends MessageType<RequestContext_Request_MySQL> {
+    constructor() {
+        super("octelium.api.main.core.v1.RequestContext.Request.MySQL", [
+            { no: 1, name: "query", kind: "message", oneof: "type", T: () => RequestContext_Request_MySQL_Query },
+            { no: 2, name: "prepareStatement", kind: "message", oneof: "type", T: () => RequestContext_Request_MySQL_PrepareStatement },
+            { no: 3, name: "initDB", kind: "message", oneof: "type", T: () => RequestContext_Request_MySQL_InitDB }
+        ]);
+    }
+    create(value?: PartialMessage<RequestContext_Request_MySQL>): RequestContext_Request_MySQL {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.type = { oneofKind: undefined };
+        if (value !== undefined)
+            reflectionMergePartial<RequestContext_Request_MySQL>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RequestContext_Request_MySQL): RequestContext_Request_MySQL {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.core.v1.RequestContext.Request.MySQL.Query query */ 1:
+                    message.type = {
+                        oneofKind: "query",
+                        query: RequestContext_Request_MySQL_Query.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).query)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.RequestContext.Request.MySQL.PrepareStatement prepareStatement */ 2:
+                    message.type = {
+                        oneofKind: "prepareStatement",
+                        prepareStatement: RequestContext_Request_MySQL_PrepareStatement.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).prepareStatement)
+                    };
+                    break;
+                case /* octelium.api.main.core.v1.RequestContext.Request.MySQL.InitDB initDB */ 3:
+                    message.type = {
+                        oneofKind: "initDB",
+                        initDB: RequestContext_Request_MySQL_InitDB.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).initDB)
+                    };
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: RequestContext_Request_MySQL, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.core.v1.RequestContext.Request.MySQL.Query query = 1; */
+        if (message.type.oneofKind === "query")
+            RequestContext_Request_MySQL_Query.internalBinaryWrite(message.type.query, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.RequestContext.Request.MySQL.PrepareStatement prepareStatement = 2; */
+        if (message.type.oneofKind === "prepareStatement")
+            RequestContext_Request_MySQL_PrepareStatement.internalBinaryWrite(message.type.prepareStatement, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.core.v1.RequestContext.Request.MySQL.InitDB initDB = 3; */
+        if (message.type.oneofKind === "initDB")
+            RequestContext_Request_MySQL_InitDB.internalBinaryWrite(message.type.initDB, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.RequestContext.Request.MySQL
+ */
+export const RequestContext_Request_MySQL = new RequestContext_Request_MySQL$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RequestContext_Request_MySQL_Query$Type extends MessageType<RequestContext_Request_MySQL_Query> {
+    constructor() {
+        super("octelium.api.main.core.v1.RequestContext.Request.MySQL.Query", [
+            { no: 1, name: "query", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<RequestContext_Request_MySQL_Query>): RequestContext_Request_MySQL_Query {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.query = "";
+        if (value !== undefined)
+            reflectionMergePartial<RequestContext_Request_MySQL_Query>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RequestContext_Request_MySQL_Query): RequestContext_Request_MySQL_Query {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string query */ 1:
+                    message.query = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: RequestContext_Request_MySQL_Query, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string query = 1; */
+        if (message.query !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.query);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.RequestContext.Request.MySQL.Query
+ */
+export const RequestContext_Request_MySQL_Query = new RequestContext_Request_MySQL_Query$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RequestContext_Request_MySQL_PrepareStatement$Type extends MessageType<RequestContext_Request_MySQL_PrepareStatement> {
+    constructor() {
+        super("octelium.api.main.core.v1.RequestContext.Request.MySQL.PrepareStatement", [
+            { no: 1, name: "query", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<RequestContext_Request_MySQL_PrepareStatement>): RequestContext_Request_MySQL_PrepareStatement {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.query = "";
+        if (value !== undefined)
+            reflectionMergePartial<RequestContext_Request_MySQL_PrepareStatement>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RequestContext_Request_MySQL_PrepareStatement): RequestContext_Request_MySQL_PrepareStatement {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string query */ 1:
+                    message.query = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: RequestContext_Request_MySQL_PrepareStatement, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string query = 1; */
+        if (message.query !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.query);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.RequestContext.Request.MySQL.PrepareStatement
+ */
+export const RequestContext_Request_MySQL_PrepareStatement = new RequestContext_Request_MySQL_PrepareStatement$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RequestContext_Request_MySQL_InitDB$Type extends MessageType<RequestContext_Request_MySQL_InitDB> {
+    constructor() {
+        super("octelium.api.main.core.v1.RequestContext.Request.MySQL.InitDB", [
+            { no: 1, name: "database", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<RequestContext_Request_MySQL_InitDB>): RequestContext_Request_MySQL_InitDB {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.database = "";
+        if (value !== undefined)
+            reflectionMergePartial<RequestContext_Request_MySQL_InitDB>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RequestContext_Request_MySQL_InitDB): RequestContext_Request_MySQL_InitDB {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string database */ 1:
+                    message.database = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: RequestContext_Request_MySQL_InitDB, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string database = 1; */
+        if (message.database !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.database);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.core.v1.RequestContext.Request.MySQL.InitDB
+ */
+export const RequestContext_Request_MySQL_InitDB = new RequestContext_Request_MySQL_InitDB$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RequestContext_Request_DNS$Type extends MessageType<RequestContext_Request_DNS> {
     constructor() {
