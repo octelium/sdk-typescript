@@ -1,0 +1,27 @@
+name: Publish @octelium/cordium
+on:
+  push:
+    tags:
+      - 'cordium/v*'
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run check
+      - name: Publish stable
+        if: "!contains(github.ref_name, '-pre.')"
+        working-directory: packages/cordium
+        run: npm publish --access public --provenance
+      - name: Publish pre-release
+        if: contains(github.ref_name, '-pre.')
+        working-directory: packages/cordium
+        run: npm publish --access public --tag next --provenance

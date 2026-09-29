@@ -1,0 +1,20 @@
+{
+  "name": "octelium-typescript",
+  "private": true,
+  "workspaces": [
+    "packages/apis",
+    "packages/sdk",
+    "packages/cordium"
+  ],
+  "scripts": {
+    "build": "npm run build -w @octelium/apis && npm run build -w @octelium/sdk && npm run build -w @octelium/cordium",
+    "test": "npm run build && npm test -w @octelium/cordium",
+    "check": "npm run test && npm run check:examples -w @octelium/cordium && npm run format:check",
+    "format": "prettier --write packages/cordium/src packages/cordium/test packages/cordium/examples packages/cordium/*.md scripts/*.mjs",
+    "format:check": "prettier --check packages/cordium/src packages/cordium/test packages/cordium/examples packages/cordium/*.md scripts/*.mjs",
+    "check:package": "node scripts/check-package.mjs"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}
