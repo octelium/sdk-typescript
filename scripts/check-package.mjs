@@ -55,11 +55,19 @@ import { Cordium, NodeGrpcTransport, createWorkspaceSpec } from '@octelium/cordi
 import { Workspace } from '@octelium/cordium/proto';
 import { cordiumv1 } from '@octelium/apis';
 import { GetOptions } from '@octelium/apis/main/metav1/metav1';
-import { OcteliumClient } from '@octelium/sdk';
+import { OcteliumClient, OcteliumError, type AuthConfig, type RequestOptions } from '@octelium/sdk';
 const spec = createWorkspaceSpec({ image: 'node:22', env: { A: 'value' } });
 const workspace: Workspace = Workspace.create({ spec });
 const options = GetOptions.create({ name: 'sandbox' });
-void [Cordium, NodeGrpcTransport, workspace, options, OcteliumClient, cordiumv1];
+const authentication: AuthConfig = {
+  type: 'authToken',
+  authToken: { token: async (signal) => signal.aborted ? '' : 'token', scopes: ['api:core'], codeVerifier: new Uint8Array(), reusable: true },
+};
+const request: RequestOptions = { signal: new AbortController().signal, timeoutMs: 1000 };
+const client = new OcteliumClient({ domain: 'example.test', auth: authentication });
+void [client.coreV1, client.userV1, client.cordiumV1, client.accessToken, request, OcteliumError];
+await client.close();
+void [Cordium, NodeGrpcTransport, workspace, options, cordiumv1];
 `,
   );
   await writeFile(
@@ -70,6 +78,7 @@ void [Cordium, NodeGrpcTransport, workspace, options, OcteliumClient, cordiumv1]
         module: "NodeNext",
         strict: true,
         noUncheckedIndexedAccess: true,
+        exactOptionalPropertyTypes: true,
         skipLibCheck: false,
         lib: ["ES2022", "DOM", "ESNext.Disposable"],
         outDir: "dist",

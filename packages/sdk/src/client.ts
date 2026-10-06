@@ -1,287 +1,192 @@
-import { MainServiceClient as CoreC } from "@octelium/apis/main/corev1";
-import { MainServiceClient as UserC } from "@octelium/apis/main/userv1";
-import { MainServiceClient as AuthC } from "@octelium/apis/main/authv1";
-import { MainServiceClient as CordiumC } from "@octelium/apis/main/cordiumv1";
+import { MainServiceClient as CoreClient } from "@octelium/apis/main/corev1";
+import { MainServiceClient as UserClient } from "@octelium/apis/main/userv1";
+import { MainServiceClient as CordiumClient } from "@octelium/apis/main/cordiumv1";
 import {
-  RpcTransport,
-  RpcInterceptor,
-  MethodInfo,
-  NextUnaryFn,
-  NextServerStreamingFn,
-  RpcOptions,
-  UnaryCall,
-  ServerStreamingCall,
-} from "@protobuf-ts/runtime-rpc";
-import { credentials, Metadata } from "@grpc/grpc-js";
-import { GrpcTransport } from "@protobuf-ts/grpc-transport";
+  credentials,
+  type ChannelCredentials,
+  type ClientOptions,
+} from "@grpc/grpc-js";
 import {
-  AuthenticateWithAuthenticationTokenRequest,
-  SessionToken,
-} from "@octelium/apis/main/authv1";
+  AuthenticationManager,
+  snapshotAuth,
+  type AuthConfig,
+} from "./auth.js";
+import { AuthenticatedTransport } from "./authenticated-transport.js";
+import { NodeGrpcTransport } from "./transport.js";
+import { OcteliumError, nonempty } from "./errors.js";
+import {
+  Operation,
+  abortable,
+  timeout,
+  type RequestOptions,
+} from "./options.js";
 
-export type OcteliumClientConfig = {
-  domain: string;
-  auth?: AuthConfig;
-};
-
-export type AuthConfig =
-  | {
-      type: "authToken";
-      authToken: {
-        token: string | (() => string | Promise<string>);
-        scopes?: string[];
-      };
-    }
-  | {
-      type: "oauth2ClientCredentials";
-      oauth2ClientCredentials: {
-        clientId: string;
-        clientSecret: string;
-        scopes?: string[];
-      };
-    }
-  | {
-      type: "accessToken";
-      accessToken: string;
-    };
-
-interface OAuth2TokenCache {
-  accessToken: string;
-  expiresAt: number;
+export interface OcteliumClientConfig {
+  readonly domain: string;
+  readonly auth?: AuthConfig;
+  readonly endpoint?: string;
+  readonly channelCredentials?: ChannelCredentials;
+  readonly channelOptions?: ClientOptions;
+  readonly fetch?: typeof globalThis.fetch;
+  readonly timeoutMs?: number;
+  readonly authTimeoutMs?: number;
 }
 
-export class OcteliumClient {
-  private readonly transport: RpcTransport;
-  private readonly authTransport: RpcTransport;
-  private readonly config: OcteliumClientConfig;
-  private _corev1?: CoreC;
-  private _userv1?: UserC;
-  private _authC: AuthC;
-  private _cordiumv1?: CordiumC;
+function normalizeDomain(domain: string): string {
+  const value = nonempty(domain, "Domain")
+    .trim()
+    .toLowerCase()
+    .replace(/\.$/, "");
+  if (
+    value.length > 253 ||
+    value
+      .split(".")
+      .some((part) => !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(part))
+  )
+    throw new OcteliumError(
+      "Domain must be a hostname without scheme, port, path or credentials",
+      "INVALID_ARGUMENT",
+    );
+  return value;
+}
 
-  private accessToken?: string;
-  private sessionToken?: SessionToken;
-  private sessionTokenSetAt?: Date;
+export class OcteliumClient implements AsyncDisposable {
+  readonly domain: string;
+  private readonly lifetime = new AbortController();
+  private readonly transport: AuthenticatedTransport;
+  private readonly owned: NodeGrpcTransport[] = [];
+  private readonly authentication: AuthenticationManager | undefined;
+  private readonly timeoutMs: number;
+  private core: CoreClient | undefined;
+  private user: UserClient | undefined;
+  private cordium: CordiumClient | undefined;
+  private closing: Promise<void> | undefined;
 
-  private _oauth2Cache?: OAuth2TokenCache;
-  private _authRefreshPromise?: Promise<string>;
-
-  private constructor(config: OcteliumClientConfig) {
-    this.config = config;
-
-    let channelCreds = credentials.createSsl();
-
-    if (config.auth) {
-      const callCreds = credentials.createFromMetadataGenerator(
-        (_, callback) => {
-          this.resolveToken()
-            .then((token) => {
-              const metadata = new Metadata();
-              metadata.add("authorization", `Bearer ${token}`);
-              callback(null, metadata);
-            })
-            .catch((err) => {
-              callback(err);
-            });
-        },
+  constructor(config: OcteliumClientConfig) {
+    if (!config || typeof config !== "object")
+      throw new OcteliumError(
+        "Invalid client configuration",
+        "INVALID_ARGUMENT",
       );
-      channelCreds = credentials.combineChannelCredentials(
-        channelCreds,
-        callCreds,
+    this.domain = normalizeDomain(config.domain);
+    this.timeoutMs = timeout(config.timeoutMs ?? 30_000);
+    const authTimeoutMs = timeout(config.authTimeoutMs ?? 30_000, false);
+    const auth =
+      config.auth === undefined ? undefined : snapshotAuth(config.auth);
+    const host =
+      config.endpoint === undefined
+        ? `octelium-api.${this.domain}:443`
+        : nonempty(config.endpoint, "Endpoint");
+    const channelCredentials =
+      config.channelCredentials ?? credentials.createSsl();
+    const clientOptions = { ...(config.channelOptions ?? {}) };
+    const http = config.fetch ?? globalThis.fetch;
+    if (typeof http !== "function")
+      throw new OcteliumError("fetch must be a function", "INVALID_ARGUMENT");
+    try {
+      const transport = new NodeGrpcTransport({
+        host,
+        channelCredentials,
+        clientOptions,
+      });
+      this.owned.push(transport);
+      if (auth) {
+        const authTransport = new NodeGrpcTransport({
+          host,
+          channelCredentials,
+          clientOptions,
+        });
+        this.owned.push(authTransport);
+        this.authentication = new AuthenticationManager(
+          auth,
+          authTransport,
+          this.lifetime.signal,
+          this.domain,
+          http,
+          authTimeoutMs,
+        );
+      }
+      this.transport = new AuthenticatedTransport(
+        transport,
+        this.authentication,
+        this.lifetime.signal,
+        this.timeoutMs,
       );
+    } catch (error) {
+      for (const transport of this.owned) transport.close();
+      throw error;
     }
-
-    this.transport = new GrpcTransport({
-      host: `octelium-api.${config.domain}:443`,
-      channelCredentials: channelCreds,
-    });
-
-    this.authTransport = new GrpcTransport({
-      host: `octelium-api.${config.domain}:443`,
-      channelCredentials: credentials.createSsl(),
-      interceptors: [this.createAuthClientInterceptor()],
-    });
-
-    this._authC = new AuthC(this.authTransport);
   }
 
-  public static async create(
+  static async create(
     config: OcteliumClientConfig,
+    options: RequestOptions = {},
   ): Promise<OcteliumClient> {
+    options.signal?.throwIfAborted();
+    if (options.timeoutMs !== undefined) timeout(options.timeoutMs);
     const client = new OcteliumClient(config);
-    if (config.auth) {
-      await client.resolveToken();
+    try {
+      if (client.authentication) await client.accessToken(options);
+      return client;
+    } catch (error) {
+      await client.close();
+      throw error;
     }
-    return client;
   }
 
-  private createAuthClientInterceptor(): RpcInterceptor {
-    return {
-      interceptUnary: (
-        next: NextUnaryFn,
-        method: MethodInfo,
-        input: object,
-        options: RpcOptions,
-      ): UnaryCall => {
-        const meta: Record<string, string | string[]> = {
-          ...(options.meta ?? {}),
-        };
-        if (this.sessionToken?.refreshToken) {
-          meta["x-octelium-refresh-token"] = this.sessionToken.refreshToken;
-        }
-        return next(method, input, { ...options, meta });
-      },
-
-      interceptServerStreaming: (
-        next: NextServerStreamingFn,
-        method: MethodInfo,
-        input: object,
-        options: RpcOptions,
-      ): ServerStreamingCall => {
-        const meta: Record<string, string | string[]> = { ...(options.meta ?? {}) };
-        if (this.sessionToken?.refreshToken) {
-          meta["x-octelium-refresh-token"] = this.sessionToken.refreshToken;
-        }
-        return next(method, input, { ...options, meta });
-      },
-    };
-  }
-
-  private async resolveToken(): Promise<string> {
-    const auth = this.config.auth;
-    if (!auth) {
-      throw new Error("No auth config provided");
-    }
-
-    if (auth.type === "accessToken") {
-      return auth.accessToken;
-    }
-
-    if (this._authRefreshPromise) {
-      return this._authRefreshPromise;
-    }
-
-    const isExpired = this.isCurrentTokenExpired();
-    if (!isExpired && this.accessToken) {
-      return this.accessToken;
-    }
-
-    this._authRefreshPromise = (async () => {
-      try {
-        if (auth.type === "authToken") {
-          const tokenValue = auth.authToken.token;
-          const tokenString =
-            typeof tokenValue === "function" ? await tokenValue() : tokenValue;
-          return await this.fetchAuthToken(tokenString, auth.authToken.scopes);
-        } else {
-          return await this.fetchOAuth2Token(auth.oauth2ClientCredentials);
-        }
-      } finally {
-        this._authRefreshPromise = undefined;
-      }
-    })();
-
-    return this._authRefreshPromise;
-  }
-
-  private isCurrentTokenExpired(): boolean {
-    if (!this.accessToken) return true;
-
-    if (this.config.auth?.type === "oauth2ClientCredentials" && this._oauth2Cache) {
-      return Date.now() >= this._oauth2Cache.expiresAt - 30_000;
-    }
-
-    if (this.sessionToken && this.sessionTokenSetAt) {
-      const expiresAt = new Date(
-        this.sessionTokenSetAt.getTime() + this.sessionToken.expiresIn * 1000,
+  async accessToken(options: RequestOptions = {}): Promise<string> {
+    this.lifetime.signal.throwIfAborted();
+    if (!this.authentication)
+      throw new OcteliumError(
+        "No authentication configuration provided",
+        "AUTHENTICATION_REQUIRED",
       );
-      return new Date() >= new Date(expiresAt.getTime() - 30_000);
+    const operation = new Operation(
+      this.lifetime.signal,
+      options.timeoutMs ?? this.timeoutMs,
+      options.signal,
+    );
+    try {
+      operation.signal.throwIfAborted();
+      return (await abortable(this.authentication.token(), operation.signal))
+        .value;
+    } finally {
+      operation.close();
     }
-
-    return true;
   }
 
-  private async fetchAuthToken(
-    authenticationToken: string,
-    scopes?: string[],
-  ): Promise<string> {
-    if (this.sessionToken?.refreshToken) {
-      const res = await this._authC.authenticateWithRefreshToken({});
-      if (!res?.response) {
-        throw new Error("Could not authenticateWithRefreshToken");
-      }
-      this.sessionToken = res.response;
-      this.sessionTokenSetAt = new Date();
-      this.accessToken = res.response.accessToken;
-      return this.accessToken;
-    }
-
-    const res = await this._authC.authenticateWithAuthenticationToken({
-      authenticationToken,
-      scopes: scopes ?? [],
-    } as AuthenticateWithAuthenticationTokenRequest);
-    if (!res?.response) {
-      throw new Error("Could not authenticateWithAuthenticationToken");
-    }
-    this.sessionToken = res.response;
-    this.sessionTokenSetAt = new Date();
-    this.accessToken = res.response.accessToken;
-    return this.accessToken;
+  invalidateAccessToken(): void {
+    this.lifetime.signal.throwIfAborted();
+    this.authentication?.invalidate();
   }
 
-  private async fetchOAuth2Token(
-    auth: Extract<
-      AuthConfig,
-      { type: "oauth2ClientCredentials" }
-    >["oauth2ClientCredentials"],
-  ): Promise<string> {
-    const tokenUrl = `https://${this.config.domain}/oauth2/token`;
-
-    const params = new URLSearchParams({
-      grant_type: "client_credentials",
-      client_id: auth.clientId,
-      client_secret: auth.clientSecret,
-    });
-
-    if (auth.scopes?.length) {
-      params.set("scope", auth.scopes.join(" "));
-    }
-
-    const res = await fetch(tokenUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: params,
-    });
-
-    if (!res.ok) {
-      throw new Error(
-        `Could not fetch OAuth2 token: ${res.status} ${res.statusText}`,
-      );
-    }
-
-    const data = (await res.json()) as {
-      access_token: string;
-      expires_in: number;
-    };
-
-    this._oauth2Cache = {
-      accessToken: data.access_token,
-      expiresAt: Date.now() + data.expires_in * 1000,
-    };
-    this.accessToken = data.access_token;
-
-    return this.accessToken;
+  get coreV1(): CoreClient {
+    this.lifetime.signal.throwIfAborted();
+    return (this.core ??= new CoreClient(this.transport));
   }
 
-  get coreV1(): CoreC {
-    return (this._corev1 ??= new CoreC(this.transport));
+  get userV1(): UserClient {
+    this.lifetime.signal.throwIfAborted();
+    return (this.user ??= new UserClient(this.transport));
   }
 
-  get userV1(): UserC {
-    return (this._userv1 ??= new UserC(this.transport));
+  get cordiumV1(): CordiumClient {
+    this.lifetime.signal.throwIfAborted();
+    return (this.cordium ??= new CordiumClient(this.transport));
   }
 
-  get corduimV1(): CordiumC {
-    return (this._cordiumv1 ??= new CordiumC(this.transport));
+  close(): Promise<void> {
+    if (this.closing) return this.closing;
+    this.lifetime.abort(new OcteliumError("Client is closed", "CLIENT_CLOSED"));
+    for (const transport of this.owned) transport.close();
+    this.owned.length = 0;
+    this.core = undefined;
+    this.user = undefined;
+    this.cordium = undefined;
+    return (this.closing = this.authentication?.close() ?? Promise.resolve());
+  }
+
+  [Symbol.asyncDispose](): Promise<void> {
+    return this.close();
   }
 }
