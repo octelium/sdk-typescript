@@ -249,10 +249,11 @@ export function createWorkspaceSpec(
         name: task.name,
         run: nonempty(task.command, "Task command"),
         type: task.on === "stop" ? 3 : task.on === "start" ? 2 : 1,
-        envVars: Object.entries(task.env ?? {}).map(([key, value]) => ({
-          key: nonempty(key, "Task environment key"),
-          value: nonempty(value, `Task environment variable ${key}`),
-        })),
+        envVars: Object.entries(task.env ?? {}).map(([key, value]) => {
+          if (!value)
+            invalid(`Task environment variable ${key} has an empty value`);
+          return { key: nonempty(key, "Task environment key"), value };
+        }),
         workingDir: task.cwd,
         isBackground: task.background,
         runAsRoot: task.root,

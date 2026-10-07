@@ -203,6 +203,13 @@ test("spec validation rejects conflicting options and keeps the caller input imm
   assert.throws(() => createWorkspaceSpec({ env: { EMPTY: "" } }), {
     code: "INVALID_ARGUMENT",
   });
+  assert.equal(
+    createWorkspaceSpec({
+      env: { IFS: " " },
+      tasks: [{ name: "t", command: "true", env: { IFS: " " } }],
+    }).runtime.tasks[0].envVars[0].value,
+    " ",
+  );
   assert.throws(
     () =>
       createWorkspaceSpec({
