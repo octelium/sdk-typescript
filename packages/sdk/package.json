@@ -1,6 +1,6 @@
 {
   "name": "@octelium/sdk",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Octelium Typescript SDK",
   "author": "Octelium <contact@octelium.com>",
   "license": "Apache-2.0",

@@ -1,4 +1,6 @@
 export * from "./client.js";
+export { NodeGrpcTransport } from "./transport.js";
+export type { NodeGrpcTransportOptions } from "./transport.js";
 export type {
   AuthConfig,
   TokenProvider,

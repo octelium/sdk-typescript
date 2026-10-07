@@ -4,13 +4,17 @@ import { status, Metadata } from "@grpc/grpc-js";
 import {
   ListUserOptions,
   GetClusterConfigRequest,
+  MainServiceClient as CoreClient,
 } from "@octelium/apis/main/corev1";
 import {
   WatchWorkspaceRequest,
   WatchWorkspaceResponse,
 } from "@octelium/apis/main/cordiumv1";
 import { ConnectRequest, ConnectResponse } from "@octelium/apis/main/userv1";
-import { OcteliumClient } from "../dist/index.js";
+import {
+  OcteliumClient,
+  NodeGrpcTransport as ExportedTransport,
+} from "../dist/index.js";
 import { NodeGrpcTransport } from "../dist/transport.js";
 import { cluster, session, deferred, pause, stale } from "./server.mjs";
 
@@ -426,4 +430,41 @@ test("retained duplex writers reject sends after client shutdown", async (t) => 
   });
   await assert.rejects(call.requests.complete(), { code: "CLIENT_CLOSED" });
   await rejects(call, { code: "CANCELLED" });
+});
+
+test("the default deadline bounds unary calls but not long-lived streams", async (t) => {
+  const server = await cluster(t, {
+    listUser: () => new Promise(() => {}),
+    watchWorkspace: (call) =>
+      setTimeout(() => {
+        call.write(WatchWorkspaceResponse.create());
+        call.end();
+      }, 80),
+  });
+  const client = server.client({
+    auth: { type: "accessToken", accessToken: "chosen" },
+    timeoutMs: 30,
+  });
+  await rejects(client.coreV1.listUser(ListUserOptions.create()), {
+    code: "DEADLINE_EXCEEDED",
+  });
+  const watch = client.cordiumV1.watchWorkspace(WatchWorkspaceRequest.create());
+  let messages = 0;
+  for await (const _message of watch.responses) messages++;
+  await watch;
+  assert.equal(messages, 1);
+});
+
+test("the authenticated transport serves generated clients of other services", async (t) => {
+  const server = await cluster(t, { listUser: () => ({}) });
+  const client = server.client({
+    auth: { type: "accessToken", accessToken: "chosen" },
+  });
+  await new CoreClient(client.transport).listUser(ListUserOptions.create());
+  assert.deepEqual(server.calls.at(-1).metadata.get("x-octelium-auth"), [
+    "chosen",
+  ]);
+  assert.equal(ExportedTransport, NodeGrpcTransport);
+  await client.close();
+  assert.throws(() => client.transport, { code: "CLIENT_CLOSED" });
 });

@@ -31,7 +31,7 @@ try {
 
 Always build requests with the generated `.create()` factories. A type assertion does not initialize protobuf defaults or oneofs. List pages start at zero; continue while the response's `listResponseMeta.hasMore` is true.
 
-`new OcteliumClient(config)` creates a lazy client; `await OcteliumClient.create(config, options)` also obtains credentials immediately and closes its channels on failure. `coreV1`, `userV1` and `cordiumV1` expose generated clients. Their calls accept protobuf-ts `RpcOptions` and return call objects with `response`, `headers`, `status` and `trailers`; streaming calls expose `responses` and, where applicable, `requests`.
+`new OcteliumClient(config)` creates a lazy client; `await OcteliumClient.create(config, options)` also obtains credentials immediately and closes its channels on failure. `coreV1`, `userV1` and `cordiumV1` expose generated clients. Their calls accept protobuf-ts `RpcOptions` and return call objects with `response`, `headers`, `status` and `trailers`; streaming calls expose `responses` and, where applicable, `requests`. `transport` is the same authenticated protobuf-ts `RpcTransport`, for the generated clients of any other service, such as Cordium's `WorkspaceService`. `NodeGrpcTransport` is the native grpc-js transport underneath it, for callers that build their own.
 
 ## Authentication
 
@@ -115,7 +115,7 @@ Rate limiting and selected transient OAuth endpoint or gRPC refresh failures may
 
 ## Deadlines, TLS and lifecycle
 
-`timeoutMs` defaults to 30,000 milliseconds for API calls and public token waits. A per-call `RpcOptions.timeout` overrides it and covers token waiting plus the RPC. Set the client default to zero for no API deadline. Use an `AbortSignal` through `RpcOptions.abort` to cancel unary or streaming calls.
+`timeoutMs` defaults to 30,000 milliseconds for unary and client-streaming API calls and public token waits. Server-streaming and bidirectional calls are long-lived and have no default deadline. A per-call `RpcOptions.timeout` overrides it for every kind of call and covers token waiting plus the RPC. Set the client default to zero for no API deadline. Use an `AbortSignal` through `RpcOptions.abort` to cancel unary or streaming calls.
 
 `authTimeoutMs` defaults to 30,000 milliseconds and must be positive. It independently bounds a shared token operation, including credential providers, auth RPCs, OAuth response headers and body reading. Caller cancellation leaves this operation running; client shutdown cancels it.
 

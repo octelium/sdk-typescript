@@ -11,6 +11,7 @@ import {
   snapshotAuth,
   type AuthConfig,
 } from "./auth.js";
+import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import { AuthenticatedTransport } from "./authenticated-transport.js";
 import { NodeGrpcTransport } from "./transport.js";
 import { OcteliumError, nonempty } from "./errors.js";
@@ -53,7 +54,7 @@ function normalizeDomain(domain: string): string {
 export class OcteliumClient implements AsyncDisposable {
   readonly domain: string;
   private readonly lifetime = new AbortController();
-  private readonly transport: AuthenticatedTransport;
+  private readonly authenticated: AuthenticatedTransport;
   private readonly owned: NodeGrpcTransport[] = [];
   private readonly authentication: AuthenticationManager | undefined;
   private readonly timeoutMs: number;
@@ -106,7 +107,7 @@ export class OcteliumClient implements AsyncDisposable {
           authTimeoutMs,
         );
       }
-      this.transport = new AuthenticatedTransport(
+      this.authenticated = new AuthenticatedTransport(
         transport,
         this.authentication,
         this.lifetime.signal,
@@ -160,19 +161,24 @@ export class OcteliumClient implements AsyncDisposable {
     this.authentication?.invalidate();
   }
 
+  get transport(): RpcTransport {
+    this.lifetime.signal.throwIfAborted();
+    return this.authenticated;
+  }
+
   get coreV1(): CoreClient {
     this.lifetime.signal.throwIfAborted();
-    return (this.core ??= new CoreClient(this.transport));
+    return (this.core ??= new CoreClient(this.authenticated));
   }
 
   get userV1(): UserClient {
     this.lifetime.signal.throwIfAborted();
-    return (this.user ??= new UserClient(this.transport));
+    return (this.user ??= new UserClient(this.authenticated));
   }
 
   get cordiumV1(): CordiumClient {
     this.lifetime.signal.throwIfAborted();
-    return (this.cordium ??= new CordiumClient(this.transport));
+    return (this.cordium ??= new CordiumClient(this.authenticated));
   }
 
   close(): Promise<void> {

@@ -24,21 +24,19 @@ export class AuthenticatedTransport implements RpcTransport {
 
   mergeOptions(options?: Partial<RpcOptions>): RpcOptions {
     this.lifetime.throwIfAborted();
-    return mergeRpcOptions(
-      this.timeoutMs ? { timeout: this.timeoutMs } : {},
-      options,
-    );
+    return mergeRpcOptions({}, options);
   }
 
   private start<C extends { status: Promise<{ code: string }> }>(
     options: RpcOptions,
     invoke: (options: RpcOptions) => C,
+    defaultTimeout = 0,
   ): Promise<{ call: C }> {
     this.lifetime.throwIfAborted();
     const milliseconds =
       options.timeout instanceof Date
         ? Math.max(1, options.timeout.getTime() - Date.now())
-        : (options.timeout ?? 0);
+        : (options.timeout ?? defaultTimeout);
     const operation = new Operation(this.lifetime, milliseconds, options.abort);
     let authenticated: CachedToken | undefined;
     const pending = Promise.resolve().then(async () => {
@@ -63,7 +61,10 @@ export class AuthenticatedTransport implements RpcTransport {
       const call = invoke({
         ...options,
         meta,
-        abort: operation.signal,
+        abort: AbortSignal.any([
+          this.lifetime,
+          ...(options.abort ? [options.abort] : []),
+        ]),
         ...(operation.deadline ? { timeout: operation.deadline } : {}),
       });
       void call.status.then(
@@ -89,8 +90,10 @@ export class AuthenticatedTransport implements RpcTransport {
     input: I,
     options: RpcOptions,
   ): UnaryCall<I, O> {
-    const pending = this.start(options, (settings) =>
-      this.inner.unary(method, input, settings),
+    const pending = this.start(
+      options,
+      (settings) => this.inner.unary(method, input, settings),
+      this.timeoutMs,
     );
     return new UnaryCall(
       method,
@@ -126,8 +129,10 @@ export class AuthenticatedTransport implements RpcTransport {
     method: MethodInfo<I, O>,
     options: RpcOptions,
   ): ClientStreamingCall<I, O> {
-    const pending = this.start(options, (settings) =>
-      this.inner.clientStreaming(method, settings),
+    const pending = this.start(
+      options,
+      (settings) => this.inner.clientStreaming(method, settings),
+      this.timeoutMs,
     );
     return new ClientStreamingCall(
       method,
