@@ -104,7 +104,10 @@ void [Cordium, NodeGrpcTransport, workspace, options, cordiumv1];
       "utf8",
     ),
   );
-  if (installed.version !== "1.0.12")
+  const expected = JSON.parse(
+    await readFile(join(root, "packages/apis/package.json"), "utf8"),
+  );
+  if (installed.version !== expected.version)
     throw new Error("Consumer did not resolve the local APIs package");
   console.log(
     "Packed packages: runtime imports and strict TypeScript consumer passed.",
