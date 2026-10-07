@@ -1,10 +1,10 @@
-import { open, mkdtemp, rename, rm } from "node:fs/promises";
+import { open, mkdir, mkdtemp, rename, rm } from "node:fs/promises";
 import { dirname, basename, join, posix } from "node:path";
 import type { Workspace } from "./workspace.js";
 import { shellQuote, type ExecOptions, type ExecSession } from "./exec.js";
 import { CordiumError, integer, nonempty } from "./errors.js";
 
-/** Transfer settings. File helpers own stdin and capture configuration. */
+/** Transfer settings; the timeout defaults to five minutes. File helpers own stdin and capture configuration. */
 export type FileOptions = Pick<
   ExecOptions,
   "signal" | "timeoutMs" | "root" | "cwd"
@@ -49,7 +49,7 @@ export class Files {
       `head -c ${max + 1} < ${shellQuote(path)}`,
       {
         ...options,
-        timeoutMs: options.timeoutMs ?? 30_000,
+        timeoutMs: options.timeoutMs ?? 300_000,
         maxCaptureBytes: max + 1,
         check: true,
       },
@@ -86,7 +86,7 @@ export class Files {
       await file.close();
     }
   }
-  /** Stream a download to a temporary local file, replacing localPath only after successful completion. */
+  /** Stream a download to a temporary local file, creating its directory and replacing localPath only after successful completion. */
   async download(
     remotePath: string,
     localPath: string,
@@ -94,6 +94,7 @@ export class Files {
   ): Promise<void> {
     nonempty(remotePath, "Remote path");
     nonempty(localPath, "Local path");
+    await mkdir(dirname(localPath), { recursive: true });
     const directory = await mkdtemp(
       join(dirname(localPath), `.${basename(localPath)}-`),
     );
@@ -104,7 +105,7 @@ export class Files {
       try {
         session = this.workspace.execStream(`cat < ${shellQuote(remotePath)}`, {
           ...options,
-          timeoutMs: options.timeoutMs ?? 30_000,
+          timeoutMs: options.timeoutMs ?? 300_000,
           interactive: false,
           maxCaptureBytes: 64 * 1024,
           check: true,
@@ -149,7 +150,7 @@ export class Files {
     const command = `mkdir -p -- ${shellQuote(parent)} && head -c ${encodedSize} | base64 -d > ${shellQuote(path)}`;
     const session = this.workspace.execStream(command, {
       ...options,
-      timeoutMs: options.timeoutMs ?? 30_000,
+      timeoutMs: options.timeoutMs ?? 300_000,
       interactive: true,
       maxCaptureBytes: 64 * 1024,
       check: true,

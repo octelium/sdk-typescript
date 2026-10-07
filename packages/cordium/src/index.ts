@@ -1,7 +1,14 @@
 /** Cordium's Node.js SDK. All durations use milliseconds unless explicitly documented otherwise. */
 export { Cordium } from "./client.js";
 export type { CordiumOptions } from "./client.js";
-export type { Authentication, TokenProvider } from "./auth.js";
+export { assertionFile } from "./auth.js";
+export { OcteliumClient } from "@octelium/sdk";
+export type {
+  AuthConfig,
+  AccessToken,
+  AccessTokenProvider,
+  TokenProvider,
+} from "@octelium/sdk";
 export {
   CordiumError,
   ExecError,
@@ -19,6 +26,7 @@ export { Workspaces, Workspace } from "./workspace.js";
 export type {
   WorkspaceListOptions,
   WorkspaceEvent,
+  LogEntry,
   StartOptions,
   RunOptions,
 } from "./workspace.js";
@@ -44,5 +52,5 @@ export {
   Volume_Status_State as VolumeState,
   Volume_AccessMode as VolumeAccessMode,
 } from "@octelium/apis/main/cordiumv1";
-export { NodeGrpcTransport } from "./transport.js";
-export type { NodeGrpcTransportOptions } from "./transport.js";
+export { NodeGrpcTransport } from "@octelium/sdk";
+export type { NodeGrpcTransportOptions } from "@octelium/sdk";

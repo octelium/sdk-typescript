@@ -1,6 +1,6 @@
 {
   "name": "@octelium/cordium",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "The Cordium SDK for TypeScript and JavaScript",
   "type": "module",
   "license": "Apache-2.0",
@@ -34,6 +34,7 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.14.3",
     "@octelium/apis": "^1.0.12",
+    "@octelium/sdk": "^1.2.0",
     "@protobuf-ts/runtime": "^2.11.1",
     "@protobuf-ts/runtime-rpc": "^2.11.1"
   },

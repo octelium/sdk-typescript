@@ -1,18 +1,9 @@
-import {
-  credentials,
-  Metadata,
-  type ChannelCredentials,
-  type ClientOptions,
-} from "@grpc/grpc-js";
-import { NodeGrpcTransport as GrpcTransport } from "./transport.js";
+import type { ChannelCredentials, ClientOptions } from "@grpc/grpc-js";
+import { OcteliumClient, type AuthConfig } from "@octelium/sdk";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
-import {
-  AuthenticationManager,
-  environmentAuth,
-  type Authentication,
-} from "./auth.js";
+import { environmentAuth } from "./auth.js";
 import { Engine } from "./engine.js";
-import { asError, CordiumError, invalid, nonempty } from "./errors.js";
+import { CordiumError, invalid, nonempty } from "./errors.js";
 import type { RequestOptions } from "./options.js";
 import { Workspaces } from "./workspace.js";
 import {
@@ -31,11 +22,13 @@ import {
 
 /** Connection, authentication, and HTTP destination policy. */
 export interface CordiumOptions {
-  /** Cluster domain. Defaults to CORDIUM_DOMAIN, then OCTELIUM_DOMAIN. */
+  /** Cluster domain. Defaults to the domain of `octelium`, then CORDIUM_DOMAIN, then OCTELIUM_DOMAIN. */
   domain?: string;
-  /** Explicit credentials; otherwise use OCTELIUM_ACCESS_TOKEN, ASSERTION_FILE, ASSERTION, or AUTH_TOKEN. */
-  auth?: Authentication;
-  /** gRPC target override, for example localhost:8443. Default: octelium-api.<domain>:443. */
+  /** Octelium credentials; otherwise OCTELIUM_ACCESS_TOKEN, ASSERTION_FILE, ASSERTION, or AUTH_TOKEN. */
+  auth?: AuthConfig;
+  /** Caller-owned Octelium client whose Session and credentials are reused. close() leaves it open. */
+  octelium?: OcteliumClient;
+  /** gRPC target override, for example localhost:8443. Default: octelium-api.<domain>:443. Cannot be combined with octelium. */
   endpoint?: string;
   /** TLS channel credentials, for private certificate authorities or mutual TLS. */
   channelCredentials?: ChannelCredentials;
@@ -65,8 +58,11 @@ function normalizeDomain(domain: string): string {
   return value;
 }
 
-/** Authenticated Cordium client. Reuse one per Cluster; close it when finished. */
-export class Cordium implements Disposable {
+/**
+ * Authenticated Cordium client. Reuse one per Cluster; close it when finished.
+ * Authentication, Session refresh, and credential handling are delegated to the Octelium SDK.
+ */
+export class Cordium implements AsyncDisposable, Disposable {
   /** Normalized Cluster domain. Empty only when using a custom transport without a domain. */
   readonly domain: string;
   /** Workspace creation, listing, and lifecycle operations. */
@@ -95,27 +91,32 @@ export class Cordium implements Disposable {
   readonly management: Management;
   /** Generated service clients. Calls use protobuf-ts RpcOptions and return call objects. */
   readonly raw: Pick<Engine, "main" | "workspace" | "management">;
+  /** The Octelium client that authenticates this client, when it is not using a custom transport. */
+  readonly octelium?: OcteliumClient;
   private readonly engine: Engine;
-  private readonly owned: GrpcTransport[] = [];
-  private readonly auth?: AuthenticationManager;
+  private readonly ownsOctelium: boolean;
   private readonly http: typeof globalThis.fetch;
   private readonly httpHosts: Set<string>;
   private readonly insecureHttp: boolean;
+  private closing?: Promise<void>;
 
   /** Create a lazy client. Authentication happens on the first request; use connect() to validate early. */
   constructor(options: CordiumOptions = {}) {
+    if (options.octelium && options.auth)
+      invalid("An Octelium client owns its credentials; do not also pass auth");
     const domain =
       options.domain ??
+      options.octelium?.domain ??
       (process.env.CORDIUM_DOMAIN || process.env.OCTELIUM_DOMAIN);
     this.domain = domain ? normalizeDomain(domain) : "";
+    if (options.octelium && this.domain !== options.octelium.domain)
+      invalid("The domain must match the domain of the Octelium client");
     this.http = options.fetch ?? globalThis.fetch;
     this.httpHosts = new Set(
       (options.authorizedHttpHosts ?? []).map(normalizeDomain),
     );
     this.insecureHttp = options.allowInsecureHttp ?? false;
     let transport = options.transport;
-    let authTransport: GrpcTransport | undefined;
-    let authentication: Authentication | undefined;
     if (transport) {
       if (
         options.auth ||
@@ -126,55 +127,46 @@ export class Cordium implements Disposable {
         invalid(
           "A custom transport owns authentication and channel configuration",
         );
+      this.octelium = options.octelium;
+      this.ownsOctelium = false;
+    } else if (options.octelium) {
+      if (
+        options.endpoint ||
+        options.channelCredentials ||
+        options.channelOptions
+      )
+        invalid("An Octelium client owns the channel configuration");
+      this.octelium = options.octelium;
+      this.ownsOctelium = false;
+      transport = this.octelium.transport;
     } else {
       if (!this.domain)
         invalid("Set domain, CORDIUM_DOMAIN, or OCTELIUM_DOMAIN");
-      authentication = options.auth ?? environmentAuth();
-      if (!authentication)
+      const auth = options.auth ?? environmentAuth();
+      if (!auth)
         invalid("Supply auth or an OCTELIUM credential environment variable");
-      const host = options.endpoint ?? `octelium-api.${this.domain}:443`;
-      const tls = options.channelCredentials ?? credentials.createSsl();
-      const calls = credentials.createFromMetadataGenerator(
-        (_params, callback) => {
-          this.accessToken().then(
-            (token) => {
-              const metadata = new Metadata();
-              metadata.set("authorization", `Bearer ${token}`);
-              callback(null, metadata);
-            },
-            (error) => callback(asError(error)),
-          );
-        },
-      );
-      const channelCredentials = credentials.combineChannelCredentials(
-        tls,
-        calls,
-      );
-      authTransport = new GrpcTransport({
-        host,
-        channelCredentials: tls,
-        clientOptions: options.channelOptions,
+      this.octelium = new OcteliumClient({
+        domain: this.domain,
+        auth,
+        ...(options.endpoint !== undefined
+          ? { endpoint: options.endpoint }
+          : {}),
+        ...(options.channelCredentials
+          ? { channelCredentials: options.channelCredentials }
+          : {}),
+        ...(options.channelOptions
+          ? { channelOptions: options.channelOptions }
+          : {}),
+        ...(options.timeoutMs !== undefined
+          ? { timeoutMs: options.timeoutMs }
+          : {}),
+        ...(options.fetch ? { fetch: options.fetch } : {}),
       });
-      try {
-        transport = new GrpcTransport({
-          host,
-          channelCredentials,
-          clientOptions: options.channelOptions,
-        });
-      } catch (error) {
-        authTransport.close();
-        throw error;
-      }
-      this.owned.push(authTransport, transport as GrpcTransport);
+      this.ownsOctelium = true;
+      transport = this.octelium.transport;
     }
     try {
       this.engine = new Engine(transport, options.timeoutMs);
-      if (authentication && authTransport)
-        this.auth = new AuthenticationManager(
-          authentication,
-          authTransport,
-          this.engine.lifetime.signal,
-        );
       this.workspaces = new Workspaces(this.engine);
       this.spaces = new Spaces(this.engine);
       this.templates = new Templates(this.engine);
@@ -193,7 +185,7 @@ export class Cordium implements Disposable {
         management: this.engine.management,
       };
     } catch (error) {
-      for (const owned of this.owned) owned.close();
+      if (this.ownsOctelium) void this.octelium?.close();
       throw error;
     }
   }
@@ -204,23 +196,26 @@ export class Cordium implements Disposable {
   ): Promise<Cordium> {
     const client = new Cordium(options);
     try {
-      if (client.auth) await client.accessToken(request);
+      if (client.octelium) await client.accessToken(request);
       return client;
     } catch (error) {
-      client.close();
+      await client.close();
       throw error;
     }
   }
-  /** Obtain a current access token. Injected transports manage their own credentials. */
+  /** Obtain a current access token from the Octelium client. Injected transports manage their own credentials. */
   async accessToken(options?: RequestOptions): Promise<string> {
     const scope = this.engine.scope(options);
     try {
-      if (!this.auth)
+      if (!this.octelium)
         throw new CordiumError(
           "The injected transport owns its credentials",
           "FAILED_PRECONDITION",
         );
-      return await abortable(this.auth.token(), scope.signal);
+      return await this.octelium.accessToken({
+        signal: scope.signal,
+        timeoutMs: 0,
+      });
     } catch (error) {
       throw scope.error(error);
     } finally {
@@ -229,7 +224,8 @@ export class Cordium implements Disposable {
   }
   /**
    * Fetch an authenticated workspace application URL. Only Cluster subdomains and explicitly
-   * allowed hosts receive credentials. Redirects are returned without following them.
+   * allowed hosts receive credentials, which travel in the x-octelium-auth header so that the
+   * application's own Authorization header is left alone. Redirects are returned without following them.
    * The deadline covers response headers; pass a signal to also cancel body consumption.
    */
   async fetch(
@@ -269,7 +265,7 @@ export class Cordium implements Disposable {
         timeoutMs: 0,
       });
       const headers = new Headers(init.headers);
-      headers.set("authorization", `Bearer ${token}`);
+      headers.set("x-octelium-auth", token);
       // Use a dedicated controller for the header deadline, leaving lifetime/caller cancellation
       // attached to the response body after the operation scope is cleaned up.
       const controller = new AbortController();
@@ -291,32 +287,25 @@ export class Cordium implements Disposable {
       scope.close();
     }
   }
-  /** Cancel SDK operations and close owned channels. Does not delete resources or log out. */
-  close(): void {
+  /**
+   * Cancel SDK operations and close the Octelium client, with its channels, unless it was supplied
+   * by the caller. Does not delete resources or log out.
+   */
+  close(): Promise<void> {
+    if (this.closing) return this.closing;
     this.engine.close();
-    for (const transport of this.owned) transport.close();
+    this.closing =
+      this.ownsOctelium && this.octelium
+        ? this.octelium.close()
+        : Promise.resolve();
+    return this.closing;
   }
-  /** Close on explicit resource disposal (`using client = new Cordium(...)`). */
+  /** Close on explicit resource disposal (`await using client = new Cordium(...)`). */
+  [Symbol.asyncDispose](): Promise<void> {
+    return this.close();
+  }
+  /** Close on explicit resource disposal (`using client = new Cordium(...)`) without awaiting the Octelium client. */
   [Symbol.dispose](): void {
-    this.close();
-  }
-}
-
-async function abortable<T>(
-  promise: Promise<T>,
-  signal: AbortSignal,
-): Promise<T> {
-  signal.throwIfAborted();
-  let abort: (() => void) | undefined;
-  try {
-    return await Promise.race([
-      promise,
-      new Promise<never>((_resolve, reject) => {
-        abort = () => reject(signal.reason);
-        signal.addEventListener("abort", abort, { once: true });
-      }),
-    ]);
-  } finally {
-    if (abort) signal.removeEventListener("abort", abort);
+    void this.close();
   }
 }

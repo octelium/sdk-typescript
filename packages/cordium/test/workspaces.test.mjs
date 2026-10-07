@@ -26,7 +26,7 @@ test("create/run encode ergonomic inputs and preserve stopped/create semantics",
     {
       image: "node:22",
       template: "node.team",
-      env: { TOKEN: { secret: "api" }, EMPTY: "" },
+      env: { TOKEN: { secret: "api" }, MODE: "dev" },
       resources: { cpu: 500, memory: 1024 },
       start: { vars: { BRANCH: "main" }, region: "eu" },
     },
@@ -36,7 +36,7 @@ test("create/run encode ergonomic inputs and preserve stopped/create semantics",
   const created = calls.find((c) => c.method === "createWorkspace").request;
   assert.equal(created.spec.image.type.registry.url, "node:22");
   assert.equal(created.status.templateRef.name, "node.team");
-  assert.equal(created.spec.runtime.envVars[1].type.value, "");
+  assert.equal(created.spec.runtime.envVars[1].type.value, "dev");
   const started = calls.find((c) => c.method === "startWorkspace").request;
   assert.equal(started.workspaceRef.uid, "workspace-uid");
   assert.equal(started.config.regionRef.name, "eu");
@@ -73,6 +73,26 @@ test("failed startup preserves workspace and cause, without automatic deletion",
     calls.some((c) => c.method === "deleteWorkspace"),
     false,
   );
+});
+
+test("a previous run's failure does not fail the wait of a restarted workspace", async (t) => {
+  let polls = 0;
+  const { client } = await cluster(t, {
+    getWorkspace: () => {
+      const current = workspace(
+        ++polls > 2 ? WorkspaceState.RUNNING : WorkspaceState.INITIALIZING,
+      );
+      current.status.failure = {
+        message: "image pull failed",
+        type: { oneofKind: "imagePull", imagePull: {} },
+      };
+      current.status.run = { id: "second" };
+      return current;
+    },
+  });
+  const ws = await client.workspaces.get("sandbox");
+  await ws.waitUntilRunning({ pollIntervalMs: 1 });
+  assert.equal(ws.isRunning, true);
 });
 
 test("wait cancellation and deadlines do not leave polling running", async (t) => {
@@ -168,12 +188,11 @@ test("workspace watch cancels on break and maps update snapshots", async (t) => 
 });
 
 test("spec validation rejects conflicting options and keeps the caller input immutable", () => {
-  assert.throws(() => createWorkspaceSpec({ template: "a", snapshot: "b" }), {
-    code: "INVALID_ARGUMENT",
-  });
-  assert.throws(() => createWorkspaceSpec({ snapshot: "a", ephemeral: true }), {
-    code: "INVALID_ARGUMENT",
-  });
+  createWorkspaceSpec({ template: "a", snapshot: "b" });
+  assert.equal(
+    createWorkspaceSpec({ snapshot: "a", ephemeral: true }).isEphemeral,
+    true,
+  );
   assert.throws(
     () => createWorkspaceSpec({ applications: [{ name: "web", port: 0 }] }),
     { code: "INVALID_ARGUMENT" },
@@ -181,6 +200,23 @@ test("spec validation rejects conflicting options and keeps the caller input imm
   assert.throws(() => createWorkspaceSpec({ resources: { cpu: NaN } }), {
     code: "INVALID_ARGUMENT",
   });
+  assert.throws(() => createWorkspaceSpec({ env: { EMPTY: "" } }), {
+    code: "INVALID_ARGUMENT",
+  });
+  assert.throws(
+    () =>
+      createWorkspaceSpec({
+        tasks: [{ name: "t", command: "true", env: { EMPTY: "" } }],
+      }),
+    { code: "INVALID_ARGUMENT" },
+  );
+  assert.throws(
+    () =>
+      createWorkspaceSpec({
+        image: { registry: "r.test/x", username: "", passwordSecret: "pw" },
+      }),
+    { code: "INVALID_ARGUMENT" },
+  );
   const input = {
     runtime: { cmd: "sleep infinity" },
     vars: [{ name: "A", value: "old" }],
@@ -200,16 +236,75 @@ test("initialization logs expose bytes/stage and empty streams finish cleanly", 
     getWorkspace: () => workspace(),
     listenLog: (call) => {
       if (!empty)
-        call.write({ type: 4, mode: 2, data: Buffer.from("task failed") });
+        call.write({
+          type: 4,
+          mode: 2,
+          data: Buffer.from("task failed"),
+          createdAt: { seconds: 1_700_000_000, nanos: 0 },
+        });
       call.end();
     },
   });
   const ws = await client.workspaces.get("sandbox");
   const entries = await Array.fromAsync(ws.logs({ timeoutMs: 1000 }));
   assert.equal(entries.length, 1);
-  assert.equal(entries[0].type, 4);
-  assert.equal(entries[0].mode, 2);
+  assert.equal(entries[0].stage, "task");
+  assert.equal(entries[0].stream, "stderr");
+  assert.equal(entries[0].at.getTime(), 1_700_000_000_000);
   assert.equal(Buffer.from(entries[0].data).toString(), "task failed");
   empty = true;
   assert.deepEqual(await Array.fromAsync(ws.logs({ timeoutMs: 1000 })), []);
+});
+
+test("start is idempotent, stop waits report failed runs and run errors keep their code", async (t) => {
+  let state = WorkspaceState.RUNNING;
+  let failure;
+  const { client, calls } = await cluster(t, {
+    createWorkspace: () => workspace(WorkspaceState.STOPPED),
+    startWorkspace: () => {
+      throw { code: status.ALREADY_EXISTS, details: "already running" };
+    },
+    getWorkspace: () => {
+      const current = workspace(state);
+      current.status.run = { id: "run", failure };
+      current.status.spaceRef = { name: "team" };
+      current.status.templateRef = { name: "default.team" };
+      return current;
+    },
+    createWorkspaceSnapshot: (input) => input,
+  });
+  const ws = await client.workspaces.get("sandbox");
+  await ws.start();
+  assert.equal(ws.isRunning, true);
+  assert.equal(ws.spaceName, "team");
+  assert.equal(ws.templateName, "default.team");
+  assert.equal(ws.failure, undefined);
+  state = WorkspaceState.STOPPED;
+  failure = {
+    message: "task failed",
+    type: { oneofKind: "unknown", unknown: {} },
+  };
+  await assert.rejects(ws.waitUntilStopped({ pollIntervalMs: 1 }), (error) => {
+    assert.ok(error instanceof WorkspaceFailureError);
+    assert.equal(error.message, "task failed");
+    return true;
+  });
+  assert.equal(ws.isStopped, true);
+  assert.equal(ws.failure.message, "task failed");
+  failure = undefined;
+  await ws.waitUntilStopped({ pollIntervalMs: 1 });
+  const snapshot = await ws.snapshot("saved");
+  assert.equal(snapshot.status.workspaceRef.uid, "workspace-uid");
+  state = WorkspaceState.INITIALIZING;
+  await assert.rejects(
+    client.workspaces.run({}, { timeoutMs: 50, pollIntervalMs: 1 }),
+    (error) => {
+      assert.ok(error instanceof CordiumError);
+      assert.ok(!(error instanceof WorkspaceFailureError));
+      assert.equal(error.code, "DEADLINE_EXCEEDED");
+      assert.equal(error.workspace.metadata.uid, "workspace-uid");
+      return true;
+    },
+  );
+  assert.equal(calls.filter((c) => c.method === "createWorkspace").length, 1);
 });

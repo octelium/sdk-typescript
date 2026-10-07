@@ -150,3 +150,28 @@ test("shellQuote treats shell syntax and empty strings as literal arguments", ()
   assert.equal(shellQuote("$(touch /tmp/x);\n"), "'$(touch /tmp/x);\n'");
   assert.throws(() => shellQuote("a\0b"), { code: "INVALID_ARGUMENT" });
 });
+
+test("a killed command without an exit ends after the grace period", async (t) => {
+  const { client } = await cluster(t, {
+    getWorkspace: () => workspace(),
+    exec: (call) =>
+      call.on("data", (message) => {
+        if (message.type.oneofKind === "request")
+          call.write(output("stderr", "terminated"));
+      }),
+  });
+  const ws = await client.workspaces.get("sandbox");
+  const session = ws.execStream("sleep 60", { killGraceMs: 30 });
+  await session.kill();
+  const result = await session.wait();
+  assert.equal(result.exitCode, -1);
+  assert.equal(result.killed, true);
+  const checked = ws.execStream("sleep 60", { killGraceMs: 30, check: true });
+  await checked.kill();
+  await assert.rejects(checked.wait(), (error) => {
+    assert.ok(error instanceof ExecError);
+    assert.equal(error.result.killed, true);
+    assert.match(error.message, /code -1: terminated/);
+    return true;
+  });
+});

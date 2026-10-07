@@ -76,6 +76,9 @@ test("streamed upload/download preserve binary data across base64 boundaries", a
   await ws.files.upload(source, remote);
   await ws.files.download(remote, local);
   assert.deepEqual(await readFile(local), content);
+  const nested = join(dir, "a", "b", "copy");
+  await ws.files.download(remote, nested);
+  assert.deepEqual(await readFile(nested), content);
 });
 
 test("failed download preserves the destination and cleans temporary files", async (t) => {

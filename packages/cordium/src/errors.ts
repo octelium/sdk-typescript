@@ -1,5 +1,8 @@
 import type { RpcMetadata } from "@protobuf-ts/runtime-rpc";
-import type { Workspace as WorkspaceResource } from "@octelium/apis/main/cordiumv1";
+import type {
+  Workspace as WorkspaceResource,
+  Workspace_Status_Failure,
+} from "@octelium/apis/main/cordiumv1";
 import type { ExecResult } from "./exec.js";
 
 /** A transport, validation, lifecycle, or protocol error. `cause` retains the original error. */
@@ -8,38 +11,57 @@ export class CordiumError extends Error {
   readonly code: string;
   /** Response metadata when supplied by the transport. */
   readonly metadata?: RpcMetadata;
+  /** The Workspace that `workspaces.run()` created before failing, so that it can be inspected or deleted. */
+  readonly workspace?: WorkspaceResource;
   constructor(
     message: string,
     code = "UNKNOWN",
-    options?: ErrorOptions & { metadata?: RpcMetadata },
+    options?: ErrorOptions & {
+      metadata?: RpcMetadata;
+      workspace?: WorkspaceResource;
+    },
   ) {
     super(message, options);
     this.name = new.target.name;
     this.code = code;
     this.metadata = options?.metadata;
+    this.workspace = options?.workspace;
   }
 }
 
 /** A command completed with a nonzero exit code. Only thrown when `check` is enabled. */
 export class ExecError extends CordiumError {
   constructor(readonly result: ExecResult) {
-    super(`Command exited with code ${result.exitCode}`, "COMMAND_FAILED");
+    const stderr = result.stderr.trim();
+    super(
+      `Command exited with code ${result.exitCode}` +
+        (stderr
+          ? `: ${stderr.length > 512 ? stderr.slice(0, 512) + "..." : stderr}`
+          : ""),
+      "COMMAND_FAILED",
+    );
   }
 }
 
-/** Startup failed. The workspace is preserved for inspection and explicit cleanup. */
+/** A Workspace run failed. The workspace is preserved for inspection and explicit cleanup. */
 export class WorkspaceFailureError extends CordiumError {
-  constructor(
-    readonly workspace: WorkspaceResource,
-    options?: ErrorOptions,
-  ) {
+  declare readonly workspace: WorkspaceResource;
+  constructor(workspace: WorkspaceResource, options?: ErrorOptions) {
     super(
-      workspace.status?.failure?.message ||
-        `Workspace ${workspace.metadata?.name ?? ""} failed to become ready`,
+      runFailure(workspace)?.message ||
+        `Workspace ${workspace.metadata?.name ?? ""} failed`,
       "WORKSPACE_FAILED",
-      options,
+      { ...options, workspace },
     );
   }
+}
+
+export function runFailure(
+  workspace: WorkspaceResource,
+): Workspace_Status_Failure | undefined {
+  return workspace.status?.run
+    ? workspace.status.run.failure
+    : workspace.status?.failure;
 }
 
 /** Check a transport status or SDK code without parsing an error message. */

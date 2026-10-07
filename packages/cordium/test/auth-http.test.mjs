@@ -1,9 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile, mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { credentials, status } from "@grpc/grpc-js";
-import { Cordium } from "../dist/index.js";
-import { AuthenticationManager } from "../dist/auth.js";
+import { Cordium, OcteliumClient, assertionFile } from "../dist/index.js";
 import { cluster, workspace, output, exit, pause } from "./server.mjs";
 
 const tls = {
@@ -13,7 +14,22 @@ const tls = {
   ),
 };
 
-test("TLS authentication is single-flight and supplies metadata on unary and duplex calls", async (t) => {
+const session = (accessToken, refreshToken = "refresh") => ({
+  accessToken,
+  refreshToken,
+  expiresIn: 60,
+  refreshTokenExpiresIn: 3600,
+});
+
+const connect = (port, options = {}) =>
+  new Cordium({
+    domain: "example.test",
+    endpoint: `localhost:${port}`,
+    channelCredentials: credentials.createSsl(tls.cert),
+    ...options,
+  });
+
+test("Octelium authentication is single-flight and supplies metadata on unary and duplex calls", async (t) => {
   let authentications = 0;
   const { port, calls } = await cluster(
     t,
@@ -22,11 +38,7 @@ test("TLS authentication is single-flight and supplies metadata on unary and dup
         authentications++;
         assert.equal(input.authenticationToken, "single-use");
         await pause(10);
-        return {
-          accessToken: "access",
-          refreshToken: "refresh",
-          expiresIn: 60,
-        };
+        return session("access");
       },
       getWorkspace: () => workspace(),
       exec: (call) =>
@@ -37,11 +49,8 @@ test("TLS authentication is single-flight and supplies metadata on unary and dup
     },
     tls,
   );
-  const client = new Cordium({
-    domain: "example.test",
-    endpoint: `localhost:${port}`,
-    channelCredentials: credentials.createSsl(tls.cert),
-    auth: { type: "authenticationToken", token: "single-use" },
+  const client = connect(port, {
+    auth: { type: "authToken", authToken: { token: "single-use" } },
   });
   t.after(() => client.close());
   const items = await Promise.all(
@@ -52,81 +61,105 @@ test("TLS authentication is single-flight and supplies metadata on unary and dup
   for (const call of calls.filter((c) =>
     ["getWorkspace", "exec"].includes(c.method),
   ))
-    assert.deepEqual(call.metadata.get("authorization"), ["Bearer access"]);
+    assert.deepEqual(call.metadata.get("x-octelium-auth"), ["access"]);
 });
 
-test("refresh uses the refresh-token header and does not reuse authentication tokens", async (t) => {
-  let first = 0,
-    refresh = 0;
-  const { transport } = await cluster(t, {
-    authenticateWithAuthenticationToken: () => {
-      first++;
-      return { accessToken: "a", refreshToken: "r", expiresIn: 60 };
+test("a rejected token is refreshed for the next call without replaying the failed one", async (t) => {
+  let gets = 0;
+  const { port, calls } = await cluster(
+    t,
+    {
+      authenticateWithAuthenticationToken: () => session("access"),
+      authenticateWithRefreshToken: (_input, call) => {
+        assert.deepEqual(call.metadata.get("x-octelium-refresh-token"), [
+          "refresh",
+        ]);
+        return session("second", "rotated");
+      },
+      getWorkspace: (_input, call) => {
+        gets++;
+        if (call.metadata.get("x-octelium-auth")[0] === "access")
+          throw { code: status.UNAUTHENTICATED, details: "Revoked" };
+        return workspace();
+      },
     },
-    authenticateWithRefreshToken: (_input, call) => {
-      refresh++;
-      assert.deepEqual(call.metadata.get("x-octelium-refresh-token"), ["r"]);
-      return { accessToken: "b", refreshToken: "r2", expiresIn: 60 };
-    },
-  });
-  const manager = new AuthenticationManager(
-    { type: "authenticationToken", token: "one-time" },
-    transport,
-    new AbortController().signal,
+    tls,
   );
-  assert.equal(await manager.token(), "a");
-  manager.expiresAt = 0;
-  assert.equal(await manager.token(), "b");
-  assert.equal(first, 1);
-  assert.equal(refresh, 1);
+  const client = connect(port, {
+    auth: { type: "authToken", authToken: { token: "single-use" } },
+  });
+  t.after(() => client.close());
+  await assert.rejects(client.workspaces.get("sandbox"), {
+    code: "UNAUTHENTICATED",
+  });
+  await client.workspaces.get("sandbox");
+  assert.equal(gets, 2);
+  assert.deepEqual(
+    calls
+      .filter((c) => c.method === "getWorkspace")
+      .map((c) => c.metadata.get("x-octelium-auth")),
+    [["access"], ["second"]],
+  );
 });
 
-test("expired sessions from assertions can reauthenticate but one-time tokens cannot", async (t) => {
-  let authCalls = 0,
-    assertionCalls = 0;
-  const { transport } = await cluster(t, {
-    authenticateWithAuthenticationToken: () => {
-      authCalls++;
-      return { accessToken: "one", refreshToken: "r", expiresIn: 60 };
+test("long-lived streams are not bounded by the default unary deadline", async (t) => {
+  const { port } = await cluster(
+    t,
+    {
+      getWorkspace: () => workspace(),
+      exec: (call) =>
+        call.on("data", () =>
+          setTimeout(() => {
+            call.write(output("stdout", "late"));
+            call.write(exit(0));
+          }, 120),
+        ),
     },
-    authenticateWithAssertion: () => {
-      assertionCalls++;
-      return {
-        accessToken: `a${assertionCalls}`,
-        refreshToken: "r",
-        expiresIn: 60,
-      };
-    },
-    authenticateWithRefreshToken: (_input, call) => {
-      assert.deepEqual(call.metadata.get("x-octelium-refresh-token"), ["r"]);
-      throw { code: status.UNAUTHENTICATED, details: "expired session" };
-    },
+    tls,
+  );
+  const client = connect(port, {
+    auth: { type: "accessToken", accessToken: "token" },
+    timeoutMs: 40,
   });
-  const oneTime = new AuthenticationManager(
-    { type: "authenticationToken", token: "one-time" },
-    transport,
-    new AbortController().signal,
+  t.after(() => client.close());
+  const ws = await client.workspaces.get("sandbox");
+  assert.equal((await ws.exec("sleep")).stdout, "late");
+});
+
+test("a supplied Octelium client is reused and left open on close", async (t) => {
+  const { port, calls } = await cluster(
+    t,
+    { getWorkspace: () => workspace() },
+    tls,
   );
-  assert.equal(await oneTime.token(), "one");
-  oneTime.expiresAt = 0;
-  await assert.rejects(oneTime.token(), { code: "UNAUTHENTICATED" });
-  assert.equal(authCalls, 1);
-  const assertion = new AuthenticationManager(
-    { type: "assertion", token: async () => "assertion" },
-    transport,
-    new AbortController().signal,
+  const octelium = new OcteliumClient({
+    domain: "example.test",
+    endpoint: `localhost:${port}`,
+    channelCredentials: credentials.createSsl(tls.cert),
+    auth: { type: "accessToken", accessToken: "shared" },
+  });
+  t.after(() => octelium.close());
+  assert.throws(
+    () =>
+      new Cordium({
+        octelium,
+        auth: { type: "accessToken", accessToken: "other" },
+      }),
+    { code: "INVALID_ARGUMENT" },
   );
-  assert.equal(await assertion.token(), "a1");
-  assertion.expiresAt = 0;
-  assert.equal(await assertion.token(), "a2");
-  assert.equal(assertionCalls, 2);
+  const client = new Cordium({ octelium });
+  assert.equal(client.domain, "example.test");
+  await client.workspaces.get("sandbox");
+  assert.deepEqual(calls.at(-1).metadata.get("x-octelium-auth"), ["shared"]);
+  await client.close();
+  assert.equal(await octelium.accessToken(), "shared");
 });
 
 test("authenticated HTTP uses exact domain boundaries, supports underscore hosts, never follows redirects", async (t) => {
   const sent = [];
   const client = new Cordium({
     domain: "Example.Test.",
-    auth: { type: "accessToken", token: "secret" },
+    auth: { type: "accessToken", accessToken: "secret" },
     authorizedHttpHosts: ["extra.test"],
     fetch: async (url, init) => {
       sent.push({ url: String(url), ...init });
@@ -139,9 +172,10 @@ test("authenticated HTTP uses exact domain boundaries, supports underscore hosts
   t.after(() => client.close());
   await client.fetch("https://api_sandbox.cordium.example.test/health", {
     redirect: "follow",
-    headers: { authorization: "wrong" },
+    headers: { authorization: "Bearer app-token", "x-octelium-auth": "wrong" },
   });
-  assert.equal(sent[0].headers.get("authorization"), "Bearer secret");
+  assert.equal(sent[0].headers.get("x-octelium-auth"), "secret");
+  assert.equal(sent[0].headers.get("authorization"), "Bearer app-token");
   assert.equal(sent[0].redirect, "manual");
   await client.fetch("https://extra.test");
   for (const url of [
@@ -161,7 +195,7 @@ test("access token provider cancellation and client close are bounded", async (t
     domain: "example.test",
     auth: {
       type: "accessToken",
-      token: (signal) => {
+      accessToken: (signal) => {
         providerSignal = signal;
         return new Promise(() => {});
       },
@@ -172,7 +206,7 @@ test("access token provider cancellation and client close are bounded", async (t
     code: "DEADLINE_EXCEEDED",
   });
   const pending = client.accessToken();
-  client.close();
+  await client.close();
   await assert.rejects(pending, { code: "CLIENT_CLOSED" });
   assert.equal(providerSignal.aborted, true);
 });
@@ -181,7 +215,7 @@ test("HTTP response bodies remain readable after headers and honor caller cancel
   let sentSignal;
   const client = new Cordium({
     domain: "example.test",
-    auth: { type: "accessToken", token: "token" },
+    auth: { type: "accessToken", accessToken: "token" },
     fetch: async (_url, init) => {
       sentSignal = init.signal;
       return new Response("body");
@@ -196,6 +230,19 @@ test("HTTP response bodies remain readable after headers and honor caller cancel
   assert.equal(await response.text(), "body");
   abort.abort();
   assert.equal(sentSignal.aborted, true);
+});
+
+test("assertion files are reread on every authentication", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "cordium-assertion-"));
+  const path = join(directory, "token");
+  await writeFile(path, "first\n");
+  const config = assertionFile(path, { scopes: ["scope"] });
+  assert.equal(config.type, "assertion");
+  assert.deepEqual(config.assertion.scopes, ["scope"]);
+  const signal = new AbortController().signal;
+  assert.equal(await config.assertion.token(signal), "first");
+  await writeFile(path, "second");
+  assert.equal(await config.assertion.token(signal), "second");
 });
 
 test("environment credentials follow Go precedence and explicit auth wins", async (t) => {
@@ -225,8 +272,11 @@ test("environment credentials follow Go precedence and explicit auth wins", asyn
   assert.equal(client.domain, "example.test");
   assert.equal(await client.accessToken(), "access");
   const explicit = new Cordium({
-    auth: { type: "accessToken", token: "explicit" },
+    auth: { type: "accessToken", accessToken: "explicit" },
   });
   t.after(() => explicit.close());
   assert.equal(await explicit.accessToken(), "explicit");
+  delete process.env.OCTELIUM_ACCESS_TOKEN;
+  delete process.env.OCTELIUM_AUTH_TOKEN;
+  assert.throws(() => new Cordium(), { code: "INVALID_ARGUMENT" });
 });

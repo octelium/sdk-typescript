@@ -10,7 +10,9 @@ import {
   CordiumError,
   WorkspaceFailureError,
   integer,
+  isCordiumError,
   nonempty,
+  runFailure,
 } from "./errors.js";
 import {
   common,
@@ -31,6 +33,8 @@ import {
 import { ExecSession, type ExecOptions, type ExecResult } from "./exec.js";
 import { Files } from "./files.js";
 import { Terminals } from "./terminal.js";
+import { Snapshots } from "./resources.js";
+import { Timestamp } from "@octelium/apis/google/protobuf/timestamp";
 
 /** Configuration applied to a single start, after template/workspace variable merging. */
 export interface StartOptions {
@@ -50,6 +54,17 @@ export type WorkspaceListOptions = ListOptions &
     | { space?: Reference; template?: never }
     | { template?: Reference; space?: never }
   );
+/** A single entry of a workspace's initialization logs. */
+export interface LogEntry {
+  /** When the entry was produced, if the Cluster reported it. */
+  at?: Date;
+  /** The initialization stage that produced the entry. */
+  stage: "cloningRepo" | "pullingImage" | "buildingImage" | "task" | "unknown";
+  /** The output stream on which the entry was emitted. */
+  stream: "stdout" | "stderr";
+  /** The raw content of the entry. */
+  data: Uint8Array;
+}
 /** A workspace event. Reconnects are not automatic; refresh after disconnects to reconcile state. */
 export type WorkspaceEvent =
   | { type: "create" | "delete"; workspace: Workspace }
@@ -86,7 +101,10 @@ export class Workspaces {
     );
     return new Workspace(this.engine, item);
   }
-  /** Create, start, and wait for RUNNING. A failed workspace is retained and attached to the error. */
+  /**
+   * Create, start, and wait for RUNNING. Once the workspace exists, every error carries it in
+   * `error.workspace` with its original code, so that it can be inspected or deleted rather than leaked.
+   */
   async run(
     options: RunOptions = {},
     request: WaitOptions = {},
@@ -102,11 +120,13 @@ export class Workspaces {
         pollIntervalMs: request.pollIntervalMs,
       });
     } catch (error) {
-      if (workspace && !(error instanceof WorkspaceFailureError))
-        throw new WorkspaceFailureError(workspace.toProto(), {
-          cause: scope.error(error),
-        });
-      throw scope.error(error);
+      const failure = scope.error(error);
+      if (!workspace || failure.workspace) throw failure;
+      throw new CordiumError(failure.message, failure.code, {
+        cause: failure,
+        metadata: failure.metadata,
+        workspace: workspace.toProto(),
+      });
     } finally {
       scope.close();
     }
@@ -253,6 +273,62 @@ export class Workspace {
   get url(): string | undefined {
     return this.hostname ? `https://${this.hostname}` : undefined;
   }
+  /** Whether a run is under way but has not reached PREPARING yet. */
+  get isStarting(): boolean {
+    return [
+      p.Workspace_Status_State.INIT_REQUEST,
+      p.Workspace_Status_State.INITIALIZING,
+      p.Workspace_Status_State.PULLING_IMAGE,
+      p.Workspace_Status_State.BUILDING_IMAGE,
+      p.Workspace_Status_State.STARTING_RUNTIME,
+    ].includes(this.state);
+  }
+  /** Whether a graceful stop is in progress. */
+  get isStopping(): boolean {
+    return (
+      this.state === p.Workspace_Status_State.STOPPING_REQUEST ||
+      this.state === p.Workspace_Status_State.STOPPING
+    );
+  }
+  /** Whether the workspace is stopped. */
+  get isStopped(): boolean {
+    return this.state === p.Workspace_Status_State.STOPPED;
+  }
+  /** Whether storage is discarded on stop. */
+  get isEphemeral(): boolean {
+    return this.resource.spec?.isEphemeral ?? false;
+  }
+  /** Creation time reported by the Cluster. */
+  get createdAt(): Date | undefined {
+    const value = this.resource.metadata?.createdAt;
+    return value ? Timestamp.toDate(value) : undefined;
+  }
+  /** Name of the Space the workspace belongs to. */
+  get spaceName(): string {
+    return this.resource.status?.spaceRef?.name ?? "";
+  }
+  /** Name of the Template the workspace was created from. */
+  get templateName(): string {
+    return this.resource.status?.templateRef?.name ?? "";
+  }
+  /** Name of the Region that currently hosts the workspace. */
+  get regionName(): string {
+    return this.resource.status?.regionRef?.name ?? "";
+  }
+  /** Failure of the current or latest run, if any. */
+  get failure(): p.Workspace_Status_Failure | undefined {
+    return runFailure(this.resource);
+  }
+  /** Effective compute limits resolved by the Cluster. */
+  get limit(): p.Workspace_Spec_Limit | undefined {
+    return this.resource.status?.limit;
+  }
+  /** Named ports declared by the spec. */
+  get applications(): p.Workspace_Spec_Application[] {
+    return (this.resource.spec?.applications ?? []).map((app) =>
+      p.Workspace_Spec_Application.clone(app),
+    );
+  }
   /** Deep copy of the complete generated resource. */
   toProto(): p.Workspace {
     return p.Workspace.clone(this.resource);
@@ -285,29 +361,36 @@ export class Workspace {
     );
     return this;
   }
-  /** Start without waiting for readiness; refresh the handle after acceptance. */
+  /**
+   * Start without waiting for readiness; refresh the handle after acceptance. Starting a workspace
+   * that is already starting or running is a no-op.
+   */
   async start(
     options: StartOptions = {},
     request?: RequestOptions,
   ): Promise<this> {
     const scope = this.engine.scope(request);
     try {
-      await this.engine.unary(
-        (o) =>
-          this.engine.main.startWorkspace(
-            p.StartWorkspaceRequest.create({
-              workspaceRef: reference(this.ref),
-              config: {
-                vars: variables(options.vars ?? {}),
-                regionRef: options.region
-                  ? reference(options.region)
-                  : undefined,
-              },
-            }),
-            o,
-          ),
-        { signal: scope.signal, timeoutMs: 0 },
-      );
+      try {
+        await this.engine.unary(
+          (o) =>
+            this.engine.main.startWorkspace(
+              p.StartWorkspaceRequest.create({
+                workspaceRef: reference(this.ref),
+                config: {
+                  vars: variables(options.vars ?? {}),
+                  regionRef: options.region
+                    ? reference(options.region)
+                    : undefined,
+                },
+              }),
+              o,
+            ),
+          { signal: scope.signal, timeoutMs: 0 },
+        );
+      } catch (error) {
+        if (!isCordiumError(error, "ALREADY_EXISTS")) throw error;
+      }
       return await this.refresh({ signal: scope.signal, timeoutMs: 0 });
     } finally {
       scope.close();
@@ -367,7 +450,7 @@ export class Workspace {
       options,
     );
   }
-  /** Poll until STOPPED. Failure details remain available through toProto(). */
+  /** Poll until STOPPED. A run that failed throws WorkspaceFailureError once it has stopped. */
   waitUntilStopped(options?: WaitOptions): Promise<this> {
     return this.wait(
       (state) => state === p.Workspace_Status_State.STOPPED,
@@ -377,7 +460,7 @@ export class Workspace {
   }
   private async wait(
     done: (state: p.Workspace_Status_State) => boolean,
-    fail: boolean,
+    starting: boolean,
     options: WaitOptions = {},
   ): Promise<this> {
     const interval = integer(
@@ -390,10 +473,14 @@ export class Workspace {
     try {
       while (true) {
         await this.refresh({ signal: scope.signal, timeoutMs: 0 });
-        if (done(this.state)) return this;
+        if (done(this.state)) {
+          if (!starting && runFailure(this.resource))
+            throw new WorkspaceFailureError(this.toProto());
+          return this;
+        }
         if (
-          fail &&
-          (this.resource.status?.failure ||
+          starting &&
+          (runFailure(this.resource) ||
             this.state === p.Workspace_Status_State.STOPPED ||
             this.state === p.Workspace_Status_State.STOPPING ||
             this.state === p.Workspace_Status_State.STOPPING_REQUEST)
@@ -418,16 +505,41 @@ export class Workspace {
   execStream(command: string, options?: ExecOptions): ExecSession {
     return new ExecSession(this.engine, this.ref, command, options);
   }
-  /** Stream initialization logs (not arbitrary exec output). */
-  logs(request?: RequestOptions): AsyncGenerator<p.ListenLogResponse> {
-    return this.engine.stream(
+  /** Stream the initialization logs: repository cloning, image pulling and building, and lifecycle task output. */
+  async *logs(request?: RequestOptions): AsyncGenerator<LogEntry> {
+    for await (const message of this.engine.stream(
       (o) =>
         this.engine.workspace.listenLog(
           p.ListenLogRequest.create({ workspaceRef: reference(this.ref) }),
           o,
         ),
       request,
-    );
+    ))
+      yield {
+        at: message.createdAt ? Timestamp.toDate(message.createdAt) : undefined,
+        stage:
+          message.type === p.ListenLogResponse_Type.CLONING_REPO
+            ? "cloningRepo"
+            : message.type === p.ListenLogResponse_Type.PULLING_IMAGE
+              ? "pullingImage"
+              : message.type === p.ListenLogResponse_Type.BUILDING_IMAGE
+                ? "buildingImage"
+                : message.type === p.ListenLogResponse_Type.TASK
+                  ? "task"
+                  : "unknown",
+        stream:
+          message.mode === p.ListenLogResponse_Mode.STDERR
+            ? "stderr"
+            : "stdout",
+        data: message.data,
+      };
+  }
+  /** Snapshot this workspace's storage without stopping it. Wait for READY before restoring it. */
+  snapshot(
+    name: string,
+    request?: RequestOptions,
+  ): Promise<p.WorkspaceSnapshot> {
+    return new Snapshots(this.engine).create(name, this.ref, request);
   }
   /** Watch this workspace's lifecycle. */
   watch(request?: RequestOptions): AsyncGenerator<WorkspaceEvent> {

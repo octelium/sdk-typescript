@@ -46,9 +46,11 @@ test("resource convenience methods encode scopes, roles, secret variants and vol
     "valueBytes",
   );
   assert.equal(
-    (await client.userSecrets.createSSHKey("key", "private")).spec.type,
+    (await client.userSecrets.createSSHKey("key")).spec.type,
     p.UserSecret_Spec_Type.SSH_KEY,
   );
+  const sshKey = calls.findLast((c) => c.method === "createUserSecret").request;
+  assert.equal(sshKey.data.type.oneofKind, undefined);
   assert.equal(
     (
       await client.gitProviders.createOAuth("github.team", "github", {

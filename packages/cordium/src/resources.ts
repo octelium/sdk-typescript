@@ -726,7 +726,7 @@ export class UserSecrets {
   ): AsyncGenerator<p.UserSecret> {
     return paginate((o) => this.list(o, request), options);
   }
-  /** Create a write-only personal Secret. Use createSSHKey for an SSH private key. */
+  /** Create a write-only personal Secret. Use createSSHKey for a Cluster-generated SSH key pair. */
   create(
     name: string,
     value: SecretValue,
@@ -746,12 +746,8 @@ export class UserSecrets {
       request,
     );
   }
-  /** Store an SSH private key; only its public key is returned in status. */
-  createSSHKey(
-    name: string,
-    privateKey: string | Uint8Array,
-    request?: RequestOptions,
-  ): Promise<p.UserSecret> {
+  /** Ask the Cluster to generate an SSH key pair. The private key never leaves the Cluster; the public key is returned in status. */
+  createSSHKey(name: string, request?: RequestOptions): Promise<p.UserSecret> {
     return this.engine.unary(
       (o) =>
         this.engine.main.createUserSecret(
@@ -759,7 +755,7 @@ export class UserSecrets {
             metadata: { name: nonempty(name, "Secret name") },
             spec: { type: p.UserSecret_Spec_Type.SSH_KEY },
             status: {},
-            data: payload(privateKey),
+            data: {},
           }),
           o,
         ),

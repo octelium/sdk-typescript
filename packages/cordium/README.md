@@ -18,8 +18,8 @@ import { Cordium, argv } from "@octelium/cordium";
 const client = new Cordium({
   domain: "example.com",
   auth: {
-    type: "authenticationToken",
-    token: process.env.OCTELIUM_AUTH_TOKEN!,
+    type: "authToken",
+    authToken: { token: process.env.OCTELIUM_AUTH_TOKEN! },
   },
 });
 
@@ -48,17 +48,21 @@ try {
     await workspace.delete();
   }
 } finally {
-  client.close();
+  await client.close();
 }
 ```
 
-`create()` creates a stopped workspace. `run()` creates it, starts it, and waits for `RUNNING`. Failed runs preserve the resource for diagnosis; `WorkspaceFailureError.workspace` contains its last fetched state. Failures after creation carry the original error in `cause` when available. Delete a failed resource explicitly after inspecting it.
+`create()` creates a stopped workspace. `run()` creates it, starts it, and waits for `RUNNING`. Failed runs preserve the resource for diagnosis: any error thrown after creation, such as a `WorkspaceFailureError` or a `DEADLINE_EXCEEDED` wait, carries the workspace's last fetched state in `error.workspace` and keeps its original code. Delete a failed resource explicitly after inspecting it.
+
+`start()` is idempotent: starting a workspace that is already starting or running succeeds. `waitUntilStopped()` throws `WorkspaceFailureError` when the run that stopped had failed. Handles expose `isStarting`, `isStopping`, `isStopped`, `isEphemeral`, `createdAt`, `spaceName`, `templateName`, `regionName`, `failure` (the current or latest run's failure), `limit` and `applications`. `workspace.snapshot(name)` checkpoints its storage.
 
 An **ephemeral** workspace loses its storage when stopped; the workspace resource itself persists. Closing the client cancels its operations and releases channels. It does not delete workspaces, remove terminals, or log out.
 
 ## Authentication and connection
 
-The constructor is lazy. `await Cordium.connect(options)` obtains credentials immediately, closing its channels if authentication fails. Reuse a client for the lifetime of your process. `client.close()` is idempotent; `Symbol.dispose` is also supported.
+Authentication, Session refresh and the gRPC channel are provided by the [Octelium SDK](https://www.npmjs.com/package/@octelium/sdk) (`@octelium/sdk`). `auth` takes its `AuthConfig`, and `client.octelium` exposes the underlying `OcteliumClient`, whose `coreV1`, `userV1` and `cordiumV1` share the same Session.
+
+The constructor is lazy. `await Cordium.connect(options)` obtains credentials immediately, closing its channels if authentication fails. Reuse a client for the lifetime of your process. `await client.close()` is idempotent; `Symbol.asyncDispose` and `Symbol.dispose` are also supported.
 
 Explicit `auth` takes precedence over environment credentials. Environment lookup follows the Go SDK:
 
@@ -73,27 +77,39 @@ Explicit `auth` takes precedence over environment credentials. Environment looku
 Credential rows are in precedence order. `OCTELIUM_AUTHENTICATION_TOKEN` is accepted as a fallback alias for `OCTELIUM_AUTH_TOKEN`. Empty environment values are ignored.
 
 ```ts
-// Externally rotated access tokens; the provider is called for each request.
+import { Cordium, OcteliumClient, assertionFile } from "@octelium/cordium";
+
+// Externally rotated access tokens; the provider may return an expiry to cache the token.
 const client = new Cordium({
   domain: "example.com",
   auth: {
     type: "accessToken",
-    token: async (signal) => obtainAccessToken(signal),
+    accessToken: async (signal) => obtainAccessToken(signal),
   },
 });
 
 // Projected Kubernetes token or another assertion file rotated by the platform.
 const workload = new Cordium({
   domain: "example.com",
-  auth: { type: "assertionFile", path: "/var/run/secrets/tokens/identity" },
+  auth: assertionFile("/var/run/secrets/tokens/identity"),
 });
+
+// Share one Octelium Session between Octelium and Cordium calls.
+const octelium = new OcteliumClient({
+  domain: "example.com",
+  auth: {
+    type: "oauth2ClientCredentials",
+    oauth2ClientCredentials: { clientId, clientSecret },
+  },
+});
+const shared = new Cordium({ octelium });
 ```
 
-Session authentication and refresh are shared across concurrent callers. An authentication token is attempted once; it is never silently replayed after an ambiguous failure or expired session. Assertion providers can obtain a new assertion when refresh reports an expired session. Providers should honor the supplied client-lifetime signal. A caller's deadline cancels its wait without cancelling a refresh shared by other callers.
+Session authentication and refresh are shared across concurrent callers. An authentication token is attempted once; it is never silently replayed after an ambiguous failure or expired session. A call rejected as `UNAUTHENTICATED` is not replayed, but the next call obtains fresh credentials. Providers should honor the supplied client-lifetime signal. A caller's deadline cancels its wait without cancelling a refresh shared by other callers.
 
-Use `endpoint` to override `octelium-api.<domain>:443`, `channelCredentials` for a private CA or mutual TLS, and `channelOptions` for advanced grpc-js configuration. TLS certificate verification remains enabled by default.
+Use `endpoint` to override `octelium-api.<domain>:443`, `channelCredentials` for a private CA or mutual TLS, and `channelOptions` for advanced grpc-js configuration. TLS certificate verification remains enabled by default. A supplied `octelium` client owns its domain, credentials and channel, so it cannot be combined with `auth`, `endpoint`, `channelCredentials` or `channelOptions`; `close()` leaves it open.
 
-A caller-owned `RpcTransport` can be supplied as `transport` for an existing authenticated connection. That transport owns its authentication and is not closed by Cordium. It must support bidirectional streaming for exec and honor RPC cancellation. `accessToken()` and authenticated `fetch()` are unavailable with an injected transport. `NodeGrpcTransport` is exported for callers constructing their own native channels.
+A caller-owned `RpcTransport` can be supplied as `transport` for an existing authenticated connection. That transport owns its authentication and is not closed by Cordium. It must support bidirectional streaming for exec and honor RPC cancellation. `accessToken()` and authenticated `fetch()` are unavailable with an injected transport. `NodeGrpcTransport` is re-exported from the Octelium SDK for callers constructing their own native channels.
 
 ## Workspace configuration
 
@@ -118,7 +134,7 @@ Resource units are CPU **millicores**, memory **megabytes**, and storage **megab
 
 Image sources include a registry string, `{ dockerfile: 'FROM ...' }`, `{ dockerfileUrl: 'https://...' }`, a private registry configuration, a separate image Git repository, or the workspace repository's devcontainer/Dockerfile. `createWorkspaceSpec(options)` constructs and validates a spec without contacting the Cluster. Convenience fields override their corresponding `spec` fields; arrays are replaced, not appended. Omitted fields retain the supplied spec values. `Workspace.update(spec)` replaces the entire spec, so start from `workspace.toProto().spec` when modifying an existing one.
 
-A template and a snapshot are mutually exclusive. Snapshot restores cannot be ephemeral. Template, Space, and Cluster policy determine the effective configuration; inspect `workspace.toProto().status` for the server's resolved limits and failure information.
+A snapshot restore uses the snapshot's Template unless `template` names another one in the same Space. An ephemeral workspace restores its snapshot on every run. Template, Space, and Cluster policy determine the effective configuration; inspect `workspace.toProto().status` for the server's resolved limits and `status.run.failure` for the failure of the current run.
 
 Workspace properties are cached. Call `refresh()` before depending on current server state. Handles use immutable UIDs when available. Concurrent requests are supported, but serialize conflicting lifecycle or update operations on the same workspace.
 
@@ -140,7 +156,7 @@ console.log(result.exitCode);
 
 Capture defaults to **1 MiB per output stream**. Set `maxCaptureBytes: 0` to disable it. `truncated` reports output omitted from capture; streamed chunks are unaffected. Decode streamed text using a separate streaming `TextDecoder` for each output stream when UTF-8 sequences may span chunks.
 
-`execStream()` enables interactive stdin by default. `write(stringOrBytes)` serializes writes and splits them into bounded messages. `kill()` requests termination of the remote process group. `close()`, cancellation, and breaking an output iterator cancel the RPC, causing Cordium to terminate the command. Call `wait()` directly to drain without iteration; once this mode is selected, iteration is unavailable. Each stream supports one consumer.
+`execStream()` enables interactive stdin by default. `write(stringOrBytes)` serializes writes and splits them into bounded messages. `kill()` requests termination of the remote process group; when the command's exit is not reported within `killGraceMs` (10 seconds by default), the session ends on its own with exit code `-1` and `killed` set. `close()`, cancellation, and breaking an output iterator cancel the RPC, causing Cordium to terminate the command. Call `wait()` directly to drain without iteration; once this mode is selected, iteration is unavailable. Each stream supports one consumer.
 
 **Cordium has no stdin EOF message.** Supplying `stdin` or finishing `write()` does not close remote stdin. Commands must consume a known amount of data or end themselves. For example, `exec('head -c 5', { stdin: 'hello' })` completes, while `cat` with stdin enabled waits for more input until killed or cancelled. The SDK does not half-close the RPC to simulate EOF.
 
@@ -163,9 +179,9 @@ await workspace.files.download("/workspace/output.bin", "./output.bin");
 
 Transfers use the exec service and standard POSIX tools (`sh`, `mkdir`, `head`, `base64`, `cat`). They support arbitrary binary data and safely quote paths. Uploads use length-framed base64 because stdin cannot be closed independently.
 
-`read()` and `readText()` default to a **64 MiB** limit and reject oversized files. Upload and download stream data. Downloads replace the local destination only after successful completion; a failed transfer removes its temporary file and preserves an existing destination. Downloads create local files with mode `0600`; parent directories must already exist. Remote writes create parents and replace the destination directly, so an interrupted upload may leave a partial remote file. Keep the local source unchanged during an upload.
+`read()` and `readText()` default to a **64 MiB** limit and reject oversized files. Upload and download stream data. Downloads replace the local destination only after successful completion; a failed transfer removes its temporary file and preserves an existing destination. Downloads create local files with mode `0600` and create missing parent directories. Remote writes create parents and replace the destination directly, so an interrupted upload may leave a partial remote file. Keep the local source unchanged during an upload.
 
-Transfers default to a 30-second deadline; increase `timeoutMs` for larger files. Repository checkout or object storage is preferable for bulk datasets. File helpers accept `root`, `cwd`, `signal`, and `timeoutMs`.
+Transfers default to a 5-minute deadline; increase `timeoutMs` for larger files. Repository checkout or object storage is preferable for bulk datasets. File helpers accept `root`, `cwd`, `signal`, and `timeoutMs`.
 
 ## Terminals, logs, and watches
 
@@ -187,7 +203,7 @@ try {
 
 `terminal.resize(cols, rows)` changes PTY dimensions. `detach()`/`close()` stop local listening while the remote shell stays alive. Reattach by ID with `workspace.terminals.attach(id)`. `remove()` terminates the remote shell. `terminals.list()` returns existing IDs. A terminal creation deadline applies to creation only; pass a signal or deadline to `events()` for listening. Start the listener before sending commands whose output you need.
 
-`workspace.logs()` yields initialization logs with raw bytes, timestamps, stream mode, and stage. `workspace.watch()` and `client.workspaces.watch()` yield create/update/delete events. Updates include the previous protobuf resource. Breaking any iterator cancels that subscription.
+`workspace.logs()` yields initialization `LogEntry` values with raw `data`, an `at` timestamp, the `stream` (`'stdout'` or `'stderr'`), and the `stage` (`'cloningRepo'`, `'pullingImage'`, `'buildingImage'` or `'task'`). `workspace.watch()` and `client.workspaces.watch()` yield create/update/delete events. Updates include the previous protobuf resource. Breaking any iterator cancels that subscription.
 
 Watch and log streams are not replayed or automatically reconnected: after a disconnection, reconcile with `refresh()`/`get()` and open a new subscription. Readiness waits use polling, so their correctness does not depend on receiving every watch event.
 
@@ -253,7 +269,7 @@ All timeouts are **milliseconds**. `timeoutMs: 0` means no deadline.
 | Unary resource calls                    | 30 seconds; configurable on the client       |
 | `run()` and readiness/build waits       | 5 minutes, including their constituent calls |
 | Commands and watch/log/terminal streams | No deadline; supply one for unattended work  |
-| File helpers                            | 30 seconds                                   |
+| File helpers                            | 5 minutes                                    |
 | Poll interval                           | 1 second                                     |
 
 Pass `{ signal, timeoutMs }` as the final request-options argument, or within exec/file options. Cancellation of a mutation cannot guarantee that the server did not apply it; fetch the resource to reconcile before retrying.

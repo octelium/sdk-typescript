@@ -29,6 +29,8 @@ export interface ExecOptions extends RequestOptions {
   maxCaptureBytes?: number;
   /** Maximum queued streaming output in bytes, default 8 MiB. Overflow cancels the command. */
   maxBufferBytes?: number;
+  /** How long a killed command may take to report its exit before the session ends with exit code -1. Default 10,000. */
+  killGraceMs?: number;
 }
 /** Completed command output. Truncation affects capture only; streamed chunks remain complete. */
 export class ExecResult {
@@ -69,6 +71,9 @@ export class ExecSession implements AsyncIterable<ExecOutput>, Disposable {
   private streaming = false;
   private discard = false;
   private killed = false;
+  private killExpired = false;
+  private killTimer?: ReturnType<typeof setTimeout>;
+  private readonly killGrace: number;
   private readonly interactive: boolean;
   private readonly capture: number;
   /** @internal Created by Workspace.execStream(). */
@@ -89,6 +94,12 @@ export class ExecSession implements AsyncIterable<ExecOutput>, Disposable {
       4096,
     );
     this.interactive = options.interactive ?? true;
+    this.killGrace = integer(
+      options.killGraceMs ?? 10_000,
+      "killGraceMs",
+      0,
+      2147483647,
+    );
     this.scope = engine.scope(options, 0);
     try {
       this.call = engine.workspace.exec(this.scope.rpc);
@@ -151,7 +162,10 @@ export class ExecSession implements AsyncIterable<ExecOutput>, Disposable {
     this.writes = pending;
     return pending;
   }
-  /** Terminate the remote process group; wait() reports the server's exit (usually -1). */
+  /**
+   * Terminate the remote process group; wait() reports the server's exit (usually -1). A command whose
+   * exit is not reported within killGraceMs ends the session on its own with exit code -1.
+   */
   async kill(): Promise<void> {
     if (this.finished) return;
     this.killed = true;
@@ -161,7 +175,14 @@ export class ExecSession implements AsyncIterable<ExecOutput>, Disposable {
       ),
     );
     this.writes = pending;
-    return pending;
+    await pending;
+    if (!this.finished && this.killTimer === undefined)
+      this.killTimer = setTimeout(() => {
+        this.killExpired = true;
+        this.scope.controller.abort(
+          new CordiumError("Command was killed", "CANCELLED"),
+        );
+      }, this.killGrace);
   }
   /** Await completion. If iteration has not started, streaming is disabled and output is drained. */
   async wait(): Promise<ExecResult> {
@@ -256,10 +277,27 @@ export class ExecSession implements AsyncIterable<ExecOutput>, Disposable {
       this.queue.end();
       return result;
     } catch (error) {
+      if (this.killExpired) {
+        const result = new ExecResult(
+          -1,
+          Buffer.concat(out, outBytes),
+          Buffer.concat(err, errBytes),
+          truncated,
+          true,
+        );
+        if (this.options.check) {
+          const failure = new ExecError(result);
+          this.queue.end(failure);
+          throw failure;
+        }
+        this.queue.end();
+        return result;
+      }
       const wrapped = this.scope.error(error);
       this.queue.end(wrapped);
       throw wrapped;
     } finally {
+      clearTimeout(this.killTimer);
       this.finished = true;
       this.scope.close();
     }

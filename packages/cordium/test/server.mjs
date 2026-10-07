@@ -1,5 +1,5 @@
 import { Server, ServerCredentials, credentials, status } from "@grpc/grpc-js";
-import { NodeGrpcTransport as GrpcTransport } from "../dist/transport.js";
+import { NodeGrpcTransport as GrpcTransport } from "@octelium/sdk";
 import * as p from "@octelium/apis/main/cordiumv1";
 import { MainService as AuthService } from "@octelium/apis/main/authv1";
 import { Cordium } from "../dist/index.js";

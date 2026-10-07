@@ -56,9 +56,9 @@ export type Image =
 export interface WorkspaceOptions {
   /** Optional human-readable label. */
   displayName?: string;
-  /** Template to inherit. Mutually exclusive with snapshot. */
+  /** Template to inherit. With a snapshot, it defaults to the snapshot's Template and must share its Space. */
   template?: Reference;
-  /** Snapshot to restore. Must belong to the same Space; cannot be ephemeral. */
+  /** Snapshot to restore. An ephemeral workspace restores it on every run. */
   snapshot?: Reference;
   /** Container image source. */
   image?: Image;
@@ -130,8 +130,6 @@ export function createWorkspaceSpec(
   options: WorkspaceOptions = {},
 ): p.Workspace_Spec {
   const spec = p.Workspace_Spec.create(options.spec);
-  if (options.template && options.snapshot)
-    invalid("template and snapshot are mutually exclusive");
   if (options.image !== undefined) {
     const image = options.image;
     if (typeof image === "string")
@@ -172,7 +170,7 @@ export function createWorkspaceSpec(
           registry: {
             url: nonempty(image.registry, "Image"),
             authentication: {
-              username: image.username,
+              username: nonempty(image.username, "Registry username"),
               password: {
                 type: {
                   oneofKind: "fromSecret",
@@ -214,12 +212,15 @@ export function createWorkspaceSpec(
     options.autoStop !== undefined
   )
     spec.runtime ??= p.Workspace_Spec_Runtime.create();
-  if (options.env) spec.runtime!.envVars = environment(options.env);
+  if (options.env) {
+    spec.runtime!.envVars = environment(options.env);
+    for (const env of spec.runtime!.envVars)
+      if (env.type.oneofKind === "value" && !env.type.value)
+        invalid(`Environment variable ${env.key} has an empty value`);
+  }
   if (options.vars) spec.vars = variables(options.vars);
   if (options.resources) spec.limit = resources(options.resources);
   if (options.ephemeral !== undefined) spec.isEphemeral = options.ephemeral;
-  if (options.snapshot && spec.isEphemeral)
-    invalid("Snapshot restores cannot be ephemeral");
   if (options.applications) {
     const names = new Set<string>();
     let defaults = 0;
@@ -249,8 +250,8 @@ export function createWorkspaceSpec(
         run: nonempty(task.command, "Task command"),
         type: task.on === "stop" ? 3 : task.on === "start" ? 2 : 1,
         envVars: Object.entries(task.env ?? {}).map(([key, value]) => ({
-          key,
-          value,
+          key: nonempty(key, "Task environment key"),
+          value: nonempty(value, `Task environment variable ${key}`),
         })),
         workingDir: task.cwd,
         isBackground: task.background,
