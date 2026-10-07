@@ -3,6 +3,12 @@ on:
   push:
     tags:
       - 'cordium/v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Package version to publish
+        required: true
+        type: string
 permissions:
   contents: read
   id-token: write
@@ -16,21 +22,27 @@ jobs:
           node-version: '24'
           registry-url: https://registry.npmjs.org
       - name: Verify package version
+        env:
+          RELEASE_VERSION: ${{ inputs.version || github.ref_name }}
         run: |
           node --input-type=module -e '
             import { readFileSync } from "node:fs";
             const { version } = JSON.parse(readFileSync("packages/cordium/package.json", "utf8"));
-            const expected = process.env.GITHUB_REF_NAME.replace(/^cordium\/v/, "");
+            const expected = process.env.RELEASE_VERSION.replace(/^cordium\/v/, "");
             if (version !== expected) throw new Error(`Package version ${version} does not match tag version ${expected}`);
           '
       - run: npm ci
       - run: npm run check
       - run: npm run check:package
       - name: Publish stable
-        if: "!contains(github.ref_name, '-pre.')"
+        if: "!contains(inputs.version || github.ref_name, '-pre.')"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         working-directory: packages/cordium
         run: npm publish --access public --provenance
       - name: Publish pre-release
-        if: contains(github.ref_name, '-pre.')
+        if: contains(inputs.version || github.ref_name, '-pre.')
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         working-directory: packages/cordium
         run: npm publish --access public --tag next --provenance
