@@ -21,14 +21,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+          registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
-        working-directory: packages/apis
-        run: npm install
+        run: npm ci
 
       - name: Build
-        working-directory: packages/apis
-        run: npx tsc
+        run: npm run build -w @octelium/apis
 
       - name: Publish stable
         if: "!contains(github.ref_name, '-pre.')"

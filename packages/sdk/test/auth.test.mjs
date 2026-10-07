@@ -478,8 +478,8 @@ test("a timed-out refresh is not replayed after an ambiguous result", async (t) 
   });
   const client = server.client();
   await client.accessToken();
-  client.authentication.timeoutMs = 50;
-  stale(client);
+  client.authentication.timeoutMs = 200;
+  stale(client, true);
   await assert.rejects(client.accessToken(), { code: "DEADLINE_EXCEEDED" });
   await assert.rejects(client.accessToken(), {
     code: "AUTHENTICATION_REQUIRED",

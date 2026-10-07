@@ -22,6 +22,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+          registry-url: https://registry.npmjs.org
 
       - name: Extract version from tag
         id: version
@@ -39,17 +40,23 @@ jobs:
           echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
           echo "Resolved version: $VERSION (is_release=$IS_RELEASE)"
 
-      - name: Update version in package.json
-        working-directory: packages/sdk
-        run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+      - name: Verify package version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const { version } = JSON.parse(readFileSync("packages/sdk/package.json", "utf8"));
+            if (version !== process.env.VERSION) throw new Error(`Package version ${version} does not match tag version ${process.env.VERSION}`);
+          '
 
       - name: Install dependencies
-        working-directory: packages/sdk
-        run: npm install
+        run: npm ci
 
-      - name: Build
-        working-directory: packages/sdk
-        run: npm run build
+      - name: Check packages
+        run: |
+          npm run check
+          npm run check:package
 
       - name: Publish stable
         if: steps.version.outputs.is_release == 'true'
