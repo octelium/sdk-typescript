@@ -154,22 +154,22 @@ export interface LogoutRequest {
 export interface LogoutResponse {
 }
 /**
- * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceBeginRequest
+ * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceRequest
  */
-export interface RegisterDeviceBeginRequest {
+export interface RegisterDeviceRequest {
     /**
-     * @generated from protobuf field: octelium.api.main.auth.v1.RegisterDeviceBeginRequest.Info info = 1
+     * @generated from protobuf field: octelium.api.main.auth.v1.RegisterDeviceRequest.Info info = 1
      */
-    info?: RegisterDeviceBeginRequest_Info;
+    info?: RegisterDeviceRequest_Info;
 }
 /**
- * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceBeginRequest.Info
+ * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceRequest.Info
  */
-export interface RegisterDeviceBeginRequest_Info {
+export interface RegisterDeviceRequest_Info {
     /**
-     * @generated from protobuf field: octelium.api.main.auth.v1.RegisterDeviceBeginRequest.Info.OSType osType = 1
+     * @generated from protobuf field: octelium.api.main.auth.v1.RegisterDeviceRequest.Info.OSType osType = 1
      */
-    osType: RegisterDeviceBeginRequest_Info_OSType;
+    osType: RegisterDeviceRequest_Info_OSType;
     /**
      * @generated from protobuf field: string hostname = 2
      */
@@ -188,9 +188,9 @@ export interface RegisterDeviceBeginRequest_Info {
     macAddresses: string[];
 }
 /**
- * @generated from protobuf enum octelium.api.main.auth.v1.RegisterDeviceBeginRequest.Info.OSType
+ * @generated from protobuf enum octelium.api.main.auth.v1.RegisterDeviceRequest.Info.OSType
  */
-export enum RegisterDeviceBeginRequest_Info_OSType {
+export enum RegisterDeviceRequest_Info_OSType {
     /**
      * @generated from protobuf enum value: OS_TYPE_UNKNOWN = 0;
      */
@@ -214,7 +214,25 @@ export enum RegisterDeviceBeginRequest_Info_OSType {
     /**
      * @generated from protobuf enum value: IOS = 5;
      */
-    IOS = 5
+    IOS = 5,
+    /**
+     * @generated from protobuf enum value: CHROMEOS = 6;
+     */
+    CHROMEOS = 6
+}
+/**
+ * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceResponse
+ */
+export interface RegisterDeviceResponse {
+}
+/**
+ * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceBeginRequest
+ */
+export interface RegisterDeviceBeginRequest {
+    /**
+     * @generated from protobuf field: octelium.api.main.auth.v1.RegisterDeviceRequest.Info info = 1
+     */
+    info?: RegisterDeviceRequest_Info;
 }
 /**
  * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceBeginResponse
@@ -224,59 +242,6 @@ export interface RegisterDeviceBeginResponse {
      * @generated from protobuf field: string uid = 1
      */
     uid: string;
-    /**
-     * @generated from protobuf field: repeated octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request requests = 2
-     */
-    requests: RegisterDeviceBeginResponse_Request[];
-}
-/**
- * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request
- */
-export interface RegisterDeviceBeginResponse_Request {
-    /**
-     * @generated from protobuf field: string uid = 1
-     */
-    uid: string;
-    /**
-     * @generated from protobuf oneof: type
-     */
-    type: {
-        oneofKind: "command";
-        /**
-         * @generated from protobuf field: octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request.Command command = 2
-         */
-        command: RegisterDeviceBeginResponse_Request_Command;
-    } | {
-        oneofKind: "file";
-        /**
-         * @generated from protobuf field: octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request.File file = 3
-         */
-        file: RegisterDeviceBeginResponse_Request_File;
-    } | {
-        oneofKind: undefined;
-    };
-}
-/**
- * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request.Command
- */
-export interface RegisterDeviceBeginResponse_Request_Command {
-    /**
-     * @generated from protobuf field: string command = 1
-     */
-    command: string;
-    /**
-     * @generated from protobuf field: repeated string args = 2
-     */
-    args: string[];
-}
-/**
- * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request.File
- */
-export interface RegisterDeviceBeginResponse_Request_File {
-    /**
-     * @generated from protobuf field: string path = 1
-     */
-    path: string;
 }
 /**
  * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceFinishRequest
@@ -286,55 +251,6 @@ export interface RegisterDeviceFinishRequest {
      * @generated from protobuf field: string uid = 1
      */
     uid: string;
-    /**
-     * @generated from protobuf field: repeated octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response responses = 2
-     */
-    responses: RegisterDeviceFinishRequest_Response[];
-}
-/**
- * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response
- */
-export interface RegisterDeviceFinishRequest_Response {
-    /**
-     * @generated from protobuf field: string uid = 1
-     */
-    uid: string;
-    /**
-     * @generated from protobuf oneof: type
-     */
-    type: {
-        oneofKind: "command";
-        /**
-         * @generated from protobuf field: octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response.Command command = 2
-         */
-        command: RegisterDeviceFinishRequest_Response_Command;
-    } | {
-        oneofKind: "file";
-        /**
-         * @generated from protobuf field: octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response.File file = 3
-         */
-        file: RegisterDeviceFinishRequest_Response_File;
-    } | {
-        oneofKind: undefined;
-    };
-}
-/**
- * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response.Command
- */
-export interface RegisterDeviceFinishRequest_Response_Command {
-    /**
-     * @generated from protobuf field: bytes output = 1
-     */
-    output: Uint8Array;
-}
-/**
- * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response.File
- */
-export interface RegisterDeviceFinishRequest_Response_File {
-    /**
-     * @generated from protobuf field: bytes output = 1
-     */
-    output: Uint8Array;
 }
 /**
  * @generated from protobuf message octelium.api.main.auth.v1.RegisterDeviceFinishResponse
@@ -989,6 +905,9 @@ export interface RunDeviceProbeBeginResponse {
     probes: DeviceProbe[];
 }
 /**
+ * DeviceProbe is one bounded collection operation. Its oneof selects the
+ * operation; the client returns exactly one result even when collection fails.
+ *
  * @generated from protobuf message octelium.api.main.auth.v1.DeviceProbe
  */
 export interface DeviceProbe {
@@ -1021,6 +940,12 @@ export interface DeviceProbe {
          * @generated from protobuf field: octelium.api.main.auth.v1.DeviceProbe.ReadRegistry readRegistry = 5
          */
         readRegistry: DeviceProbe_ReadRegistry;
+    } | {
+        oneofKind: "platformIdentifier";
+        /**
+         * @generated from protobuf field: octelium.api.main.auth.v1.DeviceProbe.PlatformIdentifier platformIdentifier = 6
+         */
+        platformIdentifier: DeviceProbe_PlatformIdentifier;
     } | {
         oneofKind: undefined;
     };
@@ -1073,6 +998,40 @@ export interface DeviceProbe_ReadRegistry {
     name: string;
 }
 /**
+ * @generated from protobuf message octelium.api.main.auth.v1.DeviceProbe.PlatformIdentifier
+ */
+export interface DeviceProbe_PlatformIdentifier {
+    /**
+     * @generated from protobuf field: octelium.api.main.auth.v1.DeviceProbe.PlatformIdentifier.Kind kind = 1
+     */
+    kind: DeviceProbe_PlatformIdentifier_Kind;
+}
+/**
+ * @generated from protobuf enum octelium.api.main.auth.v1.DeviceProbe.PlatformIdentifier.Kind
+ */
+export enum DeviceProbe_PlatformIdentifier_Kind {
+    /**
+     * @generated from protobuf enum value: KIND_UNKNOWN = 0;
+     */
+    KIND_UNKNOWN = 0,
+    /**
+     * @generated from protobuf enum value: HARDWARE_SERIAL = 1;
+     */
+    HARDWARE_SERIAL = 1,
+    /**
+     * @generated from protobuf enum value: HARDWARE_UUID = 2;
+     */
+    HARDWARE_UUID = 2,
+    /**
+     * @generated from protobuf enum value: OS_INSTALLATION_ID = 3;
+     */
+    OS_INSTALLATION_ID = 3,
+    /**
+     * @generated from protobuf enum value: MAC_ADDRESS = 4;
+     */
+    MAC_ADDRESS = 4
+}
+/**
  * @generated from protobuf message octelium.api.main.auth.v1.DeviceProbeResult
  */
 export interface DeviceProbeResult {
@@ -1081,25 +1040,95 @@ export interface DeviceProbeResult {
      */
     probeID: string;
     /**
-     * @generated from protobuf oneof: type
+     * @generated from protobuf field: octelium.api.main.auth.v1.DeviceProbeResult.Status status = 2
      */
-    type: {
-        oneofKind: "output";
+    status: DeviceProbeResult_Status;
+    /**
+     * @generated from protobuf oneof: value
+     */
+    value: {
+        oneofKind: "text";
         /**
-         * @generated from protobuf field: bytes output = 2
+         * @generated from protobuf field: string text = 3
          */
-        output: Uint8Array;
+        text: string;
     } | {
-        oneofKind: "error";
+        oneofKind: "data";
         /**
-         * @generated from protobuf field: string error = 3
+         * @generated from protobuf field: bytes data = 4
          */
-        error: string;
+        data: Uint8Array;
+    } | {
+        oneofKind: "list";
+        /**
+         * @generated from protobuf field: octelium.api.main.auth.v1.DeviceProbeResult.List list = 5
+         */
+        list: DeviceProbeResult_List;
     } | {
         oneofKind: undefined;
     };
+    /**
+     * @generated from protobuf field: bool isTruncated = 6
+     */
+    isTruncated: boolean;
+    /**
+     * @generated from protobuf field: int32 exitCode = 7
+     */
+    exitCode: number;
+    /**
+     * @generated from protobuf field: string detail = 8
+     */
+    detail: string;
 }
 /**
+ * @generated from protobuf message octelium.api.main.auth.v1.DeviceProbeResult.List
+ */
+export interface DeviceProbeResult_List {
+    /**
+     * @generated from protobuf field: repeated string items = 1
+     */
+    items: string[];
+}
+/**
+ * @generated from protobuf enum octelium.api.main.auth.v1.DeviceProbeResult.Status
+ */
+export enum DeviceProbeResult_Status {
+    /**
+     * @generated from protobuf enum value: STATUS_UNKNOWN = 0;
+     */
+    STATUS_UNKNOWN = 0,
+    /**
+     * @generated from protobuf enum value: OK = 1;
+     */
+    OK = 1,
+    /**
+     * @generated from protobuf enum value: NOT_FOUND = 2;
+     */
+    NOT_FOUND = 2,
+    /**
+     * @generated from protobuf enum value: UNSUPPORTED = 3;
+     */
+    UNSUPPORTED = 3,
+    /**
+     * @generated from protobuf enum value: PERMISSION_REQUIRED = 4;
+     */
+    PERMISSION_REQUIRED = 4,
+    /**
+     * @generated from protobuf enum value: TIMEOUT = 5;
+     */
+    TIMEOUT = 5,
+    /**
+     * @generated from protobuf enum value: FAILED = 6;
+     */
+    FAILED = 6
+}
+/**
+ * RunDeviceProbeFinishRequest submits a result for every issued probe. Unknown
+ * or duplicate probe IDs and incomplete submissions are rejected. The Cluster
+ * enforces attempt expiry using its own clock and validates result sizes.
+ * A provider adapter determines whether the evidence is sufficient for linking;
+ * a collection failure is reported as a result rather than omitted.
+ *
  * @generated from protobuf message octelium.api.main.auth.v1.RunDeviceProbeFinishRequest
  */
 export interface RunDeviceProbeFinishRequest {
@@ -1399,25 +1428,25 @@ class LogoutResponse$Type extends MessageType<LogoutResponse> {
  */
 export const LogoutResponse = new LogoutResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class RegisterDeviceBeginRequest$Type extends MessageType<RegisterDeviceBeginRequest> {
+class RegisterDeviceRequest$Type extends MessageType<RegisterDeviceRequest> {
     constructor() {
-        super("octelium.api.main.auth.v1.RegisterDeviceBeginRequest", [
-            { no: 1, name: "info", kind: "message", T: () => RegisterDeviceBeginRequest_Info }
+        super("octelium.api.main.auth.v1.RegisterDeviceRequest", [
+            { no: 1, name: "info", kind: "message", T: () => RegisterDeviceRequest_Info }
         ]);
     }
-    create(value?: PartialMessage<RegisterDeviceBeginRequest>): RegisterDeviceBeginRequest {
+    create(value?: PartialMessage<RegisterDeviceRequest>): RegisterDeviceRequest {
         const message = globalThis.Object.create((this.messagePrototype!));
         if (value !== undefined)
-            reflectionMergePartial<RegisterDeviceBeginRequest>(this, message, value);
+            reflectionMergePartial<RegisterDeviceRequest>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RegisterDeviceBeginRequest): RegisterDeviceBeginRequest {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RegisterDeviceRequest): RegisterDeviceRequest {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* octelium.api.main.auth.v1.RegisterDeviceBeginRequest.Info info */ 1:
-                    message.info = RegisterDeviceBeginRequest_Info.internalBinaryRead(reader, reader.uint32(), options, message.info);
+                case /* octelium.api.main.auth.v1.RegisterDeviceRequest.Info info */ 1:
+                    message.info = RegisterDeviceRequest_Info.internalBinaryRead(reader, reader.uint32(), options, message.info);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1430,10 +1459,10 @@ class RegisterDeviceBeginRequest$Type extends MessageType<RegisterDeviceBeginReq
         }
         return message;
     }
-    internalBinaryWrite(message: RegisterDeviceBeginRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* octelium.api.main.auth.v1.RegisterDeviceBeginRequest.Info info = 1; */
+    internalBinaryWrite(message: RegisterDeviceRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.auth.v1.RegisterDeviceRequest.Info info = 1; */
         if (message.info)
-            RegisterDeviceBeginRequest_Info.internalBinaryWrite(message.info, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+            RegisterDeviceRequest_Info.internalBinaryWrite(message.info, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1441,21 +1470,21 @@ class RegisterDeviceBeginRequest$Type extends MessageType<RegisterDeviceBeginReq
     }
 }
 /**
- * @generated MessageType for protobuf message octelium.api.main.auth.v1.RegisterDeviceBeginRequest
+ * @generated MessageType for protobuf message octelium.api.main.auth.v1.RegisterDeviceRequest
  */
-export const RegisterDeviceBeginRequest = new RegisterDeviceBeginRequest$Type();
+export const RegisterDeviceRequest = new RegisterDeviceRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class RegisterDeviceBeginRequest_Info$Type extends MessageType<RegisterDeviceBeginRequest_Info> {
+class RegisterDeviceRequest_Info$Type extends MessageType<RegisterDeviceRequest_Info> {
     constructor() {
-        super("octelium.api.main.auth.v1.RegisterDeviceBeginRequest.Info", [
-            { no: 1, name: "osType", kind: "enum", T: () => ["octelium.api.main.auth.v1.RegisterDeviceBeginRequest.Info.OSType", RegisterDeviceBeginRequest_Info_OSType] },
+        super("octelium.api.main.auth.v1.RegisterDeviceRequest.Info", [
+            { no: 1, name: "osType", kind: "enum", T: () => ["octelium.api.main.auth.v1.RegisterDeviceRequest.Info.OSType", RegisterDeviceRequest_Info_OSType] },
             { no: 2, name: "hostname", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "serialNumber", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "macAddresses", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
-    create(value?: PartialMessage<RegisterDeviceBeginRequest_Info>): RegisterDeviceBeginRequest_Info {
+    create(value?: PartialMessage<RegisterDeviceRequest_Info>): RegisterDeviceRequest_Info {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.osType = 0;
         message.hostname = "";
@@ -1463,15 +1492,15 @@ class RegisterDeviceBeginRequest_Info$Type extends MessageType<RegisterDeviceBeg
         message.serialNumber = "";
         message.macAddresses = [];
         if (value !== undefined)
-            reflectionMergePartial<RegisterDeviceBeginRequest_Info>(this, message, value);
+            reflectionMergePartial<RegisterDeviceRequest_Info>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RegisterDeviceBeginRequest_Info): RegisterDeviceBeginRequest_Info {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RegisterDeviceRequest_Info): RegisterDeviceRequest_Info {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* octelium.api.main.auth.v1.RegisterDeviceBeginRequest.Info.OSType osType */ 1:
+                case /* octelium.api.main.auth.v1.RegisterDeviceRequest.Info.OSType osType */ 1:
                     message.osType = reader.int32();
                     break;
                 case /* string hostname */ 2:
@@ -1497,8 +1526,8 @@ class RegisterDeviceBeginRequest_Info$Type extends MessageType<RegisterDeviceBeg
         }
         return message;
     }
-    internalBinaryWrite(message: RegisterDeviceBeginRequest_Info, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* octelium.api.main.auth.v1.RegisterDeviceBeginRequest.Info.OSType osType = 1; */
+    internalBinaryWrite(message: RegisterDeviceRequest_Info, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.auth.v1.RegisterDeviceRequest.Info.OSType osType = 1; */
         if (message.osType !== 0)
             writer.tag(1, WireType.Varint).int32(message.osType);
         /* string hostname = 2; */
@@ -1520,21 +1549,103 @@ class RegisterDeviceBeginRequest_Info$Type extends MessageType<RegisterDeviceBeg
     }
 }
 /**
- * @generated MessageType for protobuf message octelium.api.main.auth.v1.RegisterDeviceBeginRequest.Info
+ * @generated MessageType for protobuf message octelium.api.main.auth.v1.RegisterDeviceRequest.Info
  */
-export const RegisterDeviceBeginRequest_Info = new RegisterDeviceBeginRequest_Info$Type();
+export const RegisterDeviceRequest_Info = new RegisterDeviceRequest_Info$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RegisterDeviceResponse$Type extends MessageType<RegisterDeviceResponse> {
+    constructor() {
+        super("octelium.api.main.auth.v1.RegisterDeviceResponse", []);
+    }
+    create(value?: PartialMessage<RegisterDeviceResponse>): RegisterDeviceResponse {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<RegisterDeviceResponse>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RegisterDeviceResponse): RegisterDeviceResponse {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: RegisterDeviceResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.auth.v1.RegisterDeviceResponse
+ */
+export const RegisterDeviceResponse = new RegisterDeviceResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RegisterDeviceBeginRequest$Type extends MessageType<RegisterDeviceBeginRequest> {
+    constructor() {
+        super("octelium.api.main.auth.v1.RegisterDeviceBeginRequest", [
+            { no: 1, name: "info", kind: "message", T: () => RegisterDeviceRequest_Info }
+        ]);
+    }
+    create(value?: PartialMessage<RegisterDeviceBeginRequest>): RegisterDeviceBeginRequest {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<RegisterDeviceBeginRequest>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RegisterDeviceBeginRequest): RegisterDeviceBeginRequest {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.auth.v1.RegisterDeviceRequest.Info info */ 1:
+                    message.info = RegisterDeviceRequest_Info.internalBinaryRead(reader, reader.uint32(), options, message.info);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: RegisterDeviceBeginRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.auth.v1.RegisterDeviceRequest.Info info = 1; */
+        if (message.info)
+            RegisterDeviceRequest_Info.internalBinaryWrite(message.info, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.auth.v1.RegisterDeviceBeginRequest
+ */
+export const RegisterDeviceBeginRequest = new RegisterDeviceBeginRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RegisterDeviceBeginResponse$Type extends MessageType<RegisterDeviceBeginResponse> {
     constructor() {
         super("octelium.api.main.auth.v1.RegisterDeviceBeginResponse", [
-            { no: 1, name: "uid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "requests", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => RegisterDeviceBeginResponse_Request }
+            { no: 1, name: "uid", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<RegisterDeviceBeginResponse>): RegisterDeviceBeginResponse {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.uid = "";
-        message.requests = [];
         if (value !== undefined)
             reflectionMergePartial<RegisterDeviceBeginResponse>(this, message, value);
         return message;
@@ -1546,9 +1657,6 @@ class RegisterDeviceBeginResponse$Type extends MessageType<RegisterDeviceBeginRe
             switch (fieldNo) {
                 case /* string uid */ 1:
                     message.uid = reader.string();
-                    break;
-                case /* repeated octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request requests */ 2:
-                    message.requests.push(RegisterDeviceBeginResponse_Request.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1565,9 +1673,6 @@ class RegisterDeviceBeginResponse$Type extends MessageType<RegisterDeviceBeginRe
         /* string uid = 1; */
         if (message.uid !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.uid);
-        /* repeated octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request requests = 2; */
-        for (let i = 0; i < message.requests.length; i++)
-            RegisterDeviceBeginResponse_Request.internalBinaryWrite(message.requests[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1579,187 +1684,15 @@ class RegisterDeviceBeginResponse$Type extends MessageType<RegisterDeviceBeginRe
  */
 export const RegisterDeviceBeginResponse = new RegisterDeviceBeginResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class RegisterDeviceBeginResponse_Request$Type extends MessageType<RegisterDeviceBeginResponse_Request> {
-    constructor() {
-        super("octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request", [
-            { no: 1, name: "uid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "command", kind: "message", oneof: "type", T: () => RegisterDeviceBeginResponse_Request_Command },
-            { no: 3, name: "file", kind: "message", oneof: "type", T: () => RegisterDeviceBeginResponse_Request_File }
-        ]);
-    }
-    create(value?: PartialMessage<RegisterDeviceBeginResponse_Request>): RegisterDeviceBeginResponse_Request {
-        const message = globalThis.Object.create((this.messagePrototype!));
-        message.uid = "";
-        message.type = { oneofKind: undefined };
-        if (value !== undefined)
-            reflectionMergePartial<RegisterDeviceBeginResponse_Request>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RegisterDeviceBeginResponse_Request): RegisterDeviceBeginResponse_Request {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* string uid */ 1:
-                    message.uid = reader.string();
-                    break;
-                case /* octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request.Command command */ 2:
-                    message.type = {
-                        oneofKind: "command",
-                        command: RegisterDeviceBeginResponse_Request_Command.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).command)
-                    };
-                    break;
-                case /* octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request.File file */ 3:
-                    message.type = {
-                        oneofKind: "file",
-                        file: RegisterDeviceBeginResponse_Request_File.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).file)
-                    };
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: RegisterDeviceBeginResponse_Request, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string uid = 1; */
-        if (message.uid !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.uid);
-        /* octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request.Command command = 2; */
-        if (message.type.oneofKind === "command")
-            RegisterDeviceBeginResponse_Request_Command.internalBinaryWrite(message.type.command, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request.File file = 3; */
-        if (message.type.oneofKind === "file")
-            RegisterDeviceBeginResponse_Request_File.internalBinaryWrite(message.type.file, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request
- */
-export const RegisterDeviceBeginResponse_Request = new RegisterDeviceBeginResponse_Request$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class RegisterDeviceBeginResponse_Request_Command$Type extends MessageType<RegisterDeviceBeginResponse_Request_Command> {
-    constructor() {
-        super("octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request.Command", [
-            { no: 1, name: "command", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "args", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-    create(value?: PartialMessage<RegisterDeviceBeginResponse_Request_Command>): RegisterDeviceBeginResponse_Request_Command {
-        const message = globalThis.Object.create((this.messagePrototype!));
-        message.command = "";
-        message.args = [];
-        if (value !== undefined)
-            reflectionMergePartial<RegisterDeviceBeginResponse_Request_Command>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RegisterDeviceBeginResponse_Request_Command): RegisterDeviceBeginResponse_Request_Command {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* string command */ 1:
-                    message.command = reader.string();
-                    break;
-                case /* repeated string args */ 2:
-                    message.args.push(reader.string());
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: RegisterDeviceBeginResponse_Request_Command, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string command = 1; */
-        if (message.command !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.command);
-        /* repeated string args = 2; */
-        for (let i = 0; i < message.args.length; i++)
-            writer.tag(2, WireType.LengthDelimited).string(message.args[i]);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request.Command
- */
-export const RegisterDeviceBeginResponse_Request_Command = new RegisterDeviceBeginResponse_Request_Command$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class RegisterDeviceBeginResponse_Request_File$Type extends MessageType<RegisterDeviceBeginResponse_Request_File> {
-    constructor() {
-        super("octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request.File", [
-            { no: 1, name: "path", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-    create(value?: PartialMessage<RegisterDeviceBeginResponse_Request_File>): RegisterDeviceBeginResponse_Request_File {
-        const message = globalThis.Object.create((this.messagePrototype!));
-        message.path = "";
-        if (value !== undefined)
-            reflectionMergePartial<RegisterDeviceBeginResponse_Request_File>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RegisterDeviceBeginResponse_Request_File): RegisterDeviceBeginResponse_Request_File {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* string path */ 1:
-                    message.path = reader.string();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: RegisterDeviceBeginResponse_Request_File, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string path = 1; */
-        if (message.path !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.path);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message octelium.api.main.auth.v1.RegisterDeviceBeginResponse.Request.File
- */
-export const RegisterDeviceBeginResponse_Request_File = new RegisterDeviceBeginResponse_Request_File$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class RegisterDeviceFinishRequest$Type extends MessageType<RegisterDeviceFinishRequest> {
     constructor() {
         super("octelium.api.main.auth.v1.RegisterDeviceFinishRequest", [
-            { no: 1, name: "uid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "responses", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => RegisterDeviceFinishRequest_Response }
+            { no: 1, name: "uid", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<RegisterDeviceFinishRequest>): RegisterDeviceFinishRequest {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.uid = "";
-        message.responses = [];
         if (value !== undefined)
             reflectionMergePartial<RegisterDeviceFinishRequest>(this, message, value);
         return message;
@@ -1771,9 +1704,6 @@ class RegisterDeviceFinishRequest$Type extends MessageType<RegisterDeviceFinishR
             switch (fieldNo) {
                 case /* string uid */ 1:
                     message.uid = reader.string();
-                    break;
-                case /* repeated octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response responses */ 2:
-                    message.responses.push(RegisterDeviceFinishRequest_Response.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1790,9 +1720,6 @@ class RegisterDeviceFinishRequest$Type extends MessageType<RegisterDeviceFinishR
         /* string uid = 1; */
         if (message.uid !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.uid);
-        /* repeated octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response responses = 2; */
-        for (let i = 0; i < message.responses.length; i++)
-            RegisterDeviceFinishRequest_Response.internalBinaryWrite(message.responses[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1803,168 +1730,6 @@ class RegisterDeviceFinishRequest$Type extends MessageType<RegisterDeviceFinishR
  * @generated MessageType for protobuf message octelium.api.main.auth.v1.RegisterDeviceFinishRequest
  */
 export const RegisterDeviceFinishRequest = new RegisterDeviceFinishRequest$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class RegisterDeviceFinishRequest_Response$Type extends MessageType<RegisterDeviceFinishRequest_Response> {
-    constructor() {
-        super("octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response", [
-            { no: 1, name: "uid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "command", kind: "message", oneof: "type", T: () => RegisterDeviceFinishRequest_Response_Command },
-            { no: 3, name: "file", kind: "message", oneof: "type", T: () => RegisterDeviceFinishRequest_Response_File }
-        ]);
-    }
-    create(value?: PartialMessage<RegisterDeviceFinishRequest_Response>): RegisterDeviceFinishRequest_Response {
-        const message = globalThis.Object.create((this.messagePrototype!));
-        message.uid = "";
-        message.type = { oneofKind: undefined };
-        if (value !== undefined)
-            reflectionMergePartial<RegisterDeviceFinishRequest_Response>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RegisterDeviceFinishRequest_Response): RegisterDeviceFinishRequest_Response {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* string uid */ 1:
-                    message.uid = reader.string();
-                    break;
-                case /* octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response.Command command */ 2:
-                    message.type = {
-                        oneofKind: "command",
-                        command: RegisterDeviceFinishRequest_Response_Command.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).command)
-                    };
-                    break;
-                case /* octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response.File file */ 3:
-                    message.type = {
-                        oneofKind: "file",
-                        file: RegisterDeviceFinishRequest_Response_File.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).file)
-                    };
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: RegisterDeviceFinishRequest_Response, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string uid = 1; */
-        if (message.uid !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.uid);
-        /* octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response.Command command = 2; */
-        if (message.type.oneofKind === "command")
-            RegisterDeviceFinishRequest_Response_Command.internalBinaryWrite(message.type.command, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response.File file = 3; */
-        if (message.type.oneofKind === "file")
-            RegisterDeviceFinishRequest_Response_File.internalBinaryWrite(message.type.file, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response
- */
-export const RegisterDeviceFinishRequest_Response = new RegisterDeviceFinishRequest_Response$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class RegisterDeviceFinishRequest_Response_Command$Type extends MessageType<RegisterDeviceFinishRequest_Response_Command> {
-    constructor() {
-        super("octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response.Command", [
-            { no: 1, name: "output", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
-        ]);
-    }
-    create(value?: PartialMessage<RegisterDeviceFinishRequest_Response_Command>): RegisterDeviceFinishRequest_Response_Command {
-        const message = globalThis.Object.create((this.messagePrototype!));
-        message.output = new Uint8Array(0);
-        if (value !== undefined)
-            reflectionMergePartial<RegisterDeviceFinishRequest_Response_Command>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RegisterDeviceFinishRequest_Response_Command): RegisterDeviceFinishRequest_Response_Command {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* bytes output */ 1:
-                    message.output = reader.bytes();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: RegisterDeviceFinishRequest_Response_Command, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* bytes output = 1; */
-        if (message.output.length)
-            writer.tag(1, WireType.LengthDelimited).bytes(message.output);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response.Command
- */
-export const RegisterDeviceFinishRequest_Response_Command = new RegisterDeviceFinishRequest_Response_Command$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class RegisterDeviceFinishRequest_Response_File$Type extends MessageType<RegisterDeviceFinishRequest_Response_File> {
-    constructor() {
-        super("octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response.File", [
-            { no: 1, name: "output", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
-        ]);
-    }
-    create(value?: PartialMessage<RegisterDeviceFinishRequest_Response_File>): RegisterDeviceFinishRequest_Response_File {
-        const message = globalThis.Object.create((this.messagePrototype!));
-        message.output = new Uint8Array(0);
-        if (value !== undefined)
-            reflectionMergePartial<RegisterDeviceFinishRequest_Response_File>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RegisterDeviceFinishRequest_Response_File): RegisterDeviceFinishRequest_Response_File {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* bytes output */ 1:
-                    message.output = reader.bytes();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: RegisterDeviceFinishRequest_Response_File, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* bytes output = 1; */
-        if (message.output.length)
-            writer.tag(1, WireType.LengthDelimited).bytes(message.output);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message octelium.api.main.auth.v1.RegisterDeviceFinishRequest.Response.File
- */
-export const RegisterDeviceFinishRequest_Response_File = new RegisterDeviceFinishRequest_Response_File$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RegisterDeviceFinishResponse$Type extends MessageType<RegisterDeviceFinishResponse> {
     constructor() {
@@ -4285,7 +4050,8 @@ class DeviceProbe$Type extends MessageType<DeviceProbe> {
             { no: 2, name: "requireElevation", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 3, name: "runCommand", kind: "message", oneof: "type", T: () => DeviceProbe_RunCommand },
             { no: 4, name: "readFile", kind: "message", oneof: "type", T: () => DeviceProbe_ReadFile },
-            { no: 5, name: "readRegistry", kind: "message", oneof: "type", T: () => DeviceProbe_ReadRegistry }
+            { no: 5, name: "readRegistry", kind: "message", oneof: "type", T: () => DeviceProbe_ReadRegistry },
+            { no: 6, name: "platformIdentifier", kind: "message", oneof: "type", T: () => DeviceProbe_PlatformIdentifier }
         ]);
     }
     create(value?: PartialMessage<DeviceProbe>): DeviceProbe {
@@ -4326,6 +4092,12 @@ class DeviceProbe$Type extends MessageType<DeviceProbe> {
                         readRegistry: DeviceProbe_ReadRegistry.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).readRegistry)
                     };
                     break;
+                case /* octelium.api.main.auth.v1.DeviceProbe.PlatformIdentifier platformIdentifier */ 6:
+                    message.type = {
+                        oneofKind: "platformIdentifier",
+                        platformIdentifier: DeviceProbe_PlatformIdentifier.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).platformIdentifier)
+                    };
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -4353,6 +4125,9 @@ class DeviceProbe$Type extends MessageType<DeviceProbe> {
         /* octelium.api.main.auth.v1.DeviceProbe.ReadRegistry readRegistry = 5; */
         if (message.type.oneofKind === "readRegistry")
             DeviceProbe_ReadRegistry.internalBinaryWrite(message.type.readRegistry, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* octelium.api.main.auth.v1.DeviceProbe.PlatformIdentifier platformIdentifier = 6; */
+        if (message.type.oneofKind === "platformIdentifier")
+            DeviceProbe_PlatformIdentifier.internalBinaryWrite(message.type.platformIdentifier, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -4545,18 +4320,74 @@ class DeviceProbe_ReadRegistry$Type extends MessageType<DeviceProbe_ReadRegistry
  */
 export const DeviceProbe_ReadRegistry = new DeviceProbe_ReadRegistry$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class DeviceProbe_PlatformIdentifier$Type extends MessageType<DeviceProbe_PlatformIdentifier> {
+    constructor() {
+        super("octelium.api.main.auth.v1.DeviceProbe.PlatformIdentifier", [
+            { no: 1, name: "kind", kind: "enum", T: () => ["octelium.api.main.auth.v1.DeviceProbe.PlatformIdentifier.Kind", DeviceProbe_PlatformIdentifier_Kind] }
+        ]);
+    }
+    create(value?: PartialMessage<DeviceProbe_PlatformIdentifier>): DeviceProbe_PlatformIdentifier {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.kind = 0;
+        if (value !== undefined)
+            reflectionMergePartial<DeviceProbe_PlatformIdentifier>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: DeviceProbe_PlatformIdentifier): DeviceProbe_PlatformIdentifier {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* octelium.api.main.auth.v1.DeviceProbe.PlatformIdentifier.Kind kind */ 1:
+                    message.kind = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: DeviceProbe_PlatformIdentifier, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* octelium.api.main.auth.v1.DeviceProbe.PlatformIdentifier.Kind kind = 1; */
+        if (message.kind !== 0)
+            writer.tag(1, WireType.Varint).int32(message.kind);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.auth.v1.DeviceProbe.PlatformIdentifier
+ */
+export const DeviceProbe_PlatformIdentifier = new DeviceProbe_PlatformIdentifier$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class DeviceProbeResult$Type extends MessageType<DeviceProbeResult> {
     constructor() {
         super("octelium.api.main.auth.v1.DeviceProbeResult", [
             { no: 1, name: "probeID", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "output", kind: "scalar", oneof: "type", T: 12 /*ScalarType.BYTES*/ },
-            { no: 3, name: "error", kind: "scalar", oneof: "type", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "status", kind: "enum", T: () => ["octelium.api.main.auth.v1.DeviceProbeResult.Status", DeviceProbeResult_Status] },
+            { no: 3, name: "text", kind: "scalar", oneof: "value", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "data", kind: "scalar", oneof: "value", T: 12 /*ScalarType.BYTES*/ },
+            { no: 5, name: "list", kind: "message", oneof: "value", T: () => DeviceProbeResult_List },
+            { no: 6, name: "isTruncated", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 7, name: "exitCode", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 8, name: "detail", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<DeviceProbeResult>): DeviceProbeResult {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.probeID = "";
-        message.type = { oneofKind: undefined };
+        message.status = 0;
+        message.value = { oneofKind: undefined };
+        message.isTruncated = false;
+        message.exitCode = 0;
+        message.detail = "";
         if (value !== undefined)
             reflectionMergePartial<DeviceProbeResult>(this, message, value);
         return message;
@@ -4569,17 +4400,35 @@ class DeviceProbeResult$Type extends MessageType<DeviceProbeResult> {
                 case /* string probeID */ 1:
                     message.probeID = reader.string();
                     break;
-                case /* bytes output */ 2:
-                    message.type = {
-                        oneofKind: "output",
-                        output: reader.bytes()
+                case /* octelium.api.main.auth.v1.DeviceProbeResult.Status status */ 2:
+                    message.status = reader.int32();
+                    break;
+                case /* string text */ 3:
+                    message.value = {
+                        oneofKind: "text",
+                        text: reader.string()
                     };
                     break;
-                case /* string error */ 3:
-                    message.type = {
-                        oneofKind: "error",
-                        error: reader.string()
+                case /* bytes data */ 4:
+                    message.value = {
+                        oneofKind: "data",
+                        data: reader.bytes()
                     };
+                    break;
+                case /* octelium.api.main.auth.v1.DeviceProbeResult.List list */ 5:
+                    message.value = {
+                        oneofKind: "list",
+                        list: DeviceProbeResult_List.internalBinaryRead(reader, reader.uint32(), options, (message.value as any).list)
+                    };
+                    break;
+                case /* bool isTruncated */ 6:
+                    message.isTruncated = reader.bool();
+                    break;
+                case /* int32 exitCode */ 7:
+                    message.exitCode = reader.int32();
+                    break;
+                case /* string detail */ 8:
+                    message.detail = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -4596,12 +4445,27 @@ class DeviceProbeResult$Type extends MessageType<DeviceProbeResult> {
         /* string probeID = 1; */
         if (message.probeID !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.probeID);
-        /* bytes output = 2; */
-        if (message.type.oneofKind === "output")
-            writer.tag(2, WireType.LengthDelimited).bytes(message.type.output);
-        /* string error = 3; */
-        if (message.type.oneofKind === "error")
-            writer.tag(3, WireType.LengthDelimited).string(message.type.error);
+        /* octelium.api.main.auth.v1.DeviceProbeResult.Status status = 2; */
+        if (message.status !== 0)
+            writer.tag(2, WireType.Varint).int32(message.status);
+        /* string text = 3; */
+        if (message.value.oneofKind === "text")
+            writer.tag(3, WireType.LengthDelimited).string(message.value.text);
+        /* bytes data = 4; */
+        if (message.value.oneofKind === "data")
+            writer.tag(4, WireType.LengthDelimited).bytes(message.value.data);
+        /* octelium.api.main.auth.v1.DeviceProbeResult.List list = 5; */
+        if (message.value.oneofKind === "list")
+            DeviceProbeResult_List.internalBinaryWrite(message.value.list, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* bool isTruncated = 6; */
+        if (message.isTruncated !== false)
+            writer.tag(6, WireType.Varint).bool(message.isTruncated);
+        /* int32 exitCode = 7; */
+        if (message.exitCode !== 0)
+            writer.tag(7, WireType.Varint).int32(message.exitCode);
+        /* string detail = 8; */
+        if (message.detail !== "")
+            writer.tag(8, WireType.LengthDelimited).string(message.detail);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -4612,6 +4476,53 @@ class DeviceProbeResult$Type extends MessageType<DeviceProbeResult> {
  * @generated MessageType for protobuf message octelium.api.main.auth.v1.DeviceProbeResult
  */
 export const DeviceProbeResult = new DeviceProbeResult$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DeviceProbeResult_List$Type extends MessageType<DeviceProbeResult_List> {
+    constructor() {
+        super("octelium.api.main.auth.v1.DeviceProbeResult.List", [
+            { no: 1, name: "items", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<DeviceProbeResult_List>): DeviceProbeResult_List {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.items = [];
+        if (value !== undefined)
+            reflectionMergePartial<DeviceProbeResult_List>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: DeviceProbeResult_List): DeviceProbeResult_List {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated string items */ 1:
+                    message.items.push(reader.string());
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: DeviceProbeResult_List, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated string items = 1; */
+        for (let i = 0; i < message.items.length; i++)
+            writer.tag(1, WireType.LengthDelimited).string(message.items[i]);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message octelium.api.main.auth.v1.DeviceProbeResult.List
+ */
+export const DeviceProbeResult_List = new DeviceProbeResult_List$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RunDeviceProbeFinishRequest$Type extends MessageType<RunDeviceProbeFinishRequest> {
     constructor() {
@@ -4714,6 +4625,7 @@ export const MainService = new ServiceType("octelium.api.main.auth.v1.MainServic
     { name: "AuthenticateWithRefreshToken", options: {}, I: AuthenticateWithRefreshTokenRequest, O: SessionToken },
     { name: "AuthenticateWithAuthenticator", options: {}, I: AuthenticateWithAuthenticatorRequest, O: SessionToken },
     { name: "Logout", options: {}, I: LogoutRequest, O: LogoutResponse },
+    { name: "RegisterDevice", options: {}, I: RegisterDeviceRequest, O: RegisterDeviceResponse },
     { name: "RegisterDeviceBegin", options: {}, I: RegisterDeviceBeginRequest, O: RegisterDeviceBeginResponse },
     { name: "RegisterDeviceFinish", options: {}, I: RegisterDeviceFinishRequest, O: RegisterDeviceFinishResponse },
     { name: "GetAuthenticator", options: {}, I: GetOptions, O: Authenticator },

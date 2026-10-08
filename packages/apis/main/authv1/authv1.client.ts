@@ -45,6 +45,8 @@ import type { RegisterDeviceFinishResponse } from "./authv1.js";
 import type { RegisterDeviceFinishRequest } from "./authv1.js";
 import type { RegisterDeviceBeginResponse } from "./authv1.js";
 import type { RegisterDeviceBeginRequest } from "./authv1.js";
+import type { RegisterDeviceResponse } from "./authv1.js";
+import type { RegisterDeviceRequest } from "./authv1.js";
 import type { LogoutResponse } from "./authv1.js";
 import type { LogoutRequest } from "./authv1.js";
 import type { AuthenticateWithAuthenticatorRequest } from "./authv1.js";
@@ -80,6 +82,14 @@ export interface IMainServiceClient {
      */
     logout(input: LogoutRequest, options?: RpcOptions): UnaryCall<LogoutRequest, LogoutResponse>;
     /**
+     * @generated from protobuf rpc: RegisterDevice
+     */
+    registerDevice(input: RegisterDeviceRequest, options?: RpcOptions): UnaryCall<RegisterDeviceRequest, RegisterDeviceResponse>;
+    /**
+     * RegisterDeviceBegin and RegisterDeviceFinish are the legacy two-step
+     * registration that is only kept for the clients that predate
+     * RegisterDevice.
+     *
      * @generated from protobuf rpc: RegisterDeviceBegin
      */
     registerDeviceBegin(input: RegisterDeviceBeginRequest, options?: RpcOptions): UnaryCall<RegisterDeviceBeginRequest, RegisterDeviceBeginResponse>;
@@ -185,108 +195,119 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<LogoutRequest, LogoutResponse>("unary", this._transport, method, opt, input);
     }
     /**
+     * @generated from protobuf rpc: RegisterDevice
+     */
+    registerDevice(input: RegisterDeviceRequest, options?: RpcOptions): UnaryCall<RegisterDeviceRequest, RegisterDeviceResponse> {
+        const method = this.methods[5], opt = this._transport.mergeOptions(options);
+        return stackIntercept<RegisterDeviceRequest, RegisterDeviceResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * RegisterDeviceBegin and RegisterDeviceFinish are the legacy two-step
+     * registration that is only kept for the clients that predate
+     * RegisterDevice.
+     *
      * @generated from protobuf rpc: RegisterDeviceBegin
      */
     registerDeviceBegin(input: RegisterDeviceBeginRequest, options?: RpcOptions): UnaryCall<RegisterDeviceBeginRequest, RegisterDeviceBeginResponse> {
-        const method = this.methods[5], opt = this._transport.mergeOptions(options);
+        const method = this.methods[6], opt = this._transport.mergeOptions(options);
         return stackIntercept<RegisterDeviceBeginRequest, RegisterDeviceBeginResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: RegisterDeviceFinish
      */
     registerDeviceFinish(input: RegisterDeviceFinishRequest, options?: RpcOptions): UnaryCall<RegisterDeviceFinishRequest, RegisterDeviceFinishResponse> {
-        const method = this.methods[6], opt = this._transport.mergeOptions(options);
+        const method = this.methods[7], opt = this._transport.mergeOptions(options);
         return stackIntercept<RegisterDeviceFinishRequest, RegisterDeviceFinishResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: GetAuthenticator
      */
     getAuthenticator(input: GetOptions, options?: RpcOptions): UnaryCall<GetOptions, Authenticator> {
-        const method = this.methods[7], opt = this._transport.mergeOptions(options);
+        const method = this.methods[8], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetOptions, Authenticator>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: CreateAuthenticator
      */
     createAuthenticator(input: CreateAuthenticatorRequest, options?: RpcOptions): UnaryCall<CreateAuthenticatorRequest, Authenticator> {
-        const method = this.methods[8], opt = this._transport.mergeOptions(options);
+        const method = this.methods[9], opt = this._transport.mergeOptions(options);
         return stackIntercept<CreateAuthenticatorRequest, Authenticator>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: UpdateAuthenticator
      */
     updateAuthenticator(input: Authenticator, options?: RpcOptions): UnaryCall<Authenticator, Authenticator> {
-        const method = this.methods[9], opt = this._transport.mergeOptions(options);
+        const method = this.methods[10], opt = this._transport.mergeOptions(options);
         return stackIntercept<Authenticator, Authenticator>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: ListAuthenticator
      */
     listAuthenticator(input: ListAuthenticatorOptions, options?: RpcOptions): UnaryCall<ListAuthenticatorOptions, AuthenticatorList> {
-        const method = this.methods[10], opt = this._transport.mergeOptions(options);
+        const method = this.methods[11], opt = this._transport.mergeOptions(options);
         return stackIntercept<ListAuthenticatorOptions, AuthenticatorList>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: DeleteAuthenticator
      */
     deleteAuthenticator(input: DeleteOptions, options?: RpcOptions): UnaryCall<DeleteOptions, OperationResult> {
-        const method = this.methods[11], opt = this._transport.mergeOptions(options);
+        const method = this.methods[12], opt = this._transport.mergeOptions(options);
         return stackIntercept<DeleteOptions, OperationResult>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: RegisterAuthenticatorBegin
      */
     registerAuthenticatorBegin(input: RegisterAuthenticatorBeginRequest, options?: RpcOptions): UnaryCall<RegisterAuthenticatorBeginRequest, RegisterAuthenticatorBeginResponse> {
-        const method = this.methods[12], opt = this._transport.mergeOptions(options);
+        const method = this.methods[13], opt = this._transport.mergeOptions(options);
         return stackIntercept<RegisterAuthenticatorBeginRequest, RegisterAuthenticatorBeginResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: RegisterAuthenticatorFinish
      */
     registerAuthenticatorFinish(input: RegisterAuthenticatorFinishRequest, options?: RpcOptions): UnaryCall<RegisterAuthenticatorFinishRequest, RegisterAuthenticatorFinishResponse> {
-        const method = this.methods[13], opt = this._transport.mergeOptions(options);
+        const method = this.methods[14], opt = this._transport.mergeOptions(options);
         return stackIntercept<RegisterAuthenticatorFinishRequest, RegisterAuthenticatorFinishResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: AuthenticateAuthenticatorBegin
      */
     authenticateAuthenticatorBegin(input: AuthenticateAuthenticatorBeginRequest, options?: RpcOptions): UnaryCall<AuthenticateAuthenticatorBeginRequest, AuthenticateAuthenticatorBeginResponse> {
-        const method = this.methods[14], opt = this._transport.mergeOptions(options);
+        const method = this.methods[15], opt = this._transport.mergeOptions(options);
         return stackIntercept<AuthenticateAuthenticatorBeginRequest, AuthenticateAuthenticatorBeginResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: GetAvailableAuthenticator
      */
     getAvailableAuthenticator(input: GetAvailableAuthenticatorRequest, options?: RpcOptions): UnaryCall<GetAvailableAuthenticatorRequest, GetAvailableAuthenticatorResponse> {
-        const method = this.methods[15], opt = this._transport.mergeOptions(options);
+        const method = this.methods[16], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetAvailableAuthenticatorRequest, GetAvailableAuthenticatorResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: AuthenticateWithPasskeyBegin
      */
     authenticateWithPasskeyBegin(input: AuthenticateWithPasskeyBeginRequest, options?: RpcOptions): UnaryCall<AuthenticateWithPasskeyBeginRequest, AuthenticateWithPasskeyBeginResponse> {
-        const method = this.methods[16], opt = this._transport.mergeOptions(options);
+        const method = this.methods[17], opt = this._transport.mergeOptions(options);
         return stackIntercept<AuthenticateWithPasskeyBeginRequest, AuthenticateWithPasskeyBeginResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: AuthenticateWithPasskey
      */
     authenticateWithPasskey(input: AuthenticateWithPasskeyRequest, options?: RpcOptions): UnaryCall<AuthenticateWithPasskeyRequest, SessionToken> {
-        const method = this.methods[17], opt = this._transport.mergeOptions(options);
+        const method = this.methods[18], opt = this._transport.mergeOptions(options);
         return stackIntercept<AuthenticateWithPasskeyRequest, SessionToken>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: RunDeviceProbeBegin
      */
     runDeviceProbeBegin(input: RunDeviceProbeBeginRequest, options?: RpcOptions): UnaryCall<RunDeviceProbeBeginRequest, RunDeviceProbeBeginResponse> {
-        const method = this.methods[18], opt = this._transport.mergeOptions(options);
+        const method = this.methods[19], opt = this._transport.mergeOptions(options);
         return stackIntercept<RunDeviceProbeBeginRequest, RunDeviceProbeBeginResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: RunDeviceProbeFinish
      */
     runDeviceProbeFinish(input: RunDeviceProbeFinishRequest, options?: RpcOptions): UnaryCall<RunDeviceProbeFinishRequest, RunDeviceProbeFinishResponse> {
-        const method = this.methods[19], opt = this._transport.mergeOptions(options);
+        const method = this.methods[20], opt = this._transport.mergeOptions(options);
         return stackIntercept<RunDeviceProbeFinishRequest, RunDeviceProbeFinishResponse>("unary", this._transport, method, opt, input);
     }
 }

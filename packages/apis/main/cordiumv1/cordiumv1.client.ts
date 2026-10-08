@@ -46,6 +46,7 @@ import type { WatchWorkspaceRequest } from "./cordiumv1.js";
 import type { ServerStreamingCall } from "@protobuf-ts/runtime-rpc";
 import type { RegionList } from "./cordiumv1.js";
 import type { ListRegionOptions } from "./cordiumv1.js";
+import type { InitializeAgentRequest } from "./cordiumv1.js";
 import type { UserConfig } from "./cordiumv1.js";
 import type { GetUserConfigRequest } from "./cordiumv1.js";
 import type { UserSecretList } from "./cordiumv1.js";
@@ -487,6 +488,21 @@ export interface IMainServiceClient {
      * @generated from protobuf rpc: UpdateUserConfig
      */
     updateUserConfig(input: UserConfig, options?: RpcOptions): UnaryCall<UserConfig, UserConfig>;
+    /**
+     * InitializeAgent provisions the Cordium AI agent of the calling User upon
+     * the first call and reconciles it upon the subsequent ones. The agent runs
+     * inside a Workspace of the User's personal `octelium` Space (i.e.
+     * `octelium.<USER>`), a system Space that hosts the Workspaces of all the
+     * Octelium-managed AI agents of the User and which is created on demand.
+     * The Space, the agent's Template and the agent's Workspace are created if
+     * they do not exist yet and the agent's Template is updated to match the
+     * agent configuration of the ClusterConfig. The agent's Workspace, which is
+     * created in the STOPPED state, is referenced by the `agentWorkspaceRef` of
+     * the returned UserConfig's status.
+     *
+     * @generated from protobuf rpc: InitializeAgent
+     */
+    initializeAgent(input: InitializeAgentRequest, options?: RpcOptions): UnaryCall<InitializeAgentRequest, UserConfig>;
     /**
      * ListRegion lists the Regions of the Cluster that are enabled to host
      * Workspaces.
@@ -1062,13 +1078,31 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
         return stackIntercept<UserConfig, UserConfig>("unary", this._transport, method, opt, input);
     }
     /**
+     * InitializeAgent provisions the Cordium AI agent of the calling User upon
+     * the first call and reconciles it upon the subsequent ones. The agent runs
+     * inside a Workspace of the User's personal `octelium` Space (i.e.
+     * `octelium.<USER>`), a system Space that hosts the Workspaces of all the
+     * Octelium-managed AI agents of the User and which is created on demand.
+     * The Space, the agent's Template and the agent's Workspace are created if
+     * they do not exist yet and the agent's Template is updated to match the
+     * agent configuration of the ClusterConfig. The agent's Workspace, which is
+     * created in the STOPPED state, is referenced by the `agentWorkspaceRef` of
+     * the returned UserConfig's status.
+     *
+     * @generated from protobuf rpc: InitializeAgent
+     */
+    initializeAgent(input: InitializeAgentRequest, options?: RpcOptions): UnaryCall<InitializeAgentRequest, UserConfig> {
+        const method = this.methods[53], opt = this._transport.mergeOptions(options);
+        return stackIntercept<InitializeAgentRequest, UserConfig>("unary", this._transport, method, opt, input);
+    }
+    /**
      * ListRegion lists the Regions of the Cluster that are enabled to host
      * Workspaces.
      *
      * @generated from protobuf rpc: ListRegion
      */
     listRegion(input: ListRegionOptions, options?: RpcOptions): UnaryCall<ListRegionOptions, RegionList> {
-        const method = this.methods[53], opt = this._transport.mergeOptions(options);
+        const method = this.methods[54], opt = this._transport.mergeOptions(options);
         return stackIntercept<ListRegionOptions, RegionList>("unary", this._transport, method, opt, input);
     }
     /**
@@ -1081,7 +1115,7 @@ export class MainServiceClient implements IMainServiceClient, ServiceInfo {
      * @generated from protobuf rpc: WatchWorkspace
      */
     watchWorkspace(input: WatchWorkspaceRequest, options?: RpcOptions): ServerStreamingCall<WatchWorkspaceRequest, WatchWorkspaceResponse> {
-        const method = this.methods[54], opt = this._transport.mergeOptions(options);
+        const method = this.methods[55], opt = this._transport.mergeOptions(options);
         return stackIntercept<WatchWorkspaceRequest, WatchWorkspaceResponse>("serverStreaming", this._transport, method, opt, input);
     }
 }
